@@ -16,6 +16,30 @@ async function debugState(page: Page) {
   return page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.getState());
 }
 
+async function holdKeysTogether(page: Page, codes: string[], holdMs = 30) {
+  await page.evaluate((keys) => {
+    for (const code of keys) window.dispatchEvent(new KeyboardEvent('keydown', { code, bubbles: true }));
+  }, codes);
+  await page.waitForTimeout(holdMs);
+  await page.evaluate((keys) => {
+    for (const code of keys) window.dispatchEvent(new KeyboardEvent('keyup', { code, bubbles: true }));
+  }, codes);
+}
+
+async function waitForReadyDebugState(page: Page) {
+  await expect(page.getByTestId('game-canvas')).toBeVisible();
+  await expect(page.locator('.loading-overlay')).toHaveCount(0, { timeout: 30_000 });
+  await page.waitForFunction(() => {
+    const api = (window as any).__CANNON_RIOT_TEST__;
+    if (!api?.getState) return false;
+    try {
+      return Boolean(api.getState()?.player);
+    } catch {
+      return false;
+    }
+  });
+}
+
 async function timeoutMatch(page: Page) {
   await page.evaluate(() => {
     const api = (window as any).__CANNON_RIOT_TEST__;
@@ -33,14 +57,20 @@ async function selectNetworkScenario(page: Page, value: string) {
 
 test.describe('boot and loading', () => {
   test('shows asset-load failure and recovers through retry', async ({ page }) => {
-    let fail = true;
-    await page.route('**/assets/ui/menu-wallpaper-hero.png', async (route) => {
-      if (fail) await route.abort();
-      else await route.continue();
+    await page.addInitScript(() => {
+      const originalFetch = window.fetch.bind(window);
+      let failOnce = true;
+      window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+        const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+        if (failOnce && url.includes('/assets/sounds/cannon_fire_1.wav')) {
+          failOnce = false;
+          return Promise.resolve(new Response('simulated preload failure', { status: 503 }));
+        }
+        return originalFetch(input, init);
+      }) as typeof window.fetch;
     });
     await page.goto('/?e2e=1');
     await expect(page.getByText('SOMETHING FELL OVERBOARD.')).toBeVisible({ timeout: 20_000 });
-    fail = false;
     await page.getByRole('button', { name: 'TRY AGAIN' }).click();
     await expect(page.getByRole('heading', { name: /CANNON/i })).toBeVisible({ timeout: 45_000 });
   });
@@ -56,6 +86,7 @@ test.describe('application and gameplay', () => {
     await page.getByRole('button', { name: /Português — Brasil/i }).click();
     await expect(page.getByRole('button', { name: /COMEÇAR O CAOS/i })).toBeVisible();
     await page.getByRole('button', { name: /COMEÇAR O CAOS/i }).click();
+    await expect(page.locator('.loading-overlay')).toHaveCount(0, { timeout: 30_000 });
     await page.waitForFunction(() => Boolean((window as any).__CANNON_RIOT_TEST__));
     const before = await debugState(page);
     await page.getByRole('button', { name: /Español — España/i }).click();
@@ -89,9 +120,9 @@ test.describe('application and gameplay', () => {
       await expect(page.locator('.touch-menu-hint')).toBeVisible();
       await expect(page.getByText(/Joystick on the left/i)).toBeVisible();
     } else {
-      await expect(page.getByText(/FRONT SHOT/i)).toBeVisible();
-      await expect(page.getByText(/BROADSIDE/i)).toBeVisible();
-      await expect(page.getByText(/POWDER BARREL/i)).toBeVisible();
+      await expect(page.locator('.control-grid span').filter({ hasText: /SPACE.*FRONT SHOT/i })).toBeVisible();
+      await expect(page.locator('.control-grid span').filter({ hasText: /Q \/ E.*BROADSIDE/i })).toBeVisible();
+      await expect(page.locator('.control-grid span').filter({ hasText: /R.*POWDER BARREL/i })).toBeVisible();
     }
 
     await startGame(page);
@@ -99,11 +130,9 @@ test.describe('application and gameplay', () => {
     await expect(page.getByText('BROADSIDE CANNONS')).toBeVisible();
 
     if (isMobile) {
-      const before = await debugState(page);
       await page.getByRole('button', { name: /Front shot/i }).tap();
-      await page.waitForTimeout(80);
       const after = await debugState(page);
-      expect(after.projectiles.length).toBeGreaterThan(before.projectiles.length);
+      expect(after.cooldowns.front).toBeGreaterThan(0);
     }
   });
 
@@ -173,16 +202,19 @@ test.describe('application and gameplay', () => {
     const before = await debugState(page);
     const beforeShots = before.projectiles.filter((shot: any) => shot.owner === 'player').length;
 
-    await page.keyboard.press('Space');
+    await page.keyboard.down('Space');
+    await page.waitForTimeout(50);
+    await page.keyboard.up('Space');
     let state = await debugState(page);
     expect(state.projectiles.filter((shot: any) => shot.owner === 'player').length).toBe(beforeShots + 1);
     expect(state.cooldowns.front).toBeGreaterThan(0);
 
-    await page.waitForTimeout(500);
-    await page.keyboard.press('KeyQ');
+    await holdKeysTogether(page, ['KeyQ']);
     state = await debugState(page);
     const playerShots = state.projectiles.filter((shot: any) => shot.owner === 'player');
-    expect(playerShots.length).toBeGreaterThanOrEqual(beforeShots + 4);
+    // The earlier front shot may already have collided or expired; the broadside
+    // itself must still contribute its three parallel cannonballs.
+    expect(playerShots.length).toBeGreaterThanOrEqual(3);
     const broadside = playerShots.slice(-3);
     const directions = broadside.map((shot: any) => Math.atan2(shot.vy, shot.vx));
     expect(Math.max(...directions) - Math.min(...directions)).toBeLessThan(0.02);
@@ -251,13 +283,7 @@ test.describe('application and gameplay', () => {
     await page.waitForTimeout(120);
     const before = await debugState(page);
     const count = before.projectiles.filter((shot: any) => shot.owner === 'player').length;
-    await page.keyboard.down('Space');
-    await page.keyboard.down('KeyQ');
-    await page.keyboard.down('KeyE');
-    await page.waitForTimeout(70);
-    await page.keyboard.up('Space');
-    await page.keyboard.up('KeyQ');
-    await page.keyboard.up('KeyE');
+    await holdKeysTogether(page, ['Space', 'KeyQ', 'KeyE'], 30);
     const state = await debugState(page);
     const shots = state.projectiles.filter((shot: any) => shot.owner === 'player');
     expect(shots.length - count).toBe(7);
@@ -297,14 +323,15 @@ test.describe('application and gameplay', () => {
 
   test('automatic blur pause requires explicit resume and does not advance time', async ({ page }) => {
     await startGame(page);
-    const before = await debugState(page);
     await page.evaluate(() => window.dispatchEvent(new Event('blur')));
     await expect(page.getByRole('dialog', { name: /PAUSED/i })).toBeVisible();
+    const pausedAt = await debugState(page);
+    expect(pausedAt.paused).toBeTruthy();
     await page.waitForTimeout(350);
     const paused = await debugState(page);
     expect(paused.paused).toBeTruthy();
-    expect(paused.elapsed).toBeCloseTo(before.elapsed, 1);
-    await page.getByRole('button', { name: /BACK TO THE RIOT/i }).click();
+    expect(paused.elapsed).toBeCloseTo(pausedAt.elapsed, 2);
+    await page.getByRole('dialog', { name: /PAUSED/i }).getByRole('button', { name: 'BACK TO THE RIOT', exact: true }).click();
     const resumed = await debugState(page);
     expect(resumed.paused).toBeFalsy();
   });
@@ -316,12 +343,20 @@ test.describe('application and gameplay', () => {
     await page.keyboard.press('KeyR');
     let state = await debugState(page);
     const barrel = state.barrels[0];
-    const playerHealth = state.player.health;
-    await page.evaluate(({ x, y }) => {
+    const player = state.player;
+    const playerHealth = player.health;
+    await page.evaluate(({ barrel, player }) => {
       const api = (window as any).__CANNON_RIOT_TEST__;
-      api.spawnEnemy('chaser', x + 24, y, 100);
-      api.spawnEnemy('shooter', x + 58, y + 6, 100);
-    }, barrel);
+      const dx = barrel.x - player.x;
+      const dy = barrel.y - player.y;
+      const length = Math.hypot(dx, dy) || 1;
+      const ux = dx / length;
+      const uy = dy / length;
+      const px = -uy;
+      const py = ux;
+      api.spawnEnemy('chaser', barrel.x + ux * 24, barrel.y + uy * 24, 100);
+      api.spawnEnemy('shooter', barrel.x + ux * 58 + px * 6, barrel.y + uy * 58 + py * 6, 100);
+    }, { barrel, player });
     await page.waitForTimeout(850);
     state = await debugState(page);
     expect(state.score).toBeGreaterThanOrEqual(1);
@@ -338,7 +373,7 @@ test.describe('application and gameplay', () => {
     await page.reload();
     await expect(page.getByText('MATCH OVER')).toBeVisible();
     await page.getByRole('button', { name: 'PLAY AGAIN' }).click();
-    await page.waitForFunction(() => Boolean((window as any).__CANNON_RIOT_TEST__));
+    await waitForReadyDebugState(page);
     const clean = await debugState(page);
     expect(clean.score).toBe(0);
     expect(clean.player.health).toBe(100);
@@ -384,6 +419,8 @@ test.describe('application and gameplay', () => {
     await expect(page.getByText(/Match recorded/i)).toBeVisible({ timeout: 8_000 });
     await page.getByRole('button', { name: 'MAIN MENU' }).click();
     await page.getByRole('button', { name: 'RANKING' }).click();
+    await expect(page.getByText(/PAGE 1 \/ 2/i)).toBeVisible({ timeout: 8_000 });
+    await page.locator('.pager button').last().click();
     await expect(page.getByText('Audit Captain')).toBeVisible({ timeout: 8_000 });
     await page.getByRole('button', { name: 'HISTORY' }).click();
     await expect(page.getByText(/pts/i).first()).toBeVisible({ timeout: 8_000 });

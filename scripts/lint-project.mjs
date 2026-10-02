@@ -1,7 +1,8 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { extname, join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = new URL('..', import.meta.url).pathname;
+const root = fileURLToPath(new URL('..', import.meta.url));
 const allowed = new Set(['.ts', '.tsx', '.js', '.mjs', '.css', '.html', '.md', '.json']);
 const ignored = new Set(['node_modules', 'dist', 'playwright-report', 'test-results']);
 const problems = [];

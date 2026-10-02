@@ -2352,7 +2352,19 @@ export class GameEngine {
     this.emitSnapshot(true);
   }
 
-  setAction(action: GameAction, down: boolean): void { this.input.set(action, down); }
+  setAction(action: GameAction, down: boolean): void {
+    this.input.set(action, down);
+    if (!down || !this.started || this.paused || this.ended) return;
+
+    // Touch taps can begin and end between two ticker frames. Trigger discrete
+    // actions on pointer-down so a valid tap is never lost; cooldowns still
+    // prevent a held button from double-firing on the following simulation tick.
+    if (action === 'fire' && this.frontCooldown <= 0) this.fireFront();
+    else if (action === 'broadsideLeft' && this.broadsideCooldown <= 0) this.fireBroadside(-1);
+    else if (action === 'broadsideRight' && this.broadsideCooldown <= 0) this.fireBroadside(1);
+    else if (action === 'dash' && this.dashCooldown <= 0) this.performDash();
+    else if (action === 'barrel' && this.barrelCooldown <= 0) this.deployPowderBarrel();
+  }
   get isPaused(): boolean { return this.paused; }
 
   private onVisibility = (): void => { if (document.hidden && !this.ended) { this.visibilityPause = true; this.togglePause(true); } };
