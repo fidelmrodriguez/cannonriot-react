@@ -3255,11 +3255,9 @@ body {
   }
 }
 
-@media (any-pointer: fine) {
-  .touch-controls {
-    display: none !important;
-  }
-}
+/* Do not hide touch controls merely because a fine pointer also exists.
+   Hybrid/touch devices can report both `any-pointer: coarse` and `any-pointer: fine`;
+   the base rule already keeps controls hidden on non-touch desktops. */
 
 @media (any-pointer: coarse) {
   .control-grid {
