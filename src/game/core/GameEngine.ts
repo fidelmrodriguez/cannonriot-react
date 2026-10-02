@@ -615,20 +615,22 @@ export class GameEngine {
     this.player.body.rotation = this.player.rotation - Math.PI / 2;
     this.player.body.y = Math.sin(this.elapsed * 4.6) * 1.6;
     const powderBoost = this.powderTime > 0;
-    if (this.input.isDown('fire') && this.frontCooldown <= 0 && this.canFireWeaponNow()) this.fireFront();
-
-    const leftBroadsideDown = this.input.isDown('broadsideLeft');
-    const rightBroadsideDown = this.input.isDown('broadsideRight');
     if (powderBoost) {
-      if (this.broadsideCooldown <= 0 && (leftBroadsideDown || rightBroadsideDown)) {
-        // Living Powder is the deliberate exception to the normal one-direction-at-a-time rule:
-        // both gun decks may fire together and the front cannon can fire in the same moment.
-        if (leftBroadsideDown) this.fireBroadside(-1, false);
-        if (rightBroadsideDown) this.fireBroadside(1, false);
+      // Living Powder means full automatic artillery: while the buff is active,
+      // the front cannon and both gun decks fire as soon as their boosted reloads
+      // are ready. No fire button is required; the barrage ends with the power-up.
+      if (this.frontCooldown <= 0) this.fireFront();
+      if (this.broadsideCooldown <= 0) {
+        this.fireBroadside(-1, false);
+        this.fireBroadside(1, false);
         this.broadsideCooldownMax = this.config.frontCooldown * EXTRA_BALANCE.powerups.powderFrontCooldownMultiplier;
         this.broadsideCooldown = this.broadsideCooldownMax;
       }
     } else {
+      if (this.input.isDown('fire') && this.frontCooldown <= 0 && this.canFireWeaponNow()) this.fireFront();
+      const leftBroadsideDown = this.input.isDown('broadsideLeft');
+      const rightBroadsideDown = this.input.isDown('broadsideRight');
+
       // Normal rules: left/right share one reload and a short global weapon lock prevents
       // front + broadside from firing at the same instant. Holding a key naturally waits
       // for the lock; quick touch taps are buffered below so controls stay responsive.
@@ -1431,6 +1433,13 @@ export class GameEngine {
       this.showMechanicComicPanel('medicine', gameLines('medicine'));
     } else if (pickup.kind === 'powder') {
       this.powderTime = this.extendBuff(this.powderTime, buffDuration);
+      // Start the Living Powder barrage immediately on pickup, even if a weapon
+      // was still reloading from the player's last manual shot.
+      this.frontCooldown = 0;
+      this.broadsideCooldown = 0;
+      this.weaponSwitchCooldown = 0;
+      this.bufferedWeaponAction = null;
+      this.bufferedWeaponActionTime = 0;
       this.popLabel(engineText('powderLive'), this.player.x, this.player.y - 58, 0xff70dd, 0.75);
       this.showMechanicComicPanel('powder', gameLines('powder'));
     } else if (pickup.kind === 'wind') {

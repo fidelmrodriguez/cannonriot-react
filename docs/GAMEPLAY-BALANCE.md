@@ -27,7 +27,7 @@ High-pressure matches receive more support drops and a tighter active-enemy cap.
 ## Support/powerups
 
 - **Medicine** repairs player hull.
-- **Living Powder** temporarily accelerates and boosts artillery; front + both broadsides can fire together, bypassing the normal 0.25 s direction lock.
+- **Living Powder** temporarily accelerates and boosts artillery and automatically fires the front cannon + both broadsides whenever their boosted reloads are ready. The barrage starts on pickup, bypasses the normal 0.25 s direction lock, and stops when the power-up expires.
 - **Wind at Your Back** increases movement speed and improves dash.
 - **Reinforced Hull** reduces incoming damage temporarily.
 - **Powder Barrel** destroys the triggering enemy and deals strong non-lethal splash damage to nearby enemies; the player's ship is immune to its own barrel.

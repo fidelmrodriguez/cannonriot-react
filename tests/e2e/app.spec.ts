@@ -284,19 +284,26 @@ test.describe('application and gameplay', () => {
     expect(state.score).toBe(0);
   });
 
-  test('Living Powder allows front + both broadsides with matched boosted speed', async ({ page, isMobile }) => {
-    test.skip(isMobile, 'Keyboard weapon assertion.');
+  test('Living Powder auto-fires front + both broadsides and stops when the buff expires', async ({ page }) => {
     await startGame(page);
     await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.spawnPickup('powder'));
     await page.waitForTimeout(120);
-    const before = await debugState(page);
-    const count = before.projectiles.filter((shot: any) => shot.owner === 'player').length;
-    await holdKeysTogether(page, ['Space', 'KeyQ', 'KeyE'], 30);
-    const state = await debugState(page);
-    const shots = state.projectiles.filter((shot: any) => shot.owner === 'player');
-    expect(shots.length - count).toBe(7);
+
+    const active = await debugState(page);
+    const shots = active.projectiles.filter((shot: any) => shot.owner === 'player');
+    expect(active.buffs.powder).toBeGreaterThan(0);
+    expect(shots.length).toBeGreaterThanOrEqual(7);
     const speeds = shots.slice(-7).map((shot: any) => Math.hypot(shot.vx, shot.vy));
     expect(Math.max(...speeds) - Math.min(...speeds)).toBeLessThan(0.5);
+
+    await page.evaluate((seconds) => (window as any).__CANNON_RIOT_TEST__.advanceTime(seconds), active.buffs.powder + 2);
+    const expired = await debugState(page);
+    expect(expired.buffs.powder).toBe(0);
+    expect(expired.projectiles.filter((shot: any) => shot.owner === 'player')).toHaveLength(0);
+
+    await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.advanceTime(0.8));
+    const after = await debugState(page);
+    expect(after.projectiles.filter((shot: any) => shot.owner === 'player')).toHaveLength(0);
   });
 
   test('dash respects cooldown and arena bounds', async ({ page, isMobile }) => {

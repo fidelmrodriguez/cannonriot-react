@@ -26,7 +26,7 @@ Partidas de alta pressão recebem mais drops de suporte e um teto de inimigos at
 ## Suporte/powerups
 
 - **Medicine** repara o casco do jogador.
-- **Living Powder** acelera e fortalece temporariamente a artilharia; frente + os dois lados podem disparar juntos.
+- **Pólvora Viva** acelera e fortalece temporariamente a artilharia e dispara automaticamente o canhão frontal + os dois lados sempre que as recargas aceleradas ficam prontas. A rajada começa ao pegar o power-up e só para quando o efeito termina.
 - **Wind at Your Back** aumenta velocidade de movimento e melhora o dash.
 - **Reinforced Hull** reduz temporariamente o dano recebido.
 - **Powder Barrel** destrói o inimigo que o aciona e causa dano forte porém não letal nos inimigos próximos; o navio do jogador é imune ao próprio barril.
