@@ -1,0 +1,44 @@
+{
+  "name": "cannon-riot",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b tsconfig.app.json tsconfig.node.json && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "typecheck": "tsc -b tsconfig.app.json tsconfig.node.json --pretty false",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "check": "npm run lint && npm run typecheck && npm run build",
+    "msw:init": "msw init public --save",
+    "postinstall": "msw init public --save",
+    "lint": "node scripts/lint-project.mjs",
+    "test:e2e:update": "playwright test --update-snapshots",
+    "test:e2e:report": "playwright show-report"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.66.0",
+    "axios": "^1.7.9",
+    "msw": "^2.7.0",
+    "pixi.js": "^8.6.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.1",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0"
+  },
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
+  }
+}

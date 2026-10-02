@@ -1,0 +1,11 @@
+
+*.log
+*.tsbuildinfo
+.DS_Store
+dist
+dist/
+node_modules
+playwright-report
+playwright-report/
+test-results
+test-results/

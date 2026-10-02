@@ -1,0 +1,44 @@
+# Gameplay balance
+
+## Required baseline
+
+The challenge rules remain authoritative: fixed visible arena, forward movement + rotation, one front projectile, three parallel broadside projectiles, Chaser collision damage, Shooter ranged damage, configured spawn cadence and exactly one point per enemy killed by player attacks.
+
+Default profile:
+
+- session: 120 s;
+- enemy spawn: 3 s;
+- player HP: 100;
+- player speed: 225 px/s;
+- front cooldown: 0.38 s;
+- broadside cooldown: 1.1 s.
+
+## Extreme configurations
+
+Options allow 60–180 s and 1–8 s spawn intervals. A deterministic pressure value is derived from those two parameters. It influences support cadence, enemy cap and small assistance coefficients, not ranking identity or score value.
+
+```text
+pressure = clamp((3 / spawnTime) * (sessionTime / 120)^0.32, 0.7, 2.6)
+```
+
+High-pressure matches receive more support drops and a tighter active-enemy cap. Low-pressure matches avoid excessive assistance. The intent is to keep all allowed configurations playable without making the default trivial.
+
+## Support/powerups
+
+- **Medicine** repairs player hull.
+- **Living Powder** temporarily accelerates and boosts artillery; front + both broadsides can fire together.
+- **Wind at Your Back** increases movement speed and improves dash.
+- **Reinforced Hull** reduces incoming damage temporarily.
+- **Powder Barrel** destroys the triggering enemy and deals strong non-lethal splash damage to nearby enemies; the player's ship is immune to its own barrel.
+
+Buff drops prefer an inactive buff; repeated buffs extend duration instead of being wasted.
+
+## Fairness safeguards
+
+- no enemy spawn inside islands or near the player;
+- active enemy cap scales between safe limits;
+- Chaser self-destruction does not score;
+- barrel splash cannot chain-kill surrounding ships;
+- support systems never change the one-point-per-player-kill rule;
+- player/enemy ship bodies are solid; Shooter contact does not deal collision damage;
+- projectile substeps prevent boosted shots from tunnelling.

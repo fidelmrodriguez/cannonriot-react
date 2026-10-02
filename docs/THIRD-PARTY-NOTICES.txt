@@ -1,0 +1,9 @@
+CANNON RIOT — THIRD-PARTY NOTICES
+
+Open-source npm dependencies include React, React DOM, PixiJS, TanStack Query, Axios, Mock Service Worker (MSW), Vite, TypeScript and Playwright.
+
+Refer to each installed package's LICENSE and package metadata for authoritative license/copyright terms.
+
+The original ship/projectile/effect/sound resources used from the technical challenge were supplied as assessment assets. No separate license file was included with the provided challenge archive.
+
+Additional character illustrations, wallpapers, music and generated SFX included in this repository are project-specific assets supplied/created for this submission. Their redistribution rights must follow the source/generation terms applicable to the submitter.

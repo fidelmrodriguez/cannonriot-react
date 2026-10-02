@@ -1,0 +1,9 @@
+CANNON RIOT — AVISOS DE TERCEIROS
+
+Dependências npm open-source incluem React, React DOM, PixiJS, TanStack Query, Axios, Mock Service Worker (MSW), Vite, TypeScript e Playwright.
+
+Consulte o LICENSE e os metadados de cada pacote instalado para os termos autoritativos de licença/copyright.
+
+Os recursos originais de navios/projéteis/efeitos/som usados a partir do desafio técnico foram fornecidos como assets da avaliação. O arquivo do desafio entregue não continha uma licença separada para esses assets.
+
+Ilustrações adicionais da personagem, wallpapers, músicas e SFX gerados incluídos neste repositório são assets específicos do projeto fornecidos/criados para esta submissão. Os direitos de redistribuição devem seguir os termos de origem/geração aplicáveis ao responsável pela submissão.

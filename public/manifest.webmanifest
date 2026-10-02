@@ -1,0 +1,9 @@
+{
+  "name": "Cannon Riot",
+  "short_name": "Cannon Riot",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#071b36",
+  "theme_color": "#17d6c0"
+}
