@@ -1905,7 +1905,8 @@ export class GameEngine {
       badgeText: preset.badgeText,
       frameStroke: preset.frameStroke,
     });
-    this.playIdleChirp();
+    // The chirpy captain voice is reserved for genuine idle reactions only.
+    // Mechanic reacts (dash, pickups, etc.) rely on their own action SFX.
   }
 
   private destroyEnemy(enemy: EnemyEntity, awardPoint: boolean, playExplosionAudio = true): void {
