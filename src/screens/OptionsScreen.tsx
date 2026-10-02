@@ -31,6 +31,7 @@ export function OptionsScreen({
   const [enemySpawnTime, setEnemySpawnTime] = useState(config.enemySpawnTime);
   const [networkScenario, setNetworkScenario] = useState<NetworkScenario>(() => getScenario());
   const valid = sessionTime >= 60 && sessionTime <= 180 && enemySpawnTime >= 1 && enemySpawnTime <= 8;
+  const showDeveloperTools = new URLSearchParams(window.location.search).has('dev') || new URLSearchParams(window.location.search).has('e2e');
 
   return <main className="panel-screen options-screen"><div className="panel-card options-card">
     <header className="options-header">
@@ -84,7 +85,7 @@ export function OptionsScreen({
           <ArcadeButton className="secondary" onClick={onOpenJukebox}>{t('options.openPlaylist', {}, language)}</ArcadeButton>
         </section>
 
-        <section className="technical-options-card" aria-label={t('options.tech', {}, language)}>
+        {showDeveloperTools && <section className="technical-options-card" aria-label={t('options.tech', {}, language)}>
           <div>
             <span>{t('options.tech', {}, language)}</span>
             <strong>{t('options.networkScenario', {}, language)}</strong>
@@ -100,7 +101,7 @@ export function OptionsScreen({
             </select>
             <button type="button" onClick={() => { resetMockState(); setNetworkScenario('normal'); }}>{t('options.restore', {}, language)}</button>
           </div>
-        </section>
+        </section>}
       </section>
     </div>
 

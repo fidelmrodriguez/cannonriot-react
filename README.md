@@ -124,7 +124,7 @@ Abandoned matches never enter the outbox, ranking or history.
 
 ## Network scenarios
 
-Open **Options → Network Scenario**. The selectable MSW scenarios are:
+The network-scenario controls are intentionally hidden from the normal player-facing UI. Open the app with `?dev=1` (or `?e2e=1` in automated tests), then use **Options → Network Scenario**. The selectable MSW scenarios are:
 
 - normal success;
 - empty lists;
@@ -147,7 +147,7 @@ See [docs/NETWORK-SCENARIOS.md](docs/NETWORK-SCENARIOS.md).
 
 ## Internationalization
 
-English is the first-run/default language to satisfy the challenge requirement that the solution UI be in English. Portuguese and Spanish are optional live translations. The global flag controls are available from the first loading screen and during gameplay. Changing language does not recreate the PixiJS engine.
+English is the first-run/default language to satisfy the challenge requirement that the solution UI be in English. Portuguese and Spanish are optional live translations. The global language controls use country-flag artwork for the United States, Brazil and Spain, are available from the first loading screen and remain available during gameplay. Changing language does not recreate the PixiJS engine.
 
 ## Architecture
 

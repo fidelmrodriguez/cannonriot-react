@@ -1,6 +1,6 @@
 # Network scenarios
 
-MSW runs in the published browser build and stores confirmed match records in localStorage.
+MSW runs in the published browser build and stores confirmed match records in localStorage. The scenario selector is a reviewer/developer control and is hidden from the normal player-facing UI. Launch with `?dev=1` to expose it in Options; Playwright uses `?e2e=1`.
 
 | Scenario | Ranking/history | Register match | Purpose |
 | --- | --- | --- | --- |

@@ -53,12 +53,12 @@ test.describe('application and gameplay', () => {
 
   test('defaults to English and switches EN/PT/ES live without restarting a match', async ({ page }) => {
     await expect(page.getByRole('button', { name: /START THE RIOT/i })).toBeVisible();
-    await page.getByRole('button', { name: /🇧🇷 PT/i }).click();
+    await page.getByRole('button', { name: /Português — Brasil/i }).click();
     await expect(page.getByRole('button', { name: /COMEÇAR O CAOS/i })).toBeVisible();
     await page.getByRole('button', { name: /COMEÇAR O CAOS/i }).click();
     await page.waitForFunction(() => Boolean((window as any).__CANNON_RIOT_TEST__));
     const before = await debugState(page);
-    await page.getByRole('button', { name: /🇪🇸 ES/i }).click();
+    await page.getByRole('button', { name: /Español — España/i }).click();
     await expect(page.getByText('CAÑÓN FRONTAL')).toBeVisible();
     const after = await debugState(page);
     expect(after.elapsed).toBeGreaterThanOrEqual(before.elapsed);

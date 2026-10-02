@@ -25,11 +25,11 @@ export function AudioDock({ musicMuted, sfxMuted, language, onToggleMusic, onTog
         type="button"
         className={`language-button ${language === item.id ? 'active' : ''}`}
         aria-pressed={language === item.id}
-        aria-label={`${item.flag} ${item.short}`}
-        title={`${item.flag} ${item.short}`}
+        aria-label={`${item.nativeName} — ${item.country}`}
+        title={`${item.nativeName} — ${item.country}`}
         onClick={() => onLanguage(item.id)}
       >
-        <span className="flag" aria-hidden="true">{item.flag}</span><small>{item.short}</small>
+        <img className="flag-image" src={item.flagSrc} alt="" aria-hidden="true"/><small>{item.short}</small>
       </button>)}
     </div>
     <button

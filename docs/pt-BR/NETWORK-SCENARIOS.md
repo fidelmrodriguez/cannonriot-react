@@ -1,6 +1,6 @@
 # Cenários de rede
 
-MSW roda também no build publicado no navegador e armazena registros confirmados de partidas em `localStorage`.
+MSW roda também no build publicado no navegador e armazena registros confirmados de partidas em `localStorage`. O seletor de cenários é uma ferramenta de avaliação/desenvolvimento e fica oculto da interface normal do jogador. Abra com `?dev=1` para exibi-lo em Opções; o Playwright usa `?e2e=1`.
 
 | Cenário | Ranking/histórico | Registrar partida | Objetivo |
 | --- | --- | --- | --- |

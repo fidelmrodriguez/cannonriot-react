@@ -3744,9 +3744,14 @@ body {
   box-shadow: 3px 3px 0 var(--coral);
 }
 
-.audio-dock .language-button .flag {
-  font-size: 1rem;
-  line-height: 1;
+.audio-dock .language-button .flag-image {
+  width: 28px;
+  height: 18px;
+  display: block;
+  object-fit: cover;
+  border: 1px solid rgba(7,27,54,.45);
+  border-radius: 2px;
+  box-shadow: 0 1px 0 rgba(7,27,54,.35);
 }
 
 .audio-dock .language-button small {
@@ -3782,7 +3787,7 @@ body {
     box-shadow: 1px 1px 0 var(--ink);
   }
 
-  .audio-dock .language-button .flag { font-size: .82rem; }
+  .audio-dock .language-button .flag-image { width: 24px; height: 16px; }
   .audio-dock .language-button small { font-size: .36rem; }
 
   .quick-start-card .options-link {
@@ -3796,7 +3801,7 @@ body {
     width: 30px;
     height: 28px;
   }
-  .audio-dock .language-button .flag { font-size: .72rem; }
+  .audio-dock .language-button .flag-image { width: 22px; height: 14px; }
   .audio-dock .language-button small { display: none; }
 }
 
@@ -3827,6 +3832,7 @@ body {
 }
 .player-identity-card input:focus { box-shadow: 0 0 0 3px var(--yellow); }
 .player-identity-card small { grid-column: 1 / -1; color: #526879; font-size: .54rem; font-weight: 750; line-height: 1.25; }
+.player-identity-card + .play-zone { margin-top: 1.05rem !important; }
 .quick-start-card .options-link { margin-top: 1.35rem !important; }
 
 /* Each language flag is an independent global control, stacked like music/SFX. */
@@ -3844,7 +3850,7 @@ body {
   box-shadow: 4px 4px 0 var(--ink) !important;
 }
 .audio-dock .language-button.active { background: var(--yellow) !important; box-shadow: 4px 4px 0 var(--coral) !important; }
-.audio-dock .language-button .flag { font-size: 1.15rem !important; line-height: 1 !important; }
+.audio-dock .language-button .flag-image { width: 30px !important; height: 20px !important; display:block !important; object-fit:cover !important; border:1px solid rgba(7,27,54,.5) !important; border-radius:2px !important; }
 .audio-dock .language-button small { display: block !important; font-size: .38rem !important; line-height: 1 !important; }
 
 @media (any-pointer: coarse) {
@@ -3852,6 +3858,7 @@ body {
   .player-identity-card > span { font-size: .48rem; }
   .player-identity-card input { border-width: 2px; padding: .28rem .35rem; font-size: .64rem; }
   .player-identity-card small { display: none; }
+  .player-identity-card + .play-zone { margin-top: .68rem !important; }
   .quick-start-card .options-link { margin-top: .8rem !important; }
   .audio-dock .language-button {
     width: 42px !important;

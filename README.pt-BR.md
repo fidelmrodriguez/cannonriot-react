@@ -124,7 +124,7 @@ Partidas abandonadas nunca entram na outbox, ranking ou histórico.
 
 ## Cenários de rede
 
-Abra **Options → Network Scenario**. Os cenários MSW selecionáveis são:
+Os controles de cenário de rede ficam ocultos da interface normal do jogador. Abra o app com `?dev=1` (ou `?e2e=1` nos testes automatizados) e então use **Options → Network Scenario**. Os cenários MSW selecionáveis são:
 
 - sucesso normal;
 - listas vazias;
@@ -147,7 +147,7 @@ Veja [docs/pt-BR/NETWORK-SCENARIOS.md](docs/pt-BR/NETWORK-SCENARIOS.md).
 
 ## Internacionalização
 
-Inglês é o idioma padrão na primeira execução, atendendo ao requisito do desafio de que a solução seja apresentada em inglês. Português e espanhol são traduções extras em tempo real. Os controles globais de idioma por bandeira aparecem desde a primeira tela de loading e continuam disponíveis durante o gameplay. Trocar idioma não recria a engine PixiJS.
+Inglês é o idioma padrão na primeira execução, atendendo ao requisito do desafio de que a solução seja apresentada em inglês. Português e espanhol são traduções extras em tempo real. Os controles globais de idioma usam artes de bandeira dos Estados Unidos, Brasil e Espanha, aparecem desde a primeira tela de loading e continuam disponíveis durante o gameplay. Trocar idioma não recria a engine PixiJS.
 
 ## Arquitetura
 
