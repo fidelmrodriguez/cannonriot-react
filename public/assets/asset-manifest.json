@@ -1,0 +1,697 @@
+{
+  "meta": {
+    "app": "Cannon Riot",
+    "version": 1,
+    "format": "loose-assets",
+    "generatedBy": "scripts/generate-asset-manifest.mjs",
+    "publicPathBase": "/assets/",
+    "note": "This project uses direct asset files rather than a packed UI atlas. Pixel ratio is declared only when encoded in the filename."
+  },
+  "assets": [
+    {
+      "id": "music.battle.bala-rosa-em-mar-revolto",
+      "path": "/assets/music/battle/bala-rosa-em-mar-revolto.mp3",
+      "kind": "audio",
+      "category": "audio/music/battle",
+      "origin": "project",
+      "bytes": 3096676,
+      "sha256": "a494c76ec4fadbed04e21c3ba3ebd358d4218823dfbadebcdf25073020998818"
+    },
+    {
+      "id": "music.battle.bruma-no-conves",
+      "path": "/assets/music/battle/bruma-no-conves.mp3",
+      "kind": "audio",
+      "category": "audio/music/battle",
+      "origin": "project",
+      "bytes": 3737508,
+      "sha256": "a43df16d7037ef501c81673e5b71e6f8aee8f43400bd6c7ef0a42bf7cfb0285b"
+    },
+    {
+      "id": "music.battle.canhoes-contra-a-mare",
+      "path": "/assets/music/battle/canhoes-contra-a-mare.mp3",
+      "kind": "audio",
+      "category": "audio/music/battle",
+      "origin": "project",
+      "bytes": 1998326,
+      "sha256": "07a6fc69dff5f570368bc655739b2fa18d1ff03c43c328bcd2974c8210977f7c"
+    },
+    {
+      "id": "music.battle.cordas-de-bombordo",
+      "path": "/assets/music/battle/cordas-de-bombordo.mp3",
+      "kind": "audio",
+      "category": "audio/music/battle",
+      "origin": "project",
+      "bytes": 2716903,
+      "sha256": "2802010fee630eb79a573d10746691c0abb3bf388dd1659de94a58053dceb4f5"
+    },
+    {
+      "id": "music.battle.mare-de-feedback",
+      "path": "/assets/music/battle/mare-de-feedback.mp3",
+      "kind": "audio",
+      "category": "audio/music/battle",
+      "origin": "project",
+      "bytes": 2946231,
+      "sha256": "72b8feafeddfb734b42bc4bfbea81eaf0c6027d7768e26eba806d14e7198fcd4"
+    },
+    {
+      "id": "music.battle.motim-na-neblina",
+      "path": "/assets/music/battle/motim-na-neblina.mp3",
+      "kind": "audio",
+      "category": "audio/music/battle",
+      "origin": "project",
+      "bytes": 2805346,
+      "sha256": "0affcdbc18909161732b29b6cf89d724c80f95997685eccdc56ee3bb630d1ac8"
+    },
+    {
+      "id": "music.battle.sino-de-perseguicao",
+      "path": "/assets/music/battle/sino-de-perseguicao.mp3",
+      "kind": "audio",
+      "category": "audio/music/battle",
+      "origin": "project",
+      "bytes": 2277228,
+      "sha256": "116c37664762c83ebfa7f3e1d390ab7295007f7211de216dc38972c5c0039334"
+    },
+    {
+      "id": "music.cartas-que-o-mar-nao-devolve",
+      "path": "/assets/music/cartas-que-o-mar-nao-devolve.mp3",
+      "kind": "audio",
+      "category": "audio/music",
+      "origin": "project",
+      "bytes": 4827227,
+      "sha256": "99c5e4f7274def49c2829ed22b6f8ca9fddb6ceff83a1aae3cca62b6b0eeace9"
+    },
+    {
+      "id": "music.nevoa-rosa-no-horizonte",
+      "path": "/assets/music/nevoa-rosa-no-horizonte.mp3",
+      "kind": "audio",
+      "category": "audio/music",
+      "origin": "project",
+      "bytes": 3483439,
+      "sha256": "7b2796e5ed51339c84c9dee864b60424524616eb1d6bcadadd82ba2ede13f310"
+    },
+    {
+      "id": "music.sol-sobre-a-linha-dagua",
+      "path": "/assets/music/sol-sobre-a-linha-dagua.mp3",
+      "kind": "audio",
+      "category": "audio/music",
+      "origin": "project",
+      "bytes": 4764838,
+      "sha256": "1fbf382e4c0b9f41e138844e66bdca48ad03bacdc4e9e473bd05db64ef4643af"
+    },
+    {
+      "id": "png.default.effects.explosion_1",
+      "path": "/assets/png/default/effects/explosion_1.png",
+      "kind": "image",
+      "category": "gameplay/effect",
+      "origin": "challenge",
+      "bytes": 8792,
+      "sha256": "7dbaa89566795722f6a14f9e318f9416e5b8a2acdcb971497756346a5dab019e",
+      "dimensions": {
+        "width": 74,
+        "height": 75
+      }
+    },
+    {
+      "id": "png.default.effects.fire_1",
+      "path": "/assets/png/default/effects/fire_1.png",
+      "kind": "image",
+      "category": "gameplay/effect",
+      "origin": "challenge",
+      "bytes": 1513,
+      "sha256": "e38542640dff8dd3280d48144483657b58fbffd1ada517c68d130de62f3bc6f4",
+      "dimensions": {
+        "width": 18,
+        "height": 39
+      }
+    },
+    {
+      "id": "png.default.ship_parts.cannon_ball",
+      "path": "/assets/png/default/ship_parts/cannon_ball.png",
+      "kind": "image",
+      "category": "gameplay/projectile",
+      "origin": "challenge",
+      "bytes": 381,
+      "sha256": "15d822992f65219aa7d5cfc8aec4b3d4bcff9425943381c2b4ff3acd049eb596",
+      "dimensions": {
+        "width": 10,
+        "height": 10
+      }
+    },
+    {
+      "id": "png.default.ships.ship_16",
+      "path": "/assets/png/default/ships/ship_16.png",
+      "kind": "image",
+      "category": "gameplay/ship",
+      "origin": "challenge",
+      "bytes": 11236,
+      "sha256": "1ba2cfd81799b19455701dfc6b885c5dcf66adcdcf0ae807f0d3606725bb508f",
+      "dimensions": {
+        "width": 66,
+        "height": 113
+      }
+    },
+    {
+      "id": "png.default.ships.ship_22",
+      "path": "/assets/png/default/ships/ship_22.png",
+      "kind": "image",
+      "category": "gameplay/ship",
+      "origin": "challenge",
+      "bytes": 9990,
+      "sha256": "155011ed1e220eeb9d6945f6ef51c8e63ef464a55e0abf8e650d3085452353d5",
+      "dimensions": {
+        "width": 66,
+        "height": 113
+      }
+    },
+    {
+      "id": "png.default.ships.ship_6",
+      "path": "/assets/png/default/ships/ship_6.png",
+      "kind": "image",
+      "category": "gameplay/ship",
+      "origin": "challenge",
+      "bytes": 11160,
+      "sha256": "3642237f2e57bc86039759c04bd73034e3f3544fa3c58da7c000fafab27194f5",
+      "dimensions": {
+        "width": 66,
+        "height": 113
+      }
+    },
+    {
+      "id": "sounds.cannon_broadside",
+      "path": "/assets/sounds/cannon_broadside.wav",
+      "kind": "audio",
+      "category": "audio/sfx",
+      "origin": "challenge",
+      "bytes": 149984,
+      "sha256": "4a9f31e74c07758b30e548668e2a688176c15a20d5df52f05f4566f963ab8ea6"
+    },
+    {
+      "id": "sounds.cannon_fire_1",
+      "path": "/assets/sounds/cannon_fire_1.wav",
+      "kind": "audio",
+      "category": "audio/sfx",
+      "origin": "challenge",
+      "bytes": 104120,
+      "sha256": "14280781c2154793c1904a9c0801bb87ab4492ffaebf535b547afb78636cacfe"
+    },
+    {
+      "id": "sounds.dash_whoosh",
+      "path": "/assets/sounds/dash_whoosh.wav",
+      "kind": "audio",
+      "category": "audio/sfx",
+      "origin": "project",
+      "bytes": 24740,
+      "sha256": "055915e24ca3c4d9107ed2a2e1a0b5f2e8945246d4a235e5325c8821cded9250"
+    },
+    {
+      "id": "sounds.idle_captain_chirp",
+      "path": "/assets/sounds/idle_captain_chirp.wav",
+      "kind": "audio",
+      "category": "audio/sfx",
+      "origin": "project",
+      "bytes": 32684,
+      "sha256": "00642bbdbd6dac8e1821132208edfefaaa96c6b9a71f968d2eefc3cfd21715d7"
+    },
+    {
+      "id": "sounds.pickup_chime",
+      "path": "/assets/sounds/pickup_chime.wav",
+      "kind": "audio",
+      "category": "audio/sfx",
+      "origin": "project",
+      "bytes": 30032,
+      "sha256": "4bca015cee727bb61b34d99f27ca8ff2931d3b00643ee7953e88de61e478409d"
+    },
+    {
+      "id": "sounds.ship_collision",
+      "path": "/assets/sounds/ship_collision.wav",
+      "kind": "audio",
+      "category": "audio/sfx",
+      "origin": "project",
+      "bytes": 127934,
+      "sha256": "07f2f0ce1f57225fcce8714ef0bd2dc73a4b33d3546eb4c932c95f7f0cf7b9d9"
+    },
+    {
+      "id": "sounds.ship_explosion_1",
+      "path": "/assets/sounds/ship_explosion_1.wav",
+      "kind": "audio",
+      "category": "audio/sfx",
+      "origin": "challenge",
+      "bytes": 211724,
+      "sha256": "80b070cae59bac6358c47247692ecd29b8a33efcf399041c59d202cc81008334"
+    },
+    {
+      "id": "sounds.ship_wood_hit_1",
+      "path": "/assets/sounds/ship_wood_hit_1.wav",
+      "kind": "audio",
+      "category": "audio/sfx",
+      "origin": "project",
+      "bytes": 52964,
+      "sha256": "7d85e5191019720cdc30b91264b33e6957524373416d09531168f7c6fe6befdd"
+    },
+    {
+      "id": "sounds.ship_wood_hit_2",
+      "path": "/assets/sounds/ship_wood_hit_2.wav",
+      "kind": "audio",
+      "category": "audio/sfx",
+      "origin": "project",
+      "bytes": 52964,
+      "sha256": "fc5ee73cc8f9677db71d41f34d64e2f667fc2c9c285fe52d73b39488dfa6d261"
+    },
+    {
+      "id": "ui.damage-panel-1-2x",
+      "path": "/assets/ui/damage-panel-1-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 232322,
+      "sha256": "95e4061c832c4de0dc9ad6f098f86f350d446130370ec31c531181ab36481165",
+      "dimensions": {
+        "width": 432,
+        "height": 356
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.damage-panel-2-2x",
+      "path": "/assets/ui/damage-panel-2-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 249723,
+      "sha256": "5caefe3bd816d50c5cff3ed9e51cb15c6b9edf36b8c023197d51e5824061b136",
+      "dimensions": {
+        "width": 432,
+        "height": 356
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.damage-panel-3-2x",
+      "path": "/assets/ui/damage-panel-3-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 239676,
+      "sha256": "b0aa3d2ba8242afc777d0cf67b3529b4b30792ab43d9387f6c00a329ce6335cb",
+      "dimensions": {
+        "width": 432,
+        "height": 356
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.damage-panel-4-2x",
+      "path": "/assets/ui/damage-panel-4-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 244895,
+      "sha256": "929325a10847a45ef2b5a60bebc5d8ab375dec7079379a22ff094baa8399b7bc",
+      "dimensions": {
+        "width": 432,
+        "height": 356
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.damage-panel-5-2x",
+      "path": "/assets/ui/damage-panel-5-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 246507,
+      "sha256": "22c3a06c923b2082f24fc09a21ba98c5dd70e3488c2cf037858728c0032886ab",
+      "dimensions": {
+        "width": 432,
+        "height": 356
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.flags.br",
+      "path": "/assets/ui/flags/br.svg",
+      "kind": "vector",
+      "category": "ui/flag",
+      "origin": "project",
+      "bytes": 608,
+      "sha256": "328e22a1655f0481ed1e8dd7227488b0f5aa03dc1634cf5e9f0f4b51889aaa70",
+      "dimensions": {
+        "width": 60,
+        "height": 40
+      }
+    },
+    {
+      "id": "ui.flags.es",
+      "path": "/assets/ui/flags/es.svg",
+      "kind": "vector",
+      "category": "ui/flag",
+      "origin": "project",
+      "bytes": 727,
+      "sha256": "4e0dc0a7ec4b048257d0a7bfb2e9eb37e3ac31793d549ecbb6bcf0eecf22a687",
+      "dimensions": {
+        "width": 60,
+        "height": 40
+      }
+    },
+    {
+      "id": "ui.flags.us",
+      "path": "/assets/ui/flags/us.svg",
+      "kind": "vector",
+      "category": "ui/flag",
+      "origin": "project",
+      "bytes": 1298,
+      "sha256": "d30479ff46da0845bc7eeaed41075f648ab11c1ac890c6fc670e3767e7af36d8",
+      "dimensions": {
+        "width": 60,
+        "height": 40
+      }
+    },
+    {
+      "id": "ui.idle-panel-1-2x",
+      "path": "/assets/ui/idle-panel-1-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 1693716,
+      "sha256": "d00755ea0ba266dedab4c2538983ac6710d0313990335dbc8de935ddc73888d0",
+      "dimensions": {
+        "width": 1448,
+        "height": 1086
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.idle-panel-10-2x",
+      "path": "/assets/ui/idle-panel-10-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 1738783,
+      "sha256": "d9f09a9566f16e23d418a9d8ebcc52414b13c594b47eeb4a9a6ea121b9c27ab2",
+      "dimensions": {
+        "width": 1448,
+        "height": 1086
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.idle-panel-2-2x",
+      "path": "/assets/ui/idle-panel-2-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 1683434,
+      "sha256": "b3c38bded8eeffdeffa58c126416f3f5cdee60c2dda320e40b0adfccef12a345",
+      "dimensions": {
+        "width": 1448,
+        "height": 1086
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.idle-panel-3-2x",
+      "path": "/assets/ui/idle-panel-3-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 1789128,
+      "sha256": "7ccbb525fad7a4b94120e3b54b6e34f2330ced8cc85d1f6162950583e27afc18",
+      "dimensions": {
+        "width": 1448,
+        "height": 1086
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.idle-panel-4-2x",
+      "path": "/assets/ui/idle-panel-4-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 1683449,
+      "sha256": "52301dbc94c9e7ac8151a2bc132d8b2044ab067e86e9ca34dde4b596d5644429",
+      "dimensions": {
+        "width": 1448,
+        "height": 1086
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.idle-panel-5-2x",
+      "path": "/assets/ui/idle-panel-5-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 1667125,
+      "sha256": "4baacba3af745fa30c90108a60fbf27dfb15adaa2611e6ac976937597a257fc2",
+      "dimensions": {
+        "width": 1448,
+        "height": 1086
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.idle-panel-6-2x",
+      "path": "/assets/ui/idle-panel-6-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 1721843,
+      "sha256": "2036bc7a12cd0a26e00d41cf4ceb9551208147c2046ab0f22ce478df64163a84",
+      "dimensions": {
+        "width": 1448,
+        "height": 1086
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.idle-panel-7-2x",
+      "path": "/assets/ui/idle-panel-7-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 1812092,
+      "sha256": "02610f97f82c75fde0f810d6a911c181d95f75267053182072417abb010c65cf",
+      "dimensions": {
+        "width": 1448,
+        "height": 1086
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.idle-panel-8-2x",
+      "path": "/assets/ui/idle-panel-8-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 1792845,
+      "sha256": "d392fd4e070768b218af633fe3bfa6f1958dfd6e348076db03185c73ca21420f",
+      "dimensions": {
+        "width": 1448,
+        "height": 1086
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.idle-panel-9-2x",
+      "path": "/assets/ui/idle-panel-9-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 1680852,
+      "sha256": "7f6e33797a0337ddcd4bd4fd9e0b6286b670706e6d34f55667d4f56cb703a4d8",
+      "dimensions": {
+        "width": 1448,
+        "height": 1086
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.mechanic-armor-panel",
+      "path": "/assets/ui/mechanic-armor-panel.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 3014463,
+      "sha256": "f1c8a5ba363480e668fac6355f2d665880d5f1173a0d484b50dfa6916e148429",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      }
+    },
+    {
+      "id": "ui.mechanic-barrel-panel",
+      "path": "/assets/ui/mechanic-barrel-panel.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 2888887,
+      "sha256": "0fe05919011d2442f1f3d136bf611beddf11c6d3a82aa0a2a415d6572bfec502",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      }
+    },
+    {
+      "id": "ui.mechanic-dash-panel",
+      "path": "/assets/ui/mechanic-dash-panel.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 3095714,
+      "sha256": "fec6e4e9f316de41f0caea4e67719d5e4ff0f0b39776f485d90ffd7ec9ddd093",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      }
+    },
+    {
+      "id": "ui.mechanic-medicine-panel",
+      "path": "/assets/ui/mechanic-medicine-panel.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 3111432,
+      "sha256": "10035e388476107e2c3efdd183ef22e209445a081dd8b04a95cd822cbbcc0f88",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      }
+    },
+    {
+      "id": "ui.mechanic-powder-panel",
+      "path": "/assets/ui/mechanic-powder-panel.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 3184785,
+      "sha256": "ee31adc90c6ba78ce21b61f63012452f8828e5cfa96788cbf75973e729910502",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      }
+    },
+    {
+      "id": "ui.mechanic-wind-panel",
+      "path": "/assets/ui/mechanic-wind-panel.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 2977995,
+      "sha256": "1bdff01df55395a84dce5d9408fa8d8cb71b8558433804b87533613f10d4f00a",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      }
+    },
+    {
+      "id": "ui.menu-wallpaper-hero",
+      "path": "/assets/ui/menu-wallpaper-hero.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 2683882,
+      "sha256": "587c8fe8a40fc6496a5967e65e318f69e9e333ba02d6e41a92dc75acac85311c",
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      }
+    },
+    {
+      "id": "ui.result-defeat-wallpaper",
+      "path": "/assets/ui/result-defeat-wallpaper.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 2688500,
+      "sha256": "0b086ad608b2af609be87aa8e7f813b303780c34d7a5ecbc3470dc370e27d186",
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      }
+    },
+    {
+      "id": "ui.result-timeout-wallpaper",
+      "path": "/assets/ui/result-timeout-wallpaper.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 4090636,
+      "sha256": "8d41a22ceb1b272456bdd30c36cb74f88601575a31f5f484b09cd7fa483f16e2",
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      }
+    },
+    {
+      "id": "ui.victory-panel-1-2x",
+      "path": "/assets/ui/victory-panel-1-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 243731,
+      "sha256": "c744b53f5d32711d135a2a2ffb34c55e656ab519aa8779cc5fedbb9a35a819df",
+      "dimensions": {
+        "width": 432,
+        "height": 356
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.victory-panel-2-2x",
+      "path": "/assets/ui/victory-panel-2-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 234355,
+      "sha256": "b946f2340a35e22da99b871f988c47f8771116c5e71197bdbe693bd94ed3070c",
+      "dimensions": {
+        "width": 432,
+        "height": 356
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.victory-panel-3-2x",
+      "path": "/assets/ui/victory-panel-3-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 245880,
+      "sha256": "e26e44808ece0fc10e04add1d7097e2cbf4d470333a7abf2aad2511dc584ca92",
+      "dimensions": {
+        "width": 432,
+        "height": 356
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.victory-panel-4-2x",
+      "path": "/assets/ui/victory-panel-4-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 231608,
+      "sha256": "87be229af77f1117ac03c63300f5777a4a0b4276eb77f21cc55bc6cbe873064b",
+      "dimensions": {
+        "width": 432,
+        "height": 356
+      },
+      "pixelRatio": 2
+    },
+    {
+      "id": "ui.victory-panel-5-2x",
+      "path": "/assets/ui/victory-panel-5-2x.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 230015,
+      "sha256": "e420220ccc231b0dfd22aa016c5d1657b2cb4e289829aace3c3bb40f617e9718",
+      "dimensions": {
+        "width": 432,
+        "height": 356
+      },
+      "pixelRatio": 2
+    }
+  ]
+}
