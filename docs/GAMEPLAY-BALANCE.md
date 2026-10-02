@@ -11,7 +11,8 @@ Default profile:
 - player HP: 100;
 - player speed: 225 px/s;
 - front cooldown: 0.38 s;
-- broadside cooldown: 1.1 s.
+- broadside cooldown: 1.1 s;
+- normal artillery direction switch lock: 0.25 s (front vs. broadside).
 
 ## Extreme configurations
 
@@ -26,7 +27,7 @@ High-pressure matches receive more support drops and a tighter active-enemy cap.
 ## Support/powerups
 
 - **Medicine** repairs player hull.
-- **Living Powder** temporarily accelerates and boosts artillery; front + both broadsides can fire together.
+- **Living Powder** temporarily accelerates and boosts artillery; front + both broadsides can fire together, bypassing the normal 0.25 s direction lock.
 - **Wind at Your Back** increases movement speed and improves dash.
 - **Reinforced Hull** reduces incoming damage temporarily.
 - **Powder Barrel** destroys the triggering enemy and deals strong non-lethal splash damage to nearby enemies; the player's ship is immune to its own barrel.
@@ -41,4 +42,6 @@ Buff drops prefer an inactive buff; repeated buffs extend duration instead of be
 - barrel splash cannot chain-kill surrounding ships;
 - support systems never change the one-point-per-player-kill rule;
 - player/enemy ship bodies are solid; Shooter contact does not deal collision damage;
-- projectile substeps prevent boosted shots from tunnelling.
+- projectile substeps prevent boosted shots from tunnelling;
+- quick touch taps blocked only by the 0.25 s direction lock are buffered briefly so mobile controls do not feel unresponsive;
+- player destruction always plays the ship-explosion SFX, including lethal projectile hits, while suicide collisions avoid duplicating the same blast audio.

@@ -105,6 +105,9 @@ export class GameEngine {
   private streakClock = 0;
   private frontCooldown = 0;
   private broadsideCooldown = 0;
+  private weaponSwitchCooldown = 0;
+  private bufferedWeaponAction: Extract<GameAction, 'fire' | 'broadsideLeft' | 'broadsideRight'> | null = null;
+  private bufferedWeaponActionTime = 0;
   private frontCooldownMax = 1;
   private broadsideCooldownMax = 1;
   private dashCooldown = 0;
@@ -538,6 +541,9 @@ export class GameEngine {
     this.spawnClock += dt;
     this.frontCooldown = Math.max(0, this.frontCooldown - dt);
     this.broadsideCooldown = Math.max(0, this.broadsideCooldown - dt);
+    this.weaponSwitchCooldown = Math.max(0, this.weaponSwitchCooldown - dt);
+    this.bufferedWeaponActionTime = Math.max(0, this.bufferedWeaponActionTime - dt);
+    if (this.bufferedWeaponActionTime <= 0) this.bufferedWeaponAction = null;
     this.dashCooldown = Math.max(0, this.dashCooldown - dt);
     this.barrelCooldown = Math.max(0, this.barrelCooldown - dt);
     this.powderTime = Math.max(0, this.powderTime - dt);
@@ -608,22 +614,27 @@ export class GameEngine {
     this.player.outline.tint = this.armorTime > 0 ? 0xffd34d : 0x071b36;
     this.player.body.rotation = this.player.rotation - Math.PI / 2;
     this.player.body.y = Math.sin(this.elapsed * 4.6) * 1.6;
-    if (this.input.isDown('fire') && this.frontCooldown <= 0) this.fireFront();
+    const powderBoost = this.powderTime > 0;
+    if (this.input.isDown('fire') && this.frontCooldown <= 0 && this.canFireWeaponNow()) this.fireFront();
 
     const leftBroadsideDown = this.input.isDown('broadsideLeft');
     const rightBroadsideDown = this.input.isDown('broadsideRight');
-    if (this.powderTime > 0) {
+    if (powderBoost) {
       if (this.broadsideCooldown <= 0 && (leftBroadsideDown || rightBroadsideDown)) {
-        // Living Powder overclocks both gun decks: left and right can fire together.
+        // Living Powder is the deliberate exception to the normal one-direction-at-a-time rule:
+        // both gun decks may fire together and the front cannon can fire in the same moment.
         if (leftBroadsideDown) this.fireBroadside(-1, false);
         if (rightBroadsideDown) this.fireBroadside(1, false);
         this.broadsideCooldownMax = this.config.frontCooldown * EXTRA_BALANCE.powerups.powderFrontCooldownMultiplier;
         this.broadsideCooldown = this.broadsideCooldownMax;
       }
     } else {
-      // Normal rules: the two broadsides share one reload cycle, so only one side fires per cycle.
-      if (leftBroadsideDown && this.broadsideCooldown <= 0) this.fireBroadside(-1);
-      if (rightBroadsideDown && this.broadsideCooldown <= 0) this.fireBroadside(1);
+      // Normal rules: left/right share one reload and a short global weapon lock prevents
+      // front + broadside from firing at the same instant. Holding a key naturally waits
+      // for the lock; quick touch taps are buffered below so controls stay responsive.
+      if (leftBroadsideDown && this.broadsideCooldown <= 0 && this.canFireWeaponNow()) this.fireBroadside(-1);
+      if (rightBroadsideDown && this.broadsideCooldown <= 0 && this.canFireWeaponNow()) this.fireBroadside(1);
+      this.consumeBufferedWeaponAction();
     }
   }
 
@@ -1020,7 +1031,7 @@ export class GameEngine {
         this.playShipContactSound();
         const chaserDamageMultiplier = clamp(1 - Math.max(0, this.pressure - 1) * 0.1, 0.84, 1);
         this.damageShip(this.player, this.config.chaserCollisionDamage * chaserDamageMultiplier);
-        this.destroyEnemy(enemy, false);
+        this.destroyEnemy(enemy, false, this.player.alive);
       }
     }
   }
@@ -1121,7 +1132,7 @@ export class GameEngine {
       if (playerInvolved && chaser?.alive) {
         const chaserDamageMultiplier = clamp(1 - Math.max(0, this.pressure - 1) * 0.1, 0.84, 1);
         this.damageShip(this.player, this.config.chaserCollisionDamage * chaserDamageMultiplier);
-        this.destroyEnemy(chaser, false);
+        this.destroyEnemy(chaser, false, this.player.alive);
         return false;
       }
 
@@ -1158,10 +1169,42 @@ export class GameEngine {
     return this.islands.some((island) => island.colliders.some((collider) => distSq(x, y, collider.x, collider.y) < (radius + collider.radius) ** 2));
   }
 
+  private canFireWeaponNow(): boolean {
+    return this.powderTime > 0 || this.weaponSwitchCooldown <= 0;
+  }
+
+  private markWeaponFired(): void {
+    if (this.powderTime <= 0) this.weaponSwitchCooldown = EXTRA_BALANCE.weapons.switchLockSeconds;
+  }
+
+  private bufferWeaponAction(action: Extract<GameAction, 'fire' | 'broadsideLeft' | 'broadsideRight'>): void {
+    this.bufferedWeaponAction = action;
+    this.bufferedWeaponActionTime = EXTRA_BALANCE.weapons.inputBufferSeconds;
+  }
+
+  private consumeBufferedWeaponAction(): void {
+    if (!this.bufferedWeaponAction || this.bufferedWeaponActionTime <= 0 || !this.canFireWeaponNow()) return;
+    const action = this.bufferedWeaponAction;
+    if (action === 'fire' && this.frontCooldown <= 0) {
+      this.bufferedWeaponAction = null;
+      this.bufferedWeaponActionTime = 0;
+      this.fireFront();
+    } else if (action === 'broadsideLeft' && this.broadsideCooldown <= 0) {
+      this.bufferedWeaponAction = null;
+      this.bufferedWeaponActionTime = 0;
+      this.fireBroadside(-1);
+    } else if (action === 'broadsideRight' && this.broadsideCooldown <= 0) {
+      this.bufferedWeaponAction = null;
+      this.bufferedWeaponActionTime = 0;
+      this.fireBroadside(1);
+    }
+  }
+
   private fireFront(): void {
     const powderBoost = this.powderTime > 0;
     this.frontCooldownMax = this.config.frontCooldown * (powderBoost ? EXTRA_BALANCE.powerups.powderFrontCooldownMultiplier : 1);
     this.frontCooldown = this.frontCooldownMax;
+    this.markWeaponFired();
     const muzzleX = this.player.x + Math.cos(this.player.rotation) * 28;
     const muzzleY = this.player.y + Math.sin(this.player.rotation) * 28;
     this.createProjectile(
@@ -1179,6 +1222,7 @@ export class GameEngine {
 
   private fireBroadside(side: -1 | 1, manageCooldown = true): void {
     const powderBoost = this.powderTime > 0;
+    this.markWeaponFired();
     if (manageCooldown) {
       this.broadsideCooldownMax = powderBoost
         ? this.config.frontCooldown * EXTRA_BALANCE.powerups.powderFrontCooldownMultiplier
@@ -1431,6 +1475,9 @@ export class GameEngine {
       if (ship.id === PLAYER_ID) {
         ship.alive = false;
         this.explosion(ship.x, ship.y);
+        // Player destruction always owns its explosion audio. This guarantees a
+        // lethal cannonball has a proper final blast instead of ending on hit SFX only.
+        this.playSound('explosion');
         this.finish('destroyed');
       } else {
         this.destroyEnemy(ship as EnemyEntity, true);
@@ -1861,7 +1908,7 @@ export class GameEngine {
     this.playIdleChirp();
   }
 
-  private destroyEnemy(enemy: EnemyEntity, awardPoint: boolean): void {
+  private destroyEnemy(enemy: EnemyEntity, awardPoint: boolean, playExplosionAudio = true): void {
     if (!enemy.alive) return;
     enemy.alive = false;
     if (awardPoint) {
@@ -1877,7 +1924,7 @@ export class GameEngine {
     this.spawnActionLines(enemy.x, enemy.y, this.uiRng.range(0, Math.PI * 2), enemy.kind === 'chaser' ? 0xff6b66 : 0xd978ff, 7);
     this.explosion(enemy.x, enemy.y);
     enemy.view.destroy({ children: true });
-    this.playSound('explosion');
+    if (playExplosionAudio) this.playSound('explosion');
   }
 
   private updateHealth(ship: ShipEntity): void {
@@ -2252,7 +2299,7 @@ export class GameEngine {
     projectiles: { owner: 'player' | 'enemy'; x: number; y: number; vx: number; vy: number; damage: number }[];
     pickups: { kind: PickupKind; x: number; y: number; lifetime: number }[];
     barrels: { x: number; y: number; armTime: number; lifetime: number }[];
-    cooldowns: { front: number; broadside: number; dash: number; barrel: number };
+    cooldowns: { front: number; broadside: number; weaponSwitch: number; dash: number; barrel: number };
     buffs: { powder: number; wind: number; armor: number };
   } {
     return {
@@ -2274,7 +2321,7 @@ export class GameEngine {
       projectiles: this.projectiles.filter((projectile) => projectile.alive).map((projectile) => ({ owner: projectile.owner, x: projectile.x, y: projectile.y, vx: projectile.vx, vy: projectile.vy, damage: projectile.damage })),
       pickups: this.pickups.filter((pickup) => pickup.alive).map((pickup) => ({ kind: pickup.kind, x: pickup.x, y: pickup.y, lifetime: pickup.lifetime })),
       barrels: this.powderBarrels.filter((barrel) => barrel.alive).map((barrel) => ({ x: barrel.x, y: barrel.y, armTime: barrel.armTime, lifetime: barrel.lifetime })),
-      cooldowns: { front: this.frontCooldown, broadside: this.broadsideCooldown, dash: this.dashCooldown, barrel: this.barrelCooldown },
+      cooldowns: { front: this.frontCooldown, broadside: this.broadsideCooldown, weaponSwitch: this.weaponSwitchCooldown, dash: this.dashCooldown, barrel: this.barrelCooldown },
       buffs: { powder: this.powderTime, wind: this.windTime, armor: this.armorTime },
     };
   }
@@ -2359,10 +2406,16 @@ export class GameEngine {
     // Touch taps can begin and end between two ticker frames. Trigger discrete
     // actions on pointer-down so a valid tap is never lost; cooldowns still
     // prevent a held button from double-firing on the following simulation tick.
-    if (action === 'fire' && this.frontCooldown <= 0) this.fireFront();
-    else if (action === 'broadsideLeft' && this.broadsideCooldown <= 0) this.fireBroadside(-1);
-    else if (action === 'broadsideRight' && this.broadsideCooldown <= 0) this.fireBroadside(1);
-    else if (action === 'dash' && this.dashCooldown <= 0) this.performDash();
+    if (action === 'fire' && this.frontCooldown <= 0) {
+      if (this.canFireWeaponNow()) this.fireFront();
+      else this.bufferWeaponAction('fire');
+    } else if (action === 'broadsideLeft' && this.broadsideCooldown <= 0) {
+      if (this.canFireWeaponNow()) this.fireBroadside(-1);
+      else this.bufferWeaponAction('broadsideLeft');
+    } else if (action === 'broadsideRight' && this.broadsideCooldown <= 0) {
+      if (this.canFireWeaponNow()) this.fireBroadside(1);
+      else this.bufferWeaponAction('broadsideRight');
+    } else if (action === 'dash' && this.dashCooldown <= 0) this.performDash();
     else if (action === 'barrel' && this.barrelCooldown <= 0) this.deployPowderBarrel();
   }
   get isPaused(): boolean { return this.paused; }

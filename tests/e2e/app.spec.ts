@@ -211,6 +211,14 @@ test.describe('application and gameplay', () => {
 
     await holdKeysTogether(page, ['KeyQ']);
     state = await debugState(page);
+    // The global 0.25 s weapon lock prevents an immediate front + broadside burst.
+    expect(state.cooldowns.weaponSwitch).toBeGreaterThan(0);
+
+    // Once the lock clears, a held broadside fires normally.
+    await page.keyboard.down('KeyQ');
+    await page.waitForTimeout(280);
+    await page.keyboard.up('KeyQ');
+    state = await debugState(page);
     const playerShots = state.projectiles.filter((shot: any) => shot.owner === 'player');
     // The earlier front shot may already have collided or expired; the broadside
     // itself must still contribute its three parallel cannonballs.

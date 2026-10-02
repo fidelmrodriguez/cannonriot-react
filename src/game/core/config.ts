@@ -50,6 +50,10 @@ export const EXTRA_BALANCE = {
     baseMedicine: 20,
     baseBuffDuration: 6.8,
   },
+  weapons: {
+    switchLockSeconds: 0.25,
+    inputBufferSeconds: 0.32,
+  },
   powerups: {
     powderFrontCooldownMultiplier: 0.62,
     powderFrontDamageMultiplier: 1.15,
