@@ -49,6 +49,19 @@ export function TouchControls({ language, onAction, dashReload, barrelReload, ba
     const maxRadius = Math.max(24, rect.width * 0.34);
     let dx = event.clientX - centerX;
     let dy = event.clientY - centerY;
+
+    // When a rotation-locked phone still reports a portrait viewport, CSS rotates
+    // the whole app 90deg into a virtual landscape canvas. Pointer coordinates
+    // remain in the browser's portrait axes, so convert them back to the app's
+    // logical axes before driving the joystick.
+    const virtualLandscape = window.matchMedia('(any-pointer: coarse) and (orientation: portrait)').matches;
+    if (virtualLandscape) {
+      const screenDx = dx;
+      const screenDy = dy;
+      dx = screenDy;
+      dy = -screenDx;
+    }
+
     const distance = Math.hypot(dx, dy);
     if (distance > maxRadius) {
       const scale = maxRadius / distance;

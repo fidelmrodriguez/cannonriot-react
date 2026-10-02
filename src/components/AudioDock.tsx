@@ -7,6 +7,7 @@ interface Props {
   onToggleMusic(): void;
   onToggleSfx(): void;
   onLanguage(language: Language): void;
+  inGame?: boolean;
 }
 
 function MusicIcon({ muted }: { muted: boolean }) {
@@ -17,8 +18,8 @@ function SpeakerIcon({ muted }: { muted: boolean }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9c1 1 1 5 0 6M18.5 6.5c3 3 3 8 0 11"/>{muted && <path d="M3 3l18 18" className="mute-slash"/>}</svg>;
 }
 
-export function AudioDock({ musicMuted, sfxMuted, language, onToggleMusic, onToggleSfx, onLanguage }: Props) {
-  return <aside className="audio-dock" aria-label={t('audio.quick', {}, language)}>
+export function AudioDock({ musicMuted, sfxMuted, language, onToggleMusic, onToggleSfx, onLanguage, inGame = false }: Props) {
+  return <aside className={`audio-dock ${inGame ? 'audio-dock-game' : ''}`} aria-label={t('audio.quick', {}, language)}>
     <div className="language-dock" aria-label={t('language.select', {}, language)}>
       {LANGUAGES.map((item) => <button
         key={item.id}

@@ -444,6 +444,7 @@ export default function App() {
       onToggleMusic={toggleMusic}
       onToggleSfx={toggleSfx}
       onLanguage={changeLanguage}
+      inGame={screen === 'game'}
     />
     <LandscapeLock />
   </div>;

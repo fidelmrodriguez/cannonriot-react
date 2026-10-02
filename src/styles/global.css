@@ -3255,10 +3255,6 @@ body {
   }
 }
 
-/* Do not hide touch controls merely because a fine pointer also exists.
-   Hybrid/touch devices can report both `any-pointer: coarse` and `any-pointer: fine`;
-   the base rule already keeps controls hidden on non-touch desktops. */
-
 @media (any-pointer: coarse) {
   .control-grid {
     display: none !important;
@@ -3866,3 +3862,50 @@ body {
     box-shadow: 3px 3px 0 var(--ink) !important;
   }
 }
+
+/* Touch gameplay: keep language/audio controls clear of the attack pad.
+   The compact horizontal dock also leaves the center/right combat area readable. */
+@media (any-pointer: coarse) {
+  .audio-dock-game {
+    top: 94px !important;
+    right: max(8px, env(safe-area-inset-right)) !important;
+    bottom: auto !important;
+    transform: none !important;
+    flex-direction: row !important;
+    gap: 4px !important;
+  }
+
+  .audio-dock-game button,
+  .audio-dock-game .language-button {
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    padding: 4px !important;
+    border-width: 2px !important;
+    box-shadow: 2px 2px 0 var(--ink) !important;
+  }
+
+  .audio-dock-game .language-button .flag-image {
+    width: 24px !important;
+    height: 16px !important;
+  }
+
+  .audio-dock-game .language-button small {
+    font-size: .32rem !important;
+  }
+
+  .audio-dock-game button svg {
+    width: 21px !important;
+    height: 21px !important;
+  }
+}
+
+@media (any-pointer: coarse) and (max-height: 390px) {
+  .audio-dock-game {
+    top: 80px !important;
+  }
+}
+
+/* Hybrid touch devices may expose a fine pointer as well. Do not hide the
+   virtual controls merely because a mouse/stylus is also reported. */
+
