@@ -4,6 +4,10 @@ Cannon Riot is a top-down 2D naval arena shooter built for the **React & PixiJS 
 
 > Portuguese documentation: [README.pt-BR.md](README.pt-BR.md)
 
+## Netlify
+
+https://cannonriot-react.netlify.app/
+
 ## Run locally
 
 Requirements:

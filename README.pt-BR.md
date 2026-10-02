@@ -4,6 +4,10 @@ Cannon Riot é um shooter naval 2D top-down criado para o desafio técnico **Rea
 
 > Documentação padrão da entrega em inglês: [README.md](README.md)
 
+## Netlify
+
+https://cannonriot-react.netlify.app/
+
 ## Executar localmente
 
 Requisitos:
