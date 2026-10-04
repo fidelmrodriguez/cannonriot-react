@@ -16,7 +16,7 @@ A UI usa bordas irregulares, sombras deslocadas e painéis de pôster, mas o tex
 
 ## Composição desktop vs touch
 
-Desktop mantém a composição cinematográfica de wallpaper e densidade decorativa completa. Layouts touch/coarse-pointer são reorganizados apenas em breakpoints touch: menu/painéis recebem espaçamento/scroll seguros e o gameplay usa setas de navegação + dash à esquerda e artilharia à direita.
+Desktop mantém a composição cinematográfica de wallpaper e densidade decorativa completa. Layouts touch/coarse-pointer são reorganizados apenas em breakpoints touch: menu/painéis recebem espaçamento/scroll seguros e o gameplay usa um D-pad compacto de cinco zonas + dash à esquerda e artilharia à direita; as diagonais superiores são zonas explícitas de avançar+girar com um único polegar.
 
 O renderer mobile reduz de propósito decoração de água/efeitos e ignora blur filters pesados. A direção de arte é preservada por forma, contraste e cor, sem exigir pós-processamento de desktop em celulares mais fracos.
 

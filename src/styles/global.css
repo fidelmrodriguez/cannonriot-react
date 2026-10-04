@@ -4609,3 +4609,117 @@ body {
     font-size: .36rem !important;
   }
 }
+
+
+/* ========================================================================== */
+/* Mobile/tablet steering v3: one-thumb diagonal D-pad.                        */
+/* Fine-pointer/desktop layout remains untouched.                              */
+/* ========================================================================== */
+@media (any-pointer: coarse) {
+  .touch-nav-zone {
+    left: max(8px, env(safe-area-inset-left)) !important;
+    bottom: max(8px, env(safe-area-inset-bottom)) !important;
+    width: 176px !important;
+    height: 116px !important;
+  }
+
+  .touch-steering-pad {
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 176px !important;
+    height: 116px !important;
+  }
+
+  .touch-steer,
+  .touch-dash {
+    width: 54px !important;
+    min-width: 54px !important;
+    height: 54px !important;
+    min-height: 54px !important;
+    margin: 0 !important;
+    transform: none !important;
+    touch-action: none !important;
+  }
+
+  .touch-forward-left {
+    left: 0 !important;
+    top: 0 !important;
+    bottom: auto !important;
+    background: #fff6d6 !important;
+  }
+
+  .touch-forward {
+    left: 61px !important;
+    top: 0 !important;
+    bottom: auto !important;
+    background: #fff6d6 !important;
+  }
+
+  .touch-forward-right {
+    left: 122px !important;
+    top: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+    background: #fff6d6 !important;
+  }
+
+  .touch-turn-left {
+    left: 0 !important;
+    top: 61px !important;
+    bottom: auto !important;
+  }
+
+  .touch-turn-right {
+    left: 122px !important;
+    right: auto !important;
+    top: 61px !important;
+    bottom: auto !important;
+  }
+
+  .touch-dash {
+    left: 61px !important;
+    right: auto !important;
+    top: 61px !important;
+    bottom: auto !important;
+    border-radius: 14px !important;
+  }
+
+  .touch-forward-left strong,
+  .touch-forward-right strong {
+    font-size: 1.55rem !important;
+  }
+
+  .touch-steer:active,
+  .touch-dash:active,
+  .touch-forward-left:active,
+  .touch-forward:active,
+  .touch-forward-right:active,
+  .touch-turn-left:active,
+  .touch-turn-right:active {
+    transform: translate(1px, 2px) !important;
+    box-shadow: 1px 2px 0 rgba(7,16,24,.82) !important;
+  }
+}
+
+@media (any-pointer: coarse) and (max-height: 430px) {
+  .touch-nav-zone,
+  .touch-steering-pad {
+    width: 158px !important;
+    height: 104px !important;
+  }
+
+  .touch-steer,
+  .touch-dash {
+    width: 48px !important;
+    min-width: 48px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+  }
+
+  .touch-forward-left { left: 0 !important; top: 0 !important; }
+  .touch-forward { left: 55px !important; top: 0 !important; }
+  .touch-forward-right { left: 110px !important; top: 0 !important; }
+  .touch-turn-left { left: 0 !important; top: 55px !important; }
+  .touch-dash { left: 55px !important; top: 55px !important; }
+  .touch-turn-right { left: 110px !important; top: 55px !important; }
+}

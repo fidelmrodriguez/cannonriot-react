@@ -118,7 +118,7 @@ test.describe('application and gameplay', () => {
   test('desktop and touch controls remain visible and usable', async ({ page, isMobile }) => {
     if (isMobile) {
       await expect(page.locator('.touch-menu-hint')).toBeVisible();
-      await expect(page.getByText(/Steering arrows on the left/i)).toBeVisible();
+      await expect(page.getByText(/D-pad with diagonal steering on the left/i)).toBeVisible();
     } else {
       await expect(page.locator('.control-grid span').filter({ hasText: /SPACE.*FRONT SHOT/i })).toBeVisible();
       await expect(page.locator('.control-grid span').filter({ hasText: /Q \/ E.*BROADSIDE/i })).toBeVisible();
@@ -136,33 +136,53 @@ test.describe('application and gameplay', () => {
     }
   });
 
-  test('touch steering keeps forward and turn pressed at the same time', async ({ page, isMobile }) => {
-    test.skip(!isMobile, 'Multitouch steering assertion.');
+  test('touch D-pad supports one-thumb diagonal steering and independent multitouch', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'Touch steering assertion.');
     await startGame(page);
-    await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.setPlayerPose(640, 360, 0));
-    const before = await debugState(page);
 
-    await page.locator('.touch-forward').evaluate((button) => {
+    await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.setPlayerPose(640, 360, 0));
+    const beforeLeft = await debugState(page);
+    await page.locator('.touch-forward-left').evaluate((button) => {
       button.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 41, pointerType: 'touch', isPrimary: true, buttons: 1 }));
     });
-    await page.locator('.touch-turn-left').evaluate((button) => {
-      button.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 42, pointerType: 'touch', isPrimary: false, buttons: 1 }));
-    });
     await page.waitForTimeout(180);
-    const combined = await debugState(page);
-
-    await page.locator('.touch-turn-left').evaluate((button) => {
-      button.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 42, pointerType: 'touch', isPrimary: false }));
-    });
-    await page.waitForTimeout(100);
-    const forwardOnly = await debugState(page);
-    await page.locator('.touch-forward').evaluate((button) => {
+    const diagonalLeft = await debugState(page);
+    await page.locator('.touch-forward-left').evaluate((button) => {
       button.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 41, pointerType: 'touch', isPrimary: true }));
     });
+    expect(diagonalLeft.player.rotation).toBeLessThan(beforeLeft.player.rotation);
+    expect(diagonalLeft.player.x).toBeGreaterThan(beforeLeft.player.x);
 
-    expect(combined.player.rotation).toBeLessThan(before.player.rotation);
-    expect(combined.player.x).toBeGreaterThan(before.player.x);
-    expect(forwardOnly.player.x).toBeGreaterThan(combined.player.x);
+    await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.setPlayerPose(640, 360, 0));
+    const beforeRight = await debugState(page);
+    await page.locator('.touch-forward-right').evaluate((button) => {
+      button.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 42, pointerType: 'touch', isPrimary: true, buttons: 1 }));
+    });
+    await page.waitForTimeout(180);
+    const diagonalRight = await debugState(page);
+    await page.locator('.touch-forward-right').evaluate((button) => {
+      button.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 42, pointerType: 'touch', isPrimary: true }));
+    });
+    expect(diagonalRight.player.rotation).toBeGreaterThan(beforeRight.player.rotation);
+    expect(diagonalRight.player.x).toBeGreaterThan(beforeRight.player.x);
+
+    await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.setPlayerPose(640, 360, 0));
+    await page.locator('.touch-forward').evaluate((button) => {
+      button.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 51, pointerType: 'touch', isPrimary: true, buttons: 1 }));
+    });
+    await page.locator('.touch-turn-left').evaluate((button) => {
+      button.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 52, pointerType: 'touch', isPrimary: false, buttons: 1 }));
+    });
+    await page.waitForTimeout(150);
+    const twoFingerCombined = await debugState(page);
+    await page.locator('.touch-turn-left').evaluate((button) => {
+      button.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 52, pointerType: 'touch', isPrimary: false }));
+    });
+    await page.locator('.touch-forward').evaluate((button) => {
+      button.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 51, pointerType: 'touch', isPrimary: true }));
+    });
+    expect(twoFingerCombined.player.rotation).toBeLessThan(0);
+    expect(twoFingerCombined.player.x).toBeGreaterThan(640);
   });
 
   test('landscape mobile controls stay inside the viewport', async ({ page, isMobile }) => {

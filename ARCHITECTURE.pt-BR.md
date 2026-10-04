@@ -70,7 +70,7 @@ Em E2E, `?e2e=1` fixa a seed em `1337` e expõe `advanceTime(seconds)`, que avan
 
 ## Modelo de input
 
-Teclado e touch mapeiam para o mesmo conjunto de `GameAction`. Desktop usa teclas mantidas; os controles touch mantêm um registro independente de ponteiro por ação, então **avançar + esquerda/direita** podem permanecer ativos ao mesmo tempo e o movimento pode coexistir com ataques. Pointer capture é usado quando disponível, com limpeza por ponteiro em release/cancel/lost capture.
+Teclado e touch mapeiam para o mesmo conjunto de `GameAction`. Desktop usa teclas mantidas; no touch, o registro é de ponteiro para múltiplas ações. Assim, um único toque nas zonas diagonais ativa **avançar + esquerda** ou **avançar + direita**, enquanto ponteiros separados ainda podem combinar direção e ataques. Pointer capture é usado quando disponível, com limpeza por ponteiro em release/cancel/lost capture.
 
 A artilharia normal usa recargas independentes de frontal/lateral e um lock global curto:
 

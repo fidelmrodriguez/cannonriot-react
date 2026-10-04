@@ -131,8 +131,8 @@ Os controles ficam disponíveis somente com `?dev=1`/`?e2e=1`. **Restore calm se
 
 - Composição desktop fica separada dos overrides exclusivos de touch.
 - Menus e painéis de dados mobile/tablet podem rolar em vez de esconder conteúdo obrigatório.
-- Gameplay touch usa setas esquerda/avançar/direita + dash dedicado à esquerda e artilharia/barril à direita.
-- O rastreamento por ponteiro permite **avançar + esquerda/direita** simultaneamente, além de movimento + ataque via multitouch.
+- Gameplay touch usa um D-pad de cinco zonas (esquerda, avançar+esquerda, avançar, avançar+direita, direita) + dash dedicado à esquerda e artilharia/barril à direita.
+- Um único toque pode manter múltiplas ações, então as zonas diagonais fornecem **avançar + esquerda/direita** com um polegar; o rastreamento por ponteiro continua permitindo movimento + ataque via multitouch.
 - Renderer touch usa resolução 1, sem antialias/blur caro, densidade visual reduzida e limite de 50 FPS.
 - Arena/HUD autoritativos continuam landscape e as regras de gameplay não mudam.
 

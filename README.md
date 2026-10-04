@@ -59,7 +59,7 @@ npx playwright install chromium
 
 ### Touch/mobile/tablet
 
-Touch devices use holdable steering buttons on the left — **turn left, move forward, turn right** — plus a dedicated dash button. Front/left/right cannon controls and the powder-barrel button stay on the right. Each touch contact is tracked independently, so **forward + left** and **forward + right** can be held at the same time; movement and attacks can also stay pressed together with multitouch.
+Touch devices use a compact steering D-pad on the left. In addition to **turn left**, **move forward** and **turn right**, dedicated **↖ forward + left** and **↗ forward + right** diagonal zones let one thumb steer and advance at the same time. Dash stays inside the left cluster, while front/left/right cannon controls and the powder-barrel button stay on the right. Each touch contact can own one or more actions, so diagonal steering also coexists with movement + attack multitouch.
 
 The gameplay layout is landscape-first. Touch breakpoints also apply a mobile performance profile without changing simulation rules.
 

@@ -16,7 +16,7 @@ The UI deliberately uses uneven borders, offset shadows and poster-like panels, 
 
 ## Desktop vs touch composition
 
-Desktop keeps the cinematic wallpaper composition and full decorative density. Touch/coarse-pointer layouts are reorganized only inside touch breakpoints: menu/data panels get mobile-safe spacing/scrolling, and gameplay uses steering arrows + dash on the left with artillery on the right.
+Desktop keeps the cinematic wallpaper composition and full decorative density. Touch/coarse-pointer layouts are reorganized only inside touch breakpoints: menu/data panels get mobile-safe spacing/scrolling, and gameplay uses a compact five-zone steering D-pad + dash on the left with artillery on the right; the upper diagonals are explicit one-thumb forward+turn zones.
 
 The mobile renderer intentionally reduces purely decorative water/effect density and skips heavy blur filters. The art direction is preserved through shape, contrast and color rather than forcing desktop-level post-processing on weaker phones.
 

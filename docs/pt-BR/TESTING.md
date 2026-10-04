@@ -41,7 +41,7 @@ Helpers disponíveis:
 2. inglês padrão + troca EN/PT/ES ao vivo durante partida;
 3. identidade local persistente;
 4. validação/persistência de options;
-5. controles desktop e setas/artilharia touch, incluindo avançar + esquerda/direita simultaneamente;
+5. controles desktop e D-pad/artilharia touch, incluindo direção diagonal avançar + esquerda/direita com um único polegar e combinações multitouch;
 6. controles/HUD touch dentro da viewport landscape;
 7. limites de movimento e colisão com ilha;
 8. rotação e ataque à distância do Shooter;
@@ -66,7 +66,7 @@ Helpers disponíveis:
 27. persistência/recuperação da outbox quando o backend está indisponível no game over;
 28. requests fora de ordem mantendo a página de ranking selecionada.
 
-Os seletores mobile foram atualizados para a UI de setas; a suíte não espera mais o joystick virtual removido.
+Os seletores mobile apontam para o D-pad atual; a suíte não espera mais o joystick virtual removido e inclui regressão para direção diagonal com um único polegar.
 
 ## Isolamento de rede e estado
 

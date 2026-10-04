@@ -41,7 +41,7 @@ Available helpers:
 2. default English + live EN/PT/ES switching during a running match;
 3. persistent local player identity;
 4. options validation/persistence;
-5. desktop controls and touch arrow/artillery controls, including simultaneous forward + left/right steering;
+5. desktop controls and touch D-pad/artillery controls, including one-thumb diagonal forward + left/right steering and multitouch combinations;
 6. touch controls/HUD staying inside the landscape viewport;
 7. movement bounds and island collision;
 8. rotation and Shooter ranged attack;
@@ -66,7 +66,7 @@ Available helpers:
 27. unavailable-at-game-over outbox persistence/recovery;
 28. out-of-order ranking requests preserving the selected page.
 
-The mobile selectors were updated with the steering-arrow UI; the suite no longer expects the removed virtual joystick.
+The mobile selectors target the current D-pad UI; the suite no longer expects the removed virtual joystick and includes regression coverage for one-thumb diagonal steering.
 
 ## Network isolation and state
 
