@@ -2,37 +2,54 @@
 
 ## Overview
 
-Cannon Riot separates application UI, persistent/remote data concerns and real-time combat responsibilities.
+Cannon Riot separates application UI, persistent/remote data concerns and real-time combat.
 
-- **React** owns navigation, menu/forms, result state, semantic HUD, audio/language controls, options and remote-data panels.
-- **PixiJS** owns the visible combat arena, ships, projectiles, obstacles, health bars and real-time effects.
-- **GameEngine** is the match orchestrator. Continuous combat state stays there and never lives in React state frame-by-frame.
+- **React** owns navigation, menu/forms, options, result UI, semantic HUD, audio/language controls, jukebox and ranking/history panels.
+- **PixiJS** owns the real-time arena: ships, islands, projectiles, health bars, procedural water decoration and combat effects.
+- **GameEngine** is the authoritative match orchestrator. Continuous combat state stays outside React.
 - **InputManager** owns keyboard/touch action state.
-- **TanStack Query + Axios** own remote ranking/history requests.
-- **MSW** provides the REST simulation in development, preview, tests and deployed builds.
-- **localStorage** persists settings, language/audio preferences, local player identity, mock-confirmed records, the last completed result and the pending-match outbox.
+- **TanStack Query + Axios** own ranking/history requests and match registration.
+- **MSW** implements the REST simulation in development, preview, E2E and the published build.
+- **localStorage** persists gameplay settings, language/audio preferences, player identity, mock-confirmed records, the last completed result, network demo scenario and pending-match outbox.
+
+The authoritative gameplay world is always 1280×720; the DOM/canvas scales around it.
 
 ## React/PixiJS lifecycle
 
-`GameScreen` creates one `GameEngine` for one match. The engine is destroyed on unmount. React Strict Mode therefore exercises mount → destroy → mount without intentionally keeping duplicate Pixi applications or listeners alive.
+`GameScreen` creates one `GameEngine` per match. On unmount the engine destroys its Pixi application and clears listeners/resources. This design is compatible with React Strict Mode mount → destroy → mount behavior.
 
-The engine reports a throttled snapshot to React roughly every 80 ms. The Pixi ticker remains the source of truth for continuous movement, projectile state, AI, cooldowns and combat effects.
+React receives a throttled gameplay snapshot roughly every 80 ms for HUD data. The Pixi ticker remains authoritative for movement, AI, cooldowns, projectiles, buffs and effects.
 
 Cleanup includes:
 
-- removing the main ticker callback;
-- removing active comic-panel ticker callbacks;
-- detaching keyboard listeners;
-- removing blur/visibility listeners;
-- disconnecting the ResizeObserver;
-- destroying the Pixi application/container tree;
-- clearing audio references.
+- main ticker callback;
+- active comic-panel/effect ticker callbacks via container teardown;
+- keyboard input listeners;
+- blur/visibility listeners;
+- `ResizeObserver`;
+- Pixi display tree/application;
+- runtime audio references.
+
+Leaving combat before a completion event simply destroys the engine; no match registration occurs.
+
+## Boot and asset preload
+
+`preloadAllAssets()` runs before normal menu use. It starts the MSW worker and preloads:
+
+1. gameplay/reaction textures through Pixi `Assets`;
+2. menu/result wallpapers through DOM `Image`;
+3. SFX through `fetch` + object URLs;
+4. soundtrack tracks through the same audio path.
+
+Pixi texture loading uses concurrency 3 and up to three attempts per texture. Permanent failures log `[Cannon Riot preload]` diagnostics, including the resolved URL and an HTTP `HEAD` check, then propagate to the visible boot error/retry state.
+
+The loader keeps original asset URLs; it does not append cache-busting query strings.
 
 ## Match configuration snapshot
 
-Options persist a sanitized typed configuration. `GameScreen` takes a `structuredClone` before constructing `GameEngine`. A running match therefore cannot observe later settings changes.
+Options persist a sanitized `GameConfig`. `GameScreen` takes a `structuredClone` before constructing the engine, so a running match cannot observe later settings changes.
 
-The editable leaderboard key is intentionally:
+The leaderboard comparison key deliberately uses only:
 
 ```ts
 {
@@ -41,89 +58,133 @@ The editable leaderboard key is intentionally:
 }
 ```
 
-All other gameplay constants are versioned code/balance parameters rather than user-controlled leaderboard dimensions.
+All remaining values are versioned code/balance constants, not player-controlled leaderboard dimensions.
 
 ## Time model
 
-Pixi ticker `deltaMS` is converted to seconds and clamped before simulation updates. Movement, rotation, AI, cooldowns, projectile lifetime, buff lifetime, spawn cadence and match duration all use elapsed simulation time.
+Ticker `deltaMS` is converted to seconds and clamped to at most 0.05 s for each simulation update. Movement, AI, cooldowns, projectile lifetime, buffs, support timers, spawn cadence and match duration all use simulation time.
 
-The match duration recorded at the end comes from the simulation clock. Paused time is not included because paused ticks do not advance `elapsed`.
+Paused ticks do not advance `elapsed`, so stored match duration excludes paused time.
 
-For E2E, `?e2e=1` fixes the seed and exposes a test-only `advanceTime(seconds)` hook that advances the same simulation update path at fixed steps.
+For E2E, `?e2e=1` fixes the seed to `1337` and exposes a fixed-step `advanceTime(seconds)` hook that calls the same simulation update path.
 
-## Pause semantics
+## Input model
 
-Manual pause and automatic blur/hidden-tab pause call the same pause path. Pausing disables and clears input and sets ticker speed to zero. Returning focus does not auto-resume. The player must explicitly resume, preventing accumulated held input from firing after focus returns.
+Keyboard and touch map to the same `GameAction` set. Desktop uses held keys; touch buttons use pointer capture so simultaneous movement and attack inputs can coexist.
+
+Normal artillery uses independent front/broadside reloads plus a short global switch lock:
+
+- front cooldown: 0.38 s by default;
+- shared broadside cooldown: 1.10 s by default;
+- front ↔ broadside switch lock: 0.25 s;
+- quick touch action buffer: 0.32 s.
+
+Living Powder deliberately bypasses the normal switch rule and auto-fires front + both broadsides until the buff expires.
+
+## Dash state and damage semantics
+
+Dash is a timed state, not an instant teleport. Its default active duration is 0.28 s. Movement is advanced in small steps so arena/island collision remains authoritative.
+
+`damageShip()` ignores damage to the player only while `isDashing()` is true. There is no grace period after `finishDash()`.
+
+If a dash intersects a live Chaser, the Chaser self-destructs, the player takes no collision damage and the dash may continue. The event remains non-scoring to preserve the challenge rule that Chaser self-destruction against the player does not award a point.
 
 ## Collision model
 
-The authoritative arena is 1280×720. Ship movement is clamped to the visible arena. Island visuals are irregular procedural layers, while collision uses multiple circles per island.
-
-Interactions are separate:
+Ship and projectile interactions are separated into explicit checks:
 
 - ship × arena bounds;
-- ship × island;
+- ship × island colliders;
 - ship × ship;
 - projectile × island;
-- projectile × arena bounds;
+- projectile × arena exit;
 - player projectile × live enemy;
 - enemy projectile × live player.
 
-Projectiles use substeps so high-speed boosted shots cannot tunnel through small colliders. A projectile is marked inactive/removed immediately after its first valid hit.
+Island art is procedural/irregular, while collision is represented by stable circle colliders. Projectiles use substeps so boosted shots cannot tunnel through small colliders. A projectile is removed immediately after its first valid hit.
 
-Dead enemies are skipped by movement, AI, collision and projectile loops. Chaser collision calls the destruction path with `awardPoint = false`; projectile/player-attack kills call it with `true`.
+Dead enemies are ignored by movement, AI, collision and projectile loops.
 
 ## Enemy spawning and AI
 
-Enemy types are distributed deterministically by sequence so both Chaser and Shooter appear in a normal match. Spawn candidates are generated around arena edges and validated against:
+Enemy type order follows the deterministic `['chaser', 'shooter']` pattern so both required types appear in a normal match.
 
-- player minimum distance;
-- island collision;
-- active-enemy spacing;
-- arena bounds.
+Spawn candidates are validated against arena bounds, islands, active enemies and a minimum distance from the player. If no safe point exists, spawning is retried later rather than forcing an invalid spawn.
 
-If no valid position exists, spawning is retried later instead of falling back to an invalid point.
+A newly spawned enemy receives a short `!` visual telegraph attached to the ship. This is presentation only: AI, collision and attack timing are active immediately.
 
-AI uses steering, island look-ahead, line-of-sight checks for Shooters, separation and stuck recovery. A dynamic active-enemy cap protects both fairness and performance under the 1-second spawn configuration.
+Chasers use pursuit/steering, island avoidance and stuck recovery. Shooters combine approach/orbit steering, line-of-sight checks, range management and an aim/fire cycle.
 
-## Local player identity
+A deterministic pressure value derived from `sessionTime` and `enemySpawnTime` adjusts the active-enemy cap and support/balance coefficients for extreme configurations.
 
-Authentication is out of scope in the challenge, but player identification is required. The app creates one persistent UUID and an editable local display name. Both are captured in every completed match record and history queries are keyed by the UUID.
+## Pickups and support director
+
+Four pickup kinds exist: Medicine, Living Powder, Wind at Your Back and Reinforced Hull. Regular support drops use pressure, hull state and active buffs to choose useful pickups.
+
+At ≤35% hull, `maybeSpawnEmergencyDrop()` checks for nearby Medicine/Armor support. If none exists and the 12 s emergency cooldown is ready, it attempts to place a defensive crate 105–180 px from the player. When the normal pickup cap is already full, it may replace a less useful/farther crate so emergency support is not silently blocked.
+
+Repeated buffs extend duration with a capped extension rather than fully resetting without limit.
+
+## Powder barrel
+
+The player can keep up to three active barrels. A barrel arms after 0.48 s, lasts 10.5 s and triggers when an enemy enters its trigger radius.
+
+The triggering enemy is a guaranteed scoring kill. Other enemies inside the 170 px blast radius receive falloff splash damage clamped so the blast cannot finish them; they remain at a minimum of 1 HP. The player's own barrel blast never damages the player.
+
+This keeps the trap useful against dense groups without turning one barrel into an automatic multi-kill chain.
+
+## Reaction panels and audio ownership
+
+Damage, victory, idle and mechanic panels are Pixi overlays. Placement avoids the player safety zone and tries to avoid active panel overlap.
+
+Idle panels are the only reaction path that plays `idle_captain_chirp.wav`. Dash/pickup/barrel mechanic panels do not reuse the idle chirp. Player destruction owns its explosion sound so a lethal projectile produces both hit feedback and the destruction explosion; Chaser collision avoids doubling the same explosion event.
+
+## Pause semantics
+
+Manual pause and automatic blur/hidden-tab pause use the same path. Pausing disables/clears input and sets ticker speed to zero. Focus restoration never auto-resumes; explicit player input is required.
+
+## Player identity and persistence
+
+The app creates a local UUID and an editable display name capped at 24 characters. Completed matches capture both. History requests are keyed by UUID, while ranking shows the captured display name.
+
+Gameplay options are sanitized when loaded/saved. The last completed result is persisted separately from the flag that decides whether the result screen should resume after refresh.
 
 ## Match registration and outbox
 
-Completed matches are represented by a stable `matchId` UUID before any network call. The client writes the match into a persistent outbox before POSTing.
+A stable `matchId` is created before any network request. `useRegisterMatch()` enqueues the result before POSTing; success removes only that id.
 
-The outbox is `MatchResult[]`, not a single pending slot. This allows:
+The outbox is `MatchResult[]`, allowing multiple pending records. It survives refresh and is retried on application bootstrap and menu return.
 
-```text
-Match A -> pending
-Match B -> confirmed
-Match C -> pending
-```
-
-without blocking a new match.
-
-On success, only the matching `matchId` is removed. On failure/timeout it stays. The app retries pending records on bootstrap and again when returning to the menu.
-
-MSW stores confirmed records by `matchId` and returns an existing record for duplicate retries. This provides idempotency for “saved on server, response timed out, client retries”.
+MSW persists confirmed records in a separate local mock database and treats `matchId` as idempotent. This makes “server stored the match but the response timed out” recover without duplication.
 
 ## Ranking/history query consistency
 
-Ranking query keys contain session time, spawn interval and page. History keys contain `playerId` and page. TanStack Query provides cache ownership and invalidation.
+Ranking query keys include session time, spawn interval, page and current network scenario. History keys include player id, page and scenario.
 
-Query functions receive TanStack Query's `AbortSignal` and pass it to Axios. Obsolete requests can therefore be cancelled rather than manually racing component state. The MSW out-of-order scenario deliberately returns alternating delays to exercise this behavior.
+GET query functions receive TanStack Query's `AbortSignal` and pass it to Axios. Successful match registration invalidates ranking and history. `keepPreviousData` keeps pagination transitions stable while new pages load.
 
-## Result persistence vs abandoned matches
+## Responsive rendering and touch performance
 
-A completed result is persisted locally and marked as resumable so a refresh on the result screen restores it. Choosing Main Menu or Play Again clears only the “resume result screen” marker, not the last result record itself.
+World coordinates and gameplay rules never change with viewport size. The canvas is uniformly CSS-scaled to available space.
 
-Leaving/reloading while combat is active simply destroys the match engine. Because no completion callback runs, abandoned matches never enter the outbox, ranking or history.
+Desktop:
 
-## Responsive rendering
+- antialiasing enabled;
+- renderer resolution capped at device DPR 2;
+- full decorative water/effect density.
 
-World coordinates never change with viewport size. The Pixi canvas is scaled uniformly to fit available space. DPR is capped at 2. Mobile/tablet uses the same simulation and world dimensions with a touch overlay and a landscape-first shell.
+Touch/coarse-pointer profile:
+
+- renderer resolution forced to 1;
+- Pixi antialiasing disabled;
+- ticker capped at 50 FPS;
+- expensive `BlurFilter`s skipped;
+- reduced caustics, reefs, wavelets and ripples;
+- visual particle cap reduced from 120 to 48;
+- reduced projectile trail probability/budget, wake frequency and explosion debris.
+
+These changes are presentation/performance only. AI, damage, collision, timers, spawn rules and score are identical.
 
 ## Internationalization
 
-English is the first-run default. Language state is global and the Pixi engine reads the current language when it creates new labels/reacts. Switching language during combat changes React UI immediately without remounting GameEngine; newly emitted Pixi text uses the new language.
+English is the first-run/default language. Portuguese and Spanish are live alternatives. React UI updates immediately; the engine stays mounted. Newly created Pixi labels/reaction copy reads the current global language when emitted.

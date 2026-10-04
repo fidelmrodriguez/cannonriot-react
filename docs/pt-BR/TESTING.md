@@ -2,65 +2,96 @@
 
 ## Configuração do Playwright
 
-Playwright executa Chromium em dois projetos:
+Playwright executa o mesmo build de produção em dois projetos Chromium:
 
-- Chromium desktop;
-- Chromium mobile/touch em landscape.
+- `desktop-chromium` — perfil Desktop Chrome;
+- `mobile-chromium` — perfil Pixel 7, viewport `915×412`, touch ligado e landscape.
 
-Falhas preservam traces e screenshots. O reporter HTML grava em `playwright-report/`.
+O web server usa `npm run build && npm run preview`. Falhas preservam traces e screenshots; o relatório HTML vai para `playwright-report/`.
 
 ```bash
 npm ci
 npx playwright install chromium
-npm run build
 npm run test:e2e
 npm run test:e2e:report
 ```
 
-## Determinismo
+## Determinismo e API de teste
 
-`?e2e=1` fixa a seed do gameplay em `1337`. A API exclusiva de teste expõe:
+Abrir com `?e2e=1` fixa a seed do gameplay em `1337` e expõe `window.__CANNON_RIOT_TEST__` somente enquanto GameScreen está montado.
+
+Helpers disponíveis:
 
 - `getState()`;
 - `damagePlayer(amount)`;
 - `spawnPickup(kind)`;
 - `spawnEnemy(kind, x, y, health?)`;
+- `setEnemyShootCooldown(id, seconds)`;
 - `setPlayerPose(x, y, rotation?)`;
-- `advanceTime(seconds)`.
+- `advanceTime(seconds)`;
+- `setTimeRemaining(seconds)`.
 
-Esses hooks preparam/observam estado, mas continuam executando o código real de movimento, combate, colisão, IA e timing.
+`advanceTime()` chama o tick real da engine em passos fixos de 1/30 s. Os helpers preparam/observam estado; não substituem colisão, dano, IA, armas ou pontuação.
 
-## Mapa de cobertura do desafio
+## Cobertura automatizada atual
 
-1. Navegação/validação/persistência de options — E2E de opções.
-2. Carregamento de assets/erro/retry — teste de falha de rota no boot/loader.
-3. Início de partida/movimento/rotação/limites/ilhas — testes de movimento + setup via pose debug.
-4. Frontal/lateral/dano/cooldown/pontuação — contagem de projéteis, direção paralela, cooldown e testes de combate/barril.
-5. Chaser/Shooter/intervalo de spawn — testes de IA e sequência determinística de tipos.
-6. Timeout/morte/fim congelado/restart — relógio controlado + hook de dano.
-7. Pausa/blur/retomada — testes de pausa; input é limpo pela engine.
-8. Resultado + persistência após refresh — flag de retomada do resultado.
-9. Abandono/navegação repetida/touch — nenhum callback de conclusão no unmount; projeto touch.
-10. Ranking/history paginação/loading/vazio/erro — testes dos cenários MSW.
-11. Registro/atualização/recuperação depois de refresh — outbox persistente em array + invalidation da mutation.
-12. Retry pós-timeout/sem duplicata/respostas fora de ordem — `matchId` estável, handler idempotente, `AbortSignal` repassado ao Axios.
+`tests/e2e/app.spec.ts` cobre atualmente:
 
-## Regressão visual
+1. falha de asset no boot e recuperação por retry visível;
+2. inglês padrão + troca EN/PT/ES ao vivo durante partida;
+3. identidade local persistente;
+4. validação/persistência de options;
+5. controles desktop e setas/artilharia touch;
+6. controles/HUD touch dentro da viewport landscape;
+7. limites de movimento e colisão com ilha;
+8. rotação e ataque à distância do Shooter;
+9. contagem/direção dos tiros frontal/lateral, cooldowns e lock de troca de arma de 0,25 s;
+10. kill por projétil pontuando uma vez;
+11. sequência normal de spawn contendo Chaser e Shooter;
+12. contato sólido e sem dano com casco do Shooter;
+13. dano de colisão + autodestruição sem ponto do Chaser;
+14. Pólvora Viva disparando frontal + duas laterais automaticamente e parando ao expirar;
+15. i-frame ativo do dash, counter de Chaser e vulnerabilidade imediata após o dash;
+16. emergency drop de Medicina/Armadura com casco ≤35% e cooldown;
+17. cura de Medicina e timers de buff parados na pausa;
+18. pausa por blur exigindo retomada explícita sem avanço de tempo;
+19. kill do gatilho do barril, splash ampliado não letal e imunidade do jogador ao próprio barril;
+20. persistência do resultado por timeout e restart limpo;
+21. resultado correto por morte do jogador;
+22. abandono sem criar registro no DB/outbox;
+23. navegação/remount repetidos mantendo um único canvas;
+24. registro bem-sucedido aparecendo em ranking e histórico local;
+25. estados vazio, timeout/erro e paginação de ranking/history;
+26. retry idempotente após timeout-after-save;
+27. persistência/recuperação da outbox quando o backend está indisponível no game over;
+28. requests fora de ordem mantendo a página de ranking selecionada.
 
-A suíte deve conter assertions `toHaveScreenshot` para:
+Os seletores mobile foram atualizados para a UI de setas; a suíte não espera mais o joystick virtual removido.
 
-- menu principal;
-- arena em estado estável com seed fixa;
-- tela de resultado.
+## Isolamento de rede e estado
 
-Gere/atualize baselines somente depois de aprovar visualmente o render de referência:
+Os testes abrem com `?e2e=1`, que também expõe a UI de cenários de rede. Fixtures/estado MSW vivem no `localStorage` do navegador. Ao adicionar casos, prefira um browser context novo ou limpe as chaves relevantes para evitar acoplamento entre testes.
+
+## Status da regressão visual
+
+O desafio exige baselines versionadas do menu, arena estável e resultado. O arquivo Playwright atual **ainda não** contém baselines `toHaveScreenshot` commitadas.
+
+Antes da submissão final, adicione/aprove essas baselines usando o navegador/runtime final, sem atualizar snapshots apenas para silenciar regressões:
 
 ```bash
 npm run test:e2e:update
 ```
 
-Os PNGs baseline devem ser commitados depois de gerados no navegador/runtime final. Não atualize snapshots apenas para silenciar uma regressão.
+## Checklist de verificação final
 
-## Isolamento
+Num checkout limpo com Node 22 e Chromium do Playwright instalados:
 
-Cada teste deve resetar `localStorage`/estado mock ou usar um browser context novo. Cenários de rede são selecionados pelo mesmo caminho de UI/`localStorage` usado no build de demonstração.
+```bash
+npm ci
+npm run lint
+npm run typecheck
+npm run build
+npm run test:e2e
+```
+
+Guarde o relatório HTML e traces/screenshots de falhas. Evidência empírica de performance fica em `docs/pt-BR/PERFORMANCE.md`.

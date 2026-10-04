@@ -1,10 +1,10 @@
 # Cannon Riot
 
-Cannon Riot is a top-down 2D naval arena shooter built for the **React & PixiJS — Pirate Battle** technical challenge. React owns application UI and remote-data screens; PixiJS owns the real-time combat arena. TypeScript runs in strict mode, Axios + TanStack Query consume REST endpoints mocked by MSW, and Playwright covers the browser flows.
+Cannon Riot is a top-down 2D naval arena shooter built for the **React & PixiJS — Pirate Battle** technical challenge. React owns application UI and remote-data screens; PixiJS owns the real-time combat arena. The codebase uses strict TypeScript, Axios + TanStack Query for REST data, MSW for the browser API simulation, and Playwright for E2E coverage.
 
 > Portuguese documentation: [README.pt-BR.md](README.pt-BR.md)
 
-## Netlify
+## Public build
 
 https://cannonriot-react.netlify.app/
 
@@ -12,7 +12,7 @@ https://cannonriot-react.netlify.app/
 
 Requirements:
 
-- Node.js 22 LTS
+- Node.js 22 (`.nvmrc` and `package.json` both target Node 22)
 - npm
 
 ```bash
@@ -20,9 +20,7 @@ npm ci
 npm run dev
 ```
 
-Windows users can run `start-windows.bat`.
-
-There are no required environment variables. Ranking and match history are simulated in-browser by MSW in development, preview and deployed builds.
+There are no required environment variables. Ranking and match history are simulated in-browser by MSW in development, preview, tests and the deployed build.
 
 ## Commands
 
@@ -32,14 +30,14 @@ npm run build            # strict TypeScript projects + production Vite build
 npm run preview          # preview the production build
 npm run lint             # repository hygiene checks
 npm run typecheck        # strict TypeScript verification
-npm run test:e2e         # Playwright Chromium suite (desktop + mobile)
+npm run test:e2e         # Playwright Chromium suite
 npm run test:e2e:ui      # Playwright UI mode
 npm run test:e2e:update  # update visual baselines intentionally
 npm run test:e2e:report  # open the HTML report
 npm run check            # lint + typecheck + production build
 ```
 
-Install Playwright's browser once when needed:
+Install Playwright Chromium once when needed:
 
 ```bash
 npx playwright install chromium
@@ -59,43 +57,57 @@ npx playwright install chromium
 | Powder barrel | `R` |
 | Pause/resume | `P` / `Esc` |
 
-### Touch
+### Touch/mobile/tablet
 
-Touch devices use a virtual helm on the left and artillery controls on the right. Movement and firing can be held simultaneously. The supported game orientation is landscape. When the browser can lock orientation, the app requests landscape after a user gesture; otherwise the touch shell preserves a horizontal game viewport.
+Touch devices use holdable steering buttons on the left — **turn left, move forward, turn right** — plus a dedicated dash button. Front/left/right cannon controls and the powder-barrel button stay on the right. Pointer capture allows movement and attacks to be held together with multitouch.
 
-## Player identity
-
-The challenge requires player identification in ranking/history but does not define authentication or account registration. Cannon Riot therefore creates a persistent local `playerId` once and exposes an editable display name in the main menu before play. Completed matches snapshot both values. No login or external identity provider is involved.
+The gameplay layout is landscape-first. Touch breakpoints also apply a mobile performance profile without changing simulation rules.
 
 ## Gameplay rules
 
-The authoritative world is a fixed 1280×720 arena. Resizing only changes presentation scale.
+The authoritative world is a fixed **1280×720** arena. Viewport resizing only changes presentation scale.
 
-- The player moves forward and rotates left/right.
-- The front weapon fires one projectile.
+- Player movement is forward + left/right rotation.
+- The front cannon fires one projectile.
 - Each broadside fires three parallel projectiles.
-- Chasers pursue and self-destruct on player collision; that self-destruction gives no point.
-- Shooters approach, seek line of sight, keep combat distance and fire at the player.
+- Normal front/broadside fire is separated by a **0.25 s global weapon-switch lock**; quick touch taps can be buffered for **0.32 s**.
+- Chasers pursue the player and self-destruct on player collision. Their collision death does not score.
+- Shooters seek ranged positions, line of sight and fire at the player.
 - Islands and arena bounds block ships; islands also block projectiles.
-- Each projectile can apply damage once, then is removed on hit, obstacle, expiry or arena exit.
-- Every enemy destroyed by player attacks awards exactly one point.
+- Projectiles are single-hit and are removed on hit, obstacle, expiry or arena exit.
+- Every enemy destroyed by a scoring player attack awards exactly one point.
 - A match ends when active simulation time expires or player hull reaches zero.
-- Manual pause, blur and hidden-tab pause suspend simulation/cooldowns. Resume always requires player action.
+- Manual pause, window blur and hidden-tab pause suspend simulation/cooldowns. Resume requires explicit player action.
 - Restart creates a clean engine instance and a new match id/seed.
 
-The default match is 120 seconds with a 3-second enemy spawn interval. Options expose the challenge-required ranges: 60–180 seconds and 1–8 seconds.
+Default configuration: **120 s** match, **3 s** enemy spawn interval. Options expose the challenge ranges: **60–180 s** and **1–8 s**.
 
-## Extra arcade mechanics
+## Arcade mechanics and high-pressure balancing
 
-Dash, repair crates, temporary powerups and powder barrels are additive mechanics. They do not change the required one-point scoring rule. Adaptive support is derived only from the selected session duration and spawn interval, so extreme configurations remain playable without silently changing leaderboard keys.
+The required challenge rules stay authoritative; these mechanics are additive:
+
+- **Dash**: 0.28 s active movement state. The player is immune to projectile and ship-contact damage only while that state is active. A Chaser hit during the dash self-destructs without damaging the player and still gives no point. There is no post-dash invulnerability.
+- **Living Powder**: temporary fully automatic artillery. Front + both broadsides fire whenever their boosted reloads are ready until the buff expires.
+- **Wind at Your Back**: increases movement speed and improves dash distance/cooldown.
+- **Reinforced Hull**: temporarily reduces incoming damage.
+- **Medicine**: repairs hull.
+- **Powder Barrel**: up to three active traps; the trigger ship is destroyed and nearby ships inside the **170 px** blast radius take heavy but non-lethal splash damage. The player is immune to their own barrel blast.
+- **Emergency support**: at ≤35% hull, if no nearby Medicine/Armor support exists, the game attempts to place a defensive pickup near the player. Emergency drops have a 12 s cooldown and can replace a less useful active pickup when all normal slots are occupied.
+- **Spawn alert**: a short `!` telegraph is visual only; newly spawned enemies remain fully active immediately.
+
+Difficulty assistance is derived deterministically from the selected session duration and spawn interval. It changes support cadence, enemy cap and small balance coefficients, but never changes the ranking key or scoring value.
 
 See [docs/GAMEPLAY-BALANCE.md](docs/GAMEPLAY-BALANCE.md).
 
-## Match configuration and ranking comparability
+## Player identity and match records
 
-A match receives a `structuredClone` snapshot of the current gameplay configuration when it starts. Changing Options later cannot mutate a running match.
+Authentication is intentionally out of scope. Cannon Riot creates a persistent local `playerId` and exposes an editable display name (maximum 24 characters) in the main menu. Completed matches snapshot both values.
 
-Ranking comparability is deliberately limited to the two player-editable challenge parameters:
+A completed record contains a UUID `matchId`, player identity, timestamp, score, effective simulation duration, end reason, full configuration snapshot and match seed.
+
+## Ranking comparability
+
+The ranking key uses only the two player-editable challenge parameters:
 
 ```ts
 {
@@ -104,83 +116,67 @@ Ranking comparability is deliberately limited to the two player-editable challen
 }
 ```
 
-A 120s / 3s match never competes directly with a 180s / 1s match. Every confirmed match is a ranking entry. Ranking order is score descending, effective duration ascending, played-at timestamp ascending, then match id for a deterministic final tie-break.
+A 120 s / 3 s match therefore never competes directly with a 180 s / 1 s match. Ranking order is score descending, duration ascending, played-at timestamp ascending, then match id.
 
-## Match records, idempotency and recovery
+## Registration, idempotency and recovery
 
-A completed match has a UUID generated before the request. The record contains match/player identity, timestamp, score, effective simulation duration, end reason, configuration snapshot and seed.
+Before POSTing a completed match, the client adds it to a persistent local **outbox**. The outbox is an array, so one failed submission does not block another match.
 
-Before the POST request, the match is added to a local **outbox**. The outbox is an array, not a single pending slot, so one failed submission never blocks another match. Successful submissions remove only their own `matchId` from the outbox.
+MSW stores confirmed matches by `matchId`; retrying the same id returns the existing record rather than duplicating it. Pending entries survive refresh and are retried during app bootstrap and on menu return. Abandoned matches are never registered.
 
-MSW treats `matchId` as idempotent: a retry after a timeout returns the already stored record instead of inserting a duplicate. Pending entries survive refresh. Cannon Riot retries the outbox on application startup and again when returning to the main menu, which makes the “backend unavailable at game over → restore network → recover” path reproducible.
+## TanStack Query, Axios and MSW
 
-Abandoned matches never enter the outbox, ranking or history.
+- Ranking query key: configuration + page + current network scenario.
+- History query key: local `playerId` + page + current network scenario.
+- Axios timeout: 3500 ms.
+- TanStack Query `AbortSignal` is passed to Axios for ranking/history GETs.
+- Successful registration invalidates both ranking and history queries.
+- Confirmed mock records are persisted in `localStorage`.
 
-## TanStack Query and Axios
+Developer network scenarios are hidden in normal play. Open `?dev=1` (or `?e2e=1`) and use **Options → Network Scenario**. See [docs/NETWORK-SCENARIOS.md](docs/NETWORK-SCENARIOS.md).
 
-- Ranking key: configuration + page.
-- History key: local `playerId` + page.
-- Axios receives TanStack Query's `AbortSignal`, so cancelled/obsolete requests stop at the HTTP client.
-- Ranking and history are invalidated after a successful match registration.
-- Queries refetch when their tab is shown again.
-- Loading, empty and error states are rendered explicitly.
-- Background cache behavior is delegated to TanStack Query instead of manual component state.
+## Asset loading and diagnostics
 
-## Network scenarios
+The global preloader starts MSW, then loads Pixi textures, screen wallpapers, SFX and music before normal menu use. Pixi textures use a maximum of **3 attempts** with limited concurrency. A permanent texture/audio/image failure is logged with the prefix `[Cannon Riot preload]` and an HTTP `HEAD` diagnostic before the boot error/retry UI is shown.
 
-The network-scenario controls are intentionally hidden from the normal player-facing UI. Open the app with `?dev=1` (or `?e2e=1` in automated tests), then use **Options → Network Scenario**. The selectable MSW scenarios are:
+Audio files are fetched into object URLs and reused. Runtime image URLs are not modified with cache-busting query strings.
 
-- normal success;
-- empty lists;
-- multiple pages;
-- slow response;
-- generic request timeout;
-- deterministic variable latency;
-- out-of-order responses;
-- connection failure;
-- HTTP 422;
-- HTTP 503;
-- ranking-only failure;
-- history-only failure;
-- timeout after the server stored the match;
-- backend unavailable at game over.
+See [docs/ASSETS.md](docs/ASSETS.md).
 
-**Restore calm seas** resets both the scenario and the mock database. The client outbox is intentionally preserved so recovery can be demonstrated after restoring the network.
+## Internationalization and audio
 
-See [docs/NETWORK-SCENARIOS.md](docs/NETWORK-SCENARIOS.md).
+English is the first-run/default language. Portuguese and Spanish are live alternatives. The fixed language/audio dock remains available across screens and during gameplay. Changing language does not remount the game engine.
 
-## Internationalization
-
-English is the first-run/default language to satisfy the challenge requirement that the solution UI be in English. Portuguese and Spanish are optional live translations. The global language controls use country-flag artwork for the United States, Brazil and Spain, are available from the first loading screen and remain available during gameplay. Changing language does not recreate the PixiJS engine.
+The captain idle chirp is reserved for genuine idle reaction panels; mechanic reactions such as dash/pickups use their own action feedback instead of the idle chirp.
 
 ## Architecture
 
-The project keeps continuous combat state inside `GameEngine`; React receives throttled snapshots instead of frame-by-frame state. Input is isolated in `InputManager`; balance is centralized in typed config; render assets and runtime entity types are separate modules. Strict Mode cleanup destroys the Pixi application, detaches keyboard/visibility listeners, disconnects resize observers and removes ticker callbacks.
+Continuous combat state stays inside `GameEngine`; React receives throttled snapshots (about every 80 ms) instead of frame-by-frame state. Input is isolated in `InputManager`, balance is centralized in typed config, and runtime entity types/assets live in separate modules.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md).
 
-## Tests
+## Testing
 
-Playwright is configured for Chromium desktop and a landscape touch profile. The E2E suite uses a fixed seed (`?e2e=1`) and an explicit test-only simulation clock hook while keeping real gameplay rules, collisions and input paths.
+Playwright is configured for desktop Chromium and a landscape Pixel 7 touch profile. `?e2e=1` fixes the gameplay seed at `1337` and exposes test-only state/time hooks while still exercising the real simulation path.
 
-Coverage is mapped to every challenge testing category in [docs/TESTING.md](docs/TESTING.md).
+The current gameplay tests cover the weapon switch lock, Living Powder auto-fire, dash i-frame, emergency support and expanded powder-barrel splash. See [docs/TESTING.md](docs/TESTING.md) for the current suite status and the remaining evaluator-facing evidence.
 
 ## Performance
 
-The renderer caps device pixel ratio at 2, clamps simulation delta time, limits enemy density in extreme spawn configurations, budgets visual particles, reuses preloaded textures and removes transient ticker callbacks when effects expire.
+Desktop keeps antialiasing and caps Pixi resolution at device DPR 2. Touch/coarse-pointer devices use a separate visual-performance profile: renderer resolution 1, no Pixi antialiasing, max 50 FPS, fewer water decorations/particles/trails, lower wake frequency and no heavy blur filters. Gameplay timing, AI, damage, collision and spawn rules are unchanged.
 
-The challenge also asks for empirical optimized-build profiling (3-minute match + five enter/play/exit cycles). The exact procedure and evidence fields are in [docs/PERFORMANCE.md](docs/PERFORMANCE.md). Runtime numbers must be recorded on the machine/browser used for the final submission rather than invented.
+See [docs/PERFORMANCE.md](docs/PERFORMANCE.md).
 
 ## Documentation
 
 - [ARCHITECTURE.md](ARCHITECTURE.md)
 - [docs/CHALLENGE-COMPLIANCE.md](docs/CHALLENGE-COMPLIANCE.md)
+- [docs/GAMEPLAY-BALANCE.md](docs/GAMEPLAY-BALANCE.md)
 - [docs/TESTING.md](docs/TESTING.md)
 - [docs/NETWORK-SCENARIOS.md](docs/NETWORK-SCENARIOS.md)
-- [docs/GAMEPLAY-BALANCE.md](docs/GAMEPLAY-BALANCE.md)
 - [docs/PERFORMANCE.md](docs/PERFORMANCE.md)
 - [docs/ASSETS.md](docs/ASSETS.md)
 - [docs/ART-DIRECTION.md](docs/ART-DIRECTION.md)
 - [docs/THIRD-PARTY-NOTICES.txt](docs/THIRD-PARTY-NOTICES.txt)
 
-Portuguese mirrors live under `docs/pt-BR/` plus `README.pt-BR.md` and `ARCHITECTURE.pt-BR.md`.
+Portuguese mirrors live under `docs/pt-BR/`, plus `README.pt-BR.md` and `ARCHITECTURE.pt-BR.md`.

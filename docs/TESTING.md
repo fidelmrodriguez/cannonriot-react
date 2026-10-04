@@ -2,65 +2,96 @@
 
 ## Playwright setup
 
-Playwright runs Chromium in two projects:
+Playwright runs the same production-build application in two Chromium projects:
 
-- desktop Chromium;
-- landscape touch/mobile Chromium.
+- `desktop-chromium` — Desktop Chrome profile;
+- `mobile-chromium` — Pixel 7 device profile, `915×412`, touch enabled and landscape viewport.
 
-Failures retain traces and screenshots. The HTML reporter writes to `playwright-report/`.
+The web server command is `npm run build && npm run preview`. Failures retain traces and screenshots; the HTML report is written to `playwright-report/`.
 
 ```bash
 npm ci
 npx playwright install chromium
-npm run build
 npm run test:e2e
 npm run test:e2e:report
 ```
 
-## Determinism
+## Determinism and test API
 
-`?e2e=1` fixes the gameplay seed to `1337`. The test-only API exposes:
+Opening with `?e2e=1` fixes the gameplay seed at `1337` and exposes `window.__CANNON_RIOT_TEST__` only while GameScreen is mounted.
+
+Available helpers:
 
 - `getState()`;
 - `damagePlayer(amount)`;
 - `spawnPickup(kind)`;
 - `spawnEnemy(kind, x, y, health?)`;
+- `setEnemyShootCooldown(id, seconds)`;
 - `setPlayerPose(x, y, rotation?)`;
-- `advanceTime(seconds)`.
+- `advanceTime(seconds)`;
+- `setTimeRemaining(seconds)`.
 
-These hooks set up/observe state but still execute the real movement, combat, collision, AI and timing code.
+`advanceTime()` calls the real engine tick path at fixed 1/30 s steps. The helpers prepare/observe state; they do not replace collision, damage, AI, weapon or scoring code.
 
-## Challenge coverage map
+## Current automated coverage
 
-1. Navigation/options validation/persistence — options E2E.
-2. Asset loading/error/retry — route-failure test plan for boot/game loader.
-3. Match start/movement/rotation/bounds/islands — movement tests + debug pose setup.
-4. Front/broadside/damage/cooldown/scoring — projectile count, parallel direction, cooldown and barrel/combat tests.
-5. Chaser/Shooter/spawn interval — AI tests and deterministic type sequence.
-6. Timeout/death/end freeze/restart — controlled simulation clock + damage hook.
-7. Pause/blur/resume — pause tests; input is cleared by engine.
-8. Result display + refresh persistence — result-resume storage flag.
-9. Abandon/repeated navigation/touch — no completion callback on unmount; touch project.
-10. Ranking/history pagination/loading/empty/error — MSW scenario tests.
-11. Registration/update/recovery after refresh — persistent array outbox + mutation invalidation.
-12. Retry after timeout/no duplicate/out-of-order — stable `matchId`, idempotent handler, `AbortSignal` to Axios.
+`tests/e2e/app.spec.ts` currently covers:
 
-## Visual regression
+1. boot asset failure and visible retry recovery;
+2. default English + live EN/PT/ES switching during a running match;
+3. persistent local player identity;
+4. options validation/persistence;
+5. desktop controls and touch arrow/artillery controls;
+6. touch controls/HUD staying inside the landscape viewport;
+7. movement bounds and island collision;
+8. rotation and Shooter ranged attack;
+9. front/broadside projectile counts, parallel directions, cooldowns and the 0.25 s weapon-switch lock;
+10. projectile kill scoring exactly once;
+11. normal spawn sequence containing both Chaser and Shooter;
+12. solid/non-damaging Shooter hull contact;
+13. Chaser collision damage + non-scoring self-destruction;
+14. Living Powder automatic front + both-broadside fire and automatic stop on expiry;
+15. dash active i-frame, Chaser counter and immediate return to vulnerability after dash;
+16. ≤35% hull emergency Medicine/Armor drop and cooldown;
+17. Medicine healing and paused buff timers;
+18. blur pause requiring explicit resume without time advance;
+19. powder-barrel trigger kill, expanded non-lethal splash and player self-immunity;
+20. timeout result persistence and clean restart;
+21. player-death result reason;
+22. abandoned match not creating DB/outbox records;
+23. repeated navigation/remounting keeping a single gameplay canvas;
+24. successful registration becoming visible in ranking and local history;
+25. ranking/history empty, timeout/error and pagination states;
+26. timeout-after-save idempotent retry;
+27. unavailable-at-game-over outbox persistence/recovery;
+28. out-of-order ranking requests preserving the selected page.
 
-The suite should contain `toHaveScreenshot` assertions for:
+The mobile selectors were updated with the steering-arrow UI; the suite no longer expects the removed virtual joystick.
 
-- main menu;
-- stable arena state with fixed seed;
-- result screen.
+## Network isolation and state
 
-Generate/update baselines only after visually approving the reference render:
+Tests open the app with `?e2e=1`, which also exposes the developer network-scenario UI. MSW fixtures/state live in browser `localStorage`. Individual flows are written so their expected records/scenarios are explicit; when adding new tests, prefer a fresh browser context or clear the relevant local keys to avoid coupling.
+
+## Visual regression status
+
+The challenge requires versioned visual regression baselines for the menu, a stable arena state and the result screen. The current Playwright file does **not** yet contain committed `toHaveScreenshot` baselines.
+
+Before final submission, add/approve those baselines from the final browser/runtime rather than generating them merely to silence a regression:
 
 ```bash
 npm run test:e2e:update
 ```
 
-Baseline PNGs must be committed after generation on the final browser/runtime. Do not update snapshots just to silence a regression.
+## Final verification checklist
 
-## Isolation
+From a clean checkout with Node 22 and Playwright Chromium installed:
 
-Each test should reset localStorage/mock state or use a fresh browser context. Network scenarios are selected through the same UI/localStorage path used in the demonstration build.
+```bash
+npm ci
+npm run lint
+npm run typecheck
+npm run build
+npm run test:e2e
+```
+
+Keep the HTML report plus retained traces/screenshots for any failures. Empirical performance evidence is tracked separately in `docs/PERFORMANCE.md`.

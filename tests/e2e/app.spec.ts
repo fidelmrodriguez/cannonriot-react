@@ -118,7 +118,7 @@ test.describe('application and gameplay', () => {
   test('desktop and touch controls remain visible and usable', async ({ page, isMobile }) => {
     if (isMobile) {
       await expect(page.locator('.touch-menu-hint')).toBeVisible();
-      await expect(page.getByText(/Joystick on the left/i)).toBeVisible();
+      await expect(page.getByText(/Steering arrows on the left/i)).toBeVisible();
     } else {
       await expect(page.locator('.control-grid span').filter({ hasText: /SPACE.*FRONT SHOT/i })).toBeVisible();
       await expect(page.locator('.control-grid span').filter({ hasText: /Q \/ E.*BROADSIDE/i })).toBeVisible();
@@ -140,14 +140,14 @@ test.describe('application and gameplay', () => {
     test.skip(!isMobile, 'Touch layout assertion.');
     await startGame(page);
     const viewport = page.viewportSize();
-    const joystick = await page.locator('.touch-joystick').boundingBox();
+    const navigation = await page.locator('.touch-nav-zone').boundingBox();
     const attackZone = await page.locator('.touch-attack-zone').boundingBox();
     const topbar = await page.locator('.game-topbar').boundingBox();
-    expect(viewport && joystick && attackZone && topbar).toBeTruthy();
-    if (viewport && joystick && attackZone && topbar) {
-      expect(joystick.x).toBeGreaterThanOrEqual(0);
-      expect(joystick.y).toBeGreaterThanOrEqual(0);
-      expect(joystick.x + joystick.width).toBeLessThanOrEqual(viewport.width + 1);
+    expect(viewport && navigation && attackZone && topbar).toBeTruthy();
+    if (viewport && navigation && attackZone && topbar) {
+      expect(navigation.x).toBeGreaterThanOrEqual(0);
+      expect(navigation.y).toBeGreaterThanOrEqual(0);
+      expect(navigation.x + navigation.width).toBeLessThanOrEqual(viewport.width + 1);
       expect(attackZone.x + attackZone.width).toBeLessThanOrEqual(viewport.width + 1);
       expect(attackZone.y + attackZone.height).toBeLessThanOrEqual(viewport.height + 1);
       expect(topbar.width).toBeLessThanOrEqual(viewport.width + 1);

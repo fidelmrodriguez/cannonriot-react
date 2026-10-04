@@ -1,29 +1,44 @@
 # Direção de arte
 
-Cannon Riot usa uma linguagem de arcade naval cartunesca e saturada: contornos fortes, água ciano/turquesa, cores quentes no jogador, Chasers em coral, Shooters em roxo, UI creme/navy e feedback de impacto exagerado porém legível.
+Cannon Riot usa uma apresentação de quadrinhos pirata com papel creme, tinta azul-marinho escura, acentos coral/vermelho, amarelo, roxo de power-up e tratamento de halftone/ruído. O objetivo é manter as telas conectadas visualmente à capitã ilustrada sem perder leitura da arena Pixi em combate denso.
 
-O objetivo é energia visual frenética sem alterar as regras da simulação.
+A UI usa bordas irregulares, sombras deslocadas e painéis de pôster, mas o texto interativo permanece geometricamente estável no hover para a tipografia condensada/pixelada não borrar com transforms subpixel.
 
 ## Regras de legibilidade
 
-1. Silhuetas do jogador e dos inimigos permanecem distinguíveis na escala de gameplay.
-2. Chaser e Shooter usam cores e telegraphs de comportamento diferentes.
-3. As informações primárias do HUD são sempre casco, tempo e pontuação.
-4. Reações, labels de streak e screen shake são apenas apresentação.
-5. Cards cômicos evitam as regiões do jogador e dos inimigos ativos sempre que existir espaço livre; sobreposição só é permitida como fallback quando a arena estiver saturada.
-6. Perigo por casco baixo usa uma vinheta interna em vez de uma borda vermelha esticada pela tela inteira.
+- O mundo de combate mantém coordenadas fixas 1280×720.
+- Barras de vida ficam presas aos navios; score/tempo/recargas ficam nas camadas React do HUD.
+- Projéteis do jogador/inimigos, dano, explosão e pickups usam acentos visuais diferentes.
+- Inimigos recém-spawnados recebem um `!` curto preso ao navio. É somente visual e não atrasa a IA.
+- Painéis de reação evitam a zona imediata de segurança do jogador e tentam não sobrepor outros painéis ativos.
+- O dock global de idioma/áudio fica visualmente separado do conteúdo principal de menu/resultado.
+- Layouts mobile/tablet podem rolar painéis que não cabem verticalmente em vez de esconder conteúdo necessário.
+
+## Composição desktop vs touch
+
+Desktop mantém a composição cinematográfica de wallpaper e densidade decorativa completa. Layouts touch/coarse-pointer são reorganizados apenas em breakpoints touch: menu/painéis recebem espaçamento/scroll seguros e o gameplay usa setas de navegação + dash à esquerda e artilharia à direita.
+
+O renderer mobile reduz de propósito decoração de água/efeitos e ignora blur filters pesados. A direção de arte é preservada por forma, contraste e cor, sem exigir pós-processamento de desktop em celulares mais fracos.
 
 ## Pseudo-profundidade
 
-O jogo permanece mecanicamente 2D. O pseudo-3D é apenas apresentação:
+A profundidade é criada sem alterar a geometria de colisão:
 
-- sombras de projéteis + offsets senoidais de arco;
-- sombras/rastro dos navios;
-- camadas de costa/areia/grama/copa/sombras nas ilhas;
-- árvores, pedras e highlights dentro das ilhas;
-- faixas de corrente, cáusticas, névoa de recife e ondulações no mar;
-- brilho/pulsação da chama de casco danificado.
+- camadas de oceano, caustics, reefs, ripples e wavelets;
+- sombras de ilha e vegetação decorativa;
+- sombras/contornos dos navios, wakes e bursts de impacto;
+- sombras/glows/trails dos projéteis;
+- sombras deslocadas dos cartões de papel na UI React.
+
+Mobile reduz quantidade de camadas/partículas decorativas, mas nunca muda colliders autoritativos.
 
 ## Painéis de reação
 
-Painéis de dano, vitória, idle e mecânica são independentes. Um painel nunca cancela outro; cada um desaparece apenas quando o próprio lifetime termina. A proporção original do retrato é preservada em vez de esticar toda imagem para um retângulo fixo.
+Quatro famílias são usadas:
+
+- **damage** — dano no casco do jogador;
+- **victory** — destruição pontuável/combo;
+- **idle** — reações da capitã em períodos calmos;
+- **mechanic** — dash, medicina, Pólvora Viva, vento, armadura e barril.
+
+O chirp idle da capitã é exclusivo dos painéis idle. Painéis de mecânica usam o SFX da própria ação para dash/pickup não reproduzirem a voz idle junto.

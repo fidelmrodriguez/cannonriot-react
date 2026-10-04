@@ -1,29 +1,44 @@
 # Art direction
 
-Cannon Riot uses a saturated cartoon naval-arcade language: hard outlines, cyan/turquoise water, warm player colors, coral Chasers, purple Shooters, cream/navy UI and exaggerated but readable impact feedback.
+Cannon Riot uses a loud comic-pirate presentation built around cream paper, dark navy ink, coral/red accents, yellow highlights, purple power-up color and halftone/noise treatment. The goal is to keep the application screens visually tied to the illustrated captain while the Pixi arena stays readable during dense combat.
 
-The goal is frantic visual energy without changing simulation rules.
+The UI deliberately uses uneven borders, offset shadows and poster-like panels, but interactive text is kept geometrically stable on hover so the condensed/pixel-like typography does not blur from sub-pixel transforms.
 
 ## Readability rules
 
-1. Player/enemy silhouettes remain distinguishable at gameplay scale.
-2. Chaser and Shooter use different color/behavior telegraphs.
-3. Primary HUD information is always hull, time and score.
-4. Reactions, streak labels and screen shake are presentation only.
-5. Comic reaction cards avoid the player's and active enemies' screen regions whenever free space exists; overlap is allowed only as a fallback when the arena is saturated.
-6. Low-hull danger uses an internal vignette rather than a stretched full-screen red border.
+- The combat world remains a fixed 1280×720 coordinate system.
+- Health bars are attached to ships; score/time/reload state remain in React HUD layers.
+- Player projectiles, enemy projectiles, damage, explosion and pickup feedback use different visual accents.
+- New enemies get a short `!` spawn telegraph attached to the ship. It is visual only and does not delay AI.
+- Reaction panels avoid the immediate player safety zone and attempt to avoid other active panels.
+- The global language/audio dock stays visually separate from primary menu/result content.
+- Mobile/tablet layouts may scroll panels that do not fit vertically instead of hiding required content.
+
+## Desktop vs touch composition
+
+Desktop keeps the cinematic wallpaper composition and full decorative density. Touch/coarse-pointer layouts are reorganized only inside touch breakpoints: menu/data panels get mobile-safe spacing/scrolling, and gameplay uses steering arrows + dash on the left with artillery on the right.
+
+The mobile renderer intentionally reduces purely decorative water/effect density and skips heavy blur filters. The art direction is preserved through shape, contrast and color rather than forcing desktop-level post-processing on weaker phones.
 
 ## Pseudo-depth
 
-The game remains mechanically 2D. Pseudo-3D is presentation-only:
+Depth is produced without changing gameplay collision geometry:
 
-- projectile shadows + sinusoidal arc offsets;
-- ship shadows/wake;
-- layered island shore/sand/grass/canopy/shadows;
-- trees, rocks and highlights inside islands;
-- water current bands, caustics, reef haze and ripples;
-- damaged-hull fire glow/pulse.
+- layered ocean fills, caustics, reefs, ripples and wavelets;
+- island shadows and decorative vegetation;
+- ship shadows/outlines, wakes and impact bursts;
+- projectile shadows/glows/trails;
+- paper-card offset shadows in React UI.
+
+Mobile reduces the number of decorative layers/particles but never changes authoritative colliders.
 
 ## Reaction panels
 
-Damage, victory, idle and mechanic panels are independent. One panel never cancels another; each disappears only when its own lifetime expires. Portrait aspect ratio is preserved instead of stretching every image into a fixed rectangle.
+Four panel families are used:
+
+- **damage** — player hull damage;
+- **victory** — scoring enemy destruction/combo feedback;
+- **idle** — calm-period captain reactions;
+- **mechanic** — dash, medicine, Living Powder, wind, armor and powder-barrel reactions.
+
+The captain idle chirp is exclusive to idle panels. Mechanic panels rely on their own action SFX so dash/pickup sounds are not doubled by the idle voice.

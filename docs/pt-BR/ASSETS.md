@@ -2,29 +2,45 @@
 
 ## Conjunto de assets em runtime
 
-A pasta `public/assets/` foi reduzida para conter apenas arquivos realmente referenciados pela aplicação. Uma checagem do repositório confirma que todo caminho de asset restante é utilizado.
+`public/assets/` contém os arquivos referenciados pela aplicação. `public/assets/asset-manifest.json` é um inventário/metadado; ele não é necessário para o carregamento em runtime. Durante esta revisão da documentação, bytes, hashes e dimensões de imagem foram atualizados para corresponder aos arquivos otimizados atuais.
 
 ### Assets de gameplay derivados do desafio
 
-- `png/default/ships/ship_6.png` — navio do jogador
-- `png/default/ships/ship_16.png` — Chaser
-- `png/default/ships/ship_22.png` — Shooter
-- `png/default/ship_parts/cannon_ball.png` — projétil
-- `png/default/effects/explosion_1.png` — efeito de destruição
-- `png/default/effects/fire_1.png` — chama de casco danificado
-- WAVs de canhão/explosão fornecidos e usados como feedback de combate
+- `png/default/ships/ship_6.png` — navio do jogador;
+- `png/default/ships/ship_16.png` — Chaser;
+- `png/default/ships/ship_22.png` — Shooter;
+- `png/default/ship_parts/cannon_ball.png` — projétil;
+- `png/default/effects/explosion_1.png` — efeito de destruição;
+- `png/default/effects/fire_1.png` — chama de casco danificado;
+- WAVs fornecidos de canhão/lateral/explosão usados no feedback de combate.
 
-### Assets adicionais do projeto
+### Assets específicos do projeto
 
-- wallpapers de menu/resultado;
-- retratos de reação de dano/vitória/idle/mecânicas;
-- SFX gerados/editados para hit, colisão, pickup, dash e reação idle;
-- faixas de música de menu/resultado/batalha.
+- wallpapers de menu e resultado (`1672×941`);
+- cinco portraits de dano e cinco de vitória (`432×356`);
+- dez portraits idle otimizados (`724×543`);
+- seis portraits de mecânica otimizados (`640×640`);
+- SVGs das bandeiras EUA/Brasil/Espanha para idioma;
+- SFX de hit, colisão, pickup, dash e reação idle;
+- músicas de menu/resultado e sete faixas de batalha.
+
+As ilustrações maiores de idle/mecânica foram reduzidas porque aparecem como portraits pequenos dentro da arena 1280×720. Isso reduz download/decode/memória de GPU mantendo mais pixels do que a apresentação em tela exige.
 
 ## Visuais gerados em runtime
 
-Camadas de profundidade da água, geometria/vegetação das ilhas, barris de pólvora, rastros, glows, linhas de ação, apresentação em arco dos projéteis, fumaça/faíscas e a maior parte das decorações de HUD são geradas/compostas em runtime com `PixiJS Graphics`. Isso evita variantes estáticas desnecessárias e mantém colisões independentes da arte decorativa.
+Camadas de profundidade da água, caustics, reefs, wavelets, ripples, geometria/vegetação das ilhas, barris, wakes, glows, action lines, trails de projéteis, fumaça/faíscas e boa parte das decorações da arena são geradas/compostas com `PixiJS Graphics`.
 
-## Carregamento
+A geometria de colisão é separada da arte decorativa, então reduções visuais mobile não alteram gameplay.
 
-O preloader global carrega texturas do jogo, wallpapers, SFX e trilha sonora antes da navegação normal pelo menu. Áudio é obtido como object URLs e reutilizado pelo controlador de áudio. Texturas Pixi são carregadas via `Assets` e reutilizadas via `Texture.from`.
+## Pipeline de carregamento
+
+O preloader global carrega todas as texturas declaradas, wallpapers de tela, SFX e trilha antes do uso normal do menu.
+
+- Texturas Pixi: concorrência 3, até 3 tentativas por arquivo.
+- Imagens de tela: `Image` do DOM.
+- Áudio/música: `fetch` para object URLs reutilizáveis.
+- Progresso é enviado à tela de boot.
+- Falhas permanentes emitem logs `[Cannon Riot preload]` e fazem um `HEAD` para expor status/headers HTTP antes da tela de retry.
+- Caminhos de imagem permanecem originais; não é adicionada query string de cache-busting.
+
+`GameEngine` usa `Texture.from()`/URLs pré-carregadas depois do boot, em vez de baixar uma cópia por entidade/efeito.

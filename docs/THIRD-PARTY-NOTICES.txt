@@ -1,9 +1,9 @@
 CANNON RIOT — THIRD-PARTY NOTICES
 
-Open-source npm dependencies include React, React DOM, PixiJS, TanStack Query, Axios, Mock Service Worker (MSW), Vite, TypeScript and Playwright.
+Open-source npm dependencies used by the project include React, React DOM, PixiJS, TanStack Query, Axios, Mock Service Worker (MSW), Vite, TypeScript and Playwright.
 
-Refer to each installed package's LICENSE and package metadata for authoritative license/copyright terms.
+Refer to each installed package's LICENSE and package metadata for authoritative license and copyright terms. This file is a project-level notice, not a replacement for upstream licenses.
 
-The original ship/projectile/effect/sound resources used from the technical challenge were supplied as assessment assets. No separate license file was included with the provided challenge archive.
+The original ship, projectile, effect and combat-sound resources derived from the Jungle Gaming technical-challenge package were supplied as assessment assets. No separate asset license file was included with the challenge material used by this submission.
 
-Additional character illustrations, wallpapers, music and generated SFX included in this repository are project-specific assets supplied/created for this submission. Their redistribution rights must follow the source/generation terms applicable to the submitter.
+Additional character/reaction illustrations, wallpapers, language-flag UI files, music and project-specific SFX in public/assets are submission-specific resources. Some large artwork files were resized/optimized for browser delivery; that optimization does not change their provenance. Redistribution rights must follow the original source/generation terms applicable to the submitter.

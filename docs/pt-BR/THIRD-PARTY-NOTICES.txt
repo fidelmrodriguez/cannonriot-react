@@ -1,9 +1,9 @@
 CANNON RIOT — AVISOS DE TERCEIROS
 
-Dependências npm open-source incluem React, React DOM, PixiJS, TanStack Query, Axios, Mock Service Worker (MSW), Vite, TypeScript e Playwright.
+Dependências npm open-source usadas pelo projeto incluem React, React DOM, PixiJS, TanStack Query, Axios, Mock Service Worker (MSW), Vite, TypeScript e Playwright.
 
-Consulte o LICENSE e os metadados de cada pacote instalado para os termos autoritativos de licença/copyright.
+Consulte LICENSE e metadados de cada pacote instalado para os termos autoritativos de licença e copyright. Este arquivo é um aviso do projeto, não substitui as licenças upstream.
 
-Os recursos originais de navios/projéteis/efeitos/som usados a partir do desafio técnico foram fornecidos como assets da avaliação. O arquivo do desafio entregue não continha uma licença separada para esses assets.
+Os recursos originais de navios, projéteis, efeitos e sons de combate derivados do pacote do desafio técnico da Jungle Gaming foram fornecidos como assets da avaliação. O material do desafio usado nesta submissão não incluía um arquivo de licença separado para esses assets.
 
-Ilustrações adicionais da personagem, wallpapers, músicas e SFX gerados incluídos neste repositório são assets específicos do projeto fornecidos/criados para esta submissão. Os direitos de redistribuição devem seguir os termos de origem/geração aplicáveis ao responsável pela submissão.
+Ilustrações adicionais da personagem/reactions, wallpapers, arquivos de bandeira da UI, músicas e SFX específicos do projeto em public/assets são recursos da submissão. Alguns arquivos grandes de arte foram redimensionados/otimizados para entrega no navegador; essa otimização não altera sua procedência. Os direitos de redistribuição devem seguir os termos de origem/geração aplicáveis ao responsável pela submissão.

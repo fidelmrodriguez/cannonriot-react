@@ -2,37 +2,54 @@
 
 ## Visão geral
 
-Cannon Riot separa responsabilidades de interface da aplicação, dados persistentes/remotos e combate em tempo real.
+Cannon Riot separa interface da aplicação, dados persistentes/remotos e combate em tempo real.
 
-- **React** controla navegação, menus/formulários, estado da tela de resultado, HUD semântico, controles de áudio/idioma, opções e painéis de dados remotos.
-- **PixiJS** controla a arena de combate visível, navios, projéteis, obstáculos, barras de vida e efeitos em tempo real.
-- **GameEngine** é o orquestrador da partida. Estado contínuo de combate permanece nele e nunca vive em estado React frame a frame.
-- **InputManager** controla estado de ações de teclado/touch.
-- **TanStack Query + Axios** controlam requests remotos de ranking/histórico.
-- **MSW** fornece a simulação REST em desenvolvimento, preview, testes e build publicado.
-- **localStorage** persiste configurações, preferências de idioma/áudio, identidade do jogador local, registros confirmados do mock, último resultado concluído e outbox de partidas pendentes.
+- **React** controla navegação, menus/formulários, options, resultado, HUD semântico, controles de áudio/idioma, jukebox e painéis de ranking/history.
+- **PixiJS** controla a arena em tempo real: navios, ilhas, projéteis, barras de vida, decoração procedural da água e efeitos de combate.
+- **GameEngine** é o orquestrador autoritativo da partida. Estado contínuo de combate fica fora do React.
+- **InputManager** controla o estado de ações de teclado/touch.
+- **TanStack Query + Axios** controlam ranking/history e registro de partida.
+- **MSW** implementa a simulação REST em desenvolvimento, preview, E2E e build publicado.
+- **localStorage** persiste opções, preferências de idioma/áudio, identidade do jogador, registros confirmados do mock, último resultado concluído, cenário de rede de demonstração e outbox de partidas pendentes.
+
+O mundo autoritativo do gameplay é sempre 1280×720; DOM/canvas apenas escalam ao redor dele.
 
 ## Ciclo de vida React/PixiJS
 
-`GameScreen` cria uma única `GameEngine` para uma partida. A engine é destruída no unmount. Assim, o React Strict Mode exercita mount → destroy → mount sem manter intencionalmente aplicações Pixi ou listeners duplicados vivos.
+`GameScreen` cria uma `GameEngine` por partida. No unmount, a engine destrói a aplicação Pixi e limpa listeners/recursos. O desenho é compatível com o ciclo mount → destroy → mount do React Strict Mode.
 
-A engine envia um snapshot limitado ao React aproximadamente a cada 80 ms. O ticker Pixi continua sendo a fonte de verdade para movimento contínuo, projéteis, IA, cooldowns e efeitos de combate.
+React recebe um snapshot limitado aproximadamente a cada 80 ms para o HUD. O ticker Pixi continua autoritativo para movimento, IA, cooldowns, projéteis, buffs e efeitos.
 
 O cleanup inclui:
 
-- remover o callback principal do ticker;
-- remover callbacks ativos dos painéis cômicos;
-- desanexar listeners de teclado;
-- remover listeners de blur/visibility;
-- desconectar o `ResizeObserver`;
-- destruir a aplicação Pixi/árvore de containers;
-- limpar referências de áudio.
+- callback principal do ticker;
+- callbacks temporários dos painéis/efeitos por meio da destruição da árvore;
+- listeners de input de teclado;
+- listeners de blur/visibility;
+- `ResizeObserver`;
+- árvore de display/aplicação Pixi;
+- referências de áudio em runtime.
+
+Sair do combate antes de um evento de conclusão apenas destrói a engine; nenhum registro de partida é criado.
+
+## Boot e preload de assets
+
+`preloadAllAssets()` executa antes do uso normal do menu. Ele inicia o worker do MSW e pré-carrega:
+
+1. texturas de gameplay/reação via Pixi `Assets`;
+2. wallpapers de menu/resultado via `Image` do DOM;
+3. SFX via `fetch` + object URLs;
+4. músicas pelo mesmo caminho de áudio.
+
+Texturas Pixi usam concorrência 3 e até três tentativas por textura. Falhas permanentes registram diagnósticos `[Cannon Riot preload]`, incluindo URL resolvida e checagem HTTP `HEAD`, e então propagam para a tela visível de erro/retry do boot.
+
+O loader mantém as URLs originais e não adiciona query strings de cache-busting.
 
 ## Snapshot da configuração de partida
 
-Options persiste uma configuração tipada e sanitizada. `GameScreen` faz um `structuredClone` antes de construir `GameEngine`. Assim, uma partida em andamento não observa alterações posteriores nas configurações.
+Options persiste um `GameConfig` sanitizado. `GameScreen` faz `structuredClone` antes de construir a engine, então uma partida em andamento não observa alterações posteriores.
 
-A chave editável do leaderboard é intencionalmente:
+A chave de comparação do ranking usa apenas:
 
 ```ts
 {
@@ -41,91 +58,133 @@ A chave editável do leaderboard é intencionalmente:
 }
 ```
 
-Todos os demais parâmetros de gameplay são parâmetros versionados de código/balanceamento, e não dimensões de leaderboard controladas pelo usuário.
+Os demais valores são constantes versionadas de código/balanceamento, e não dimensões de leaderboard controladas pelo jogador.
 
 ## Modelo de tempo
 
-`deltaMS` do ticker Pixi é convertido para segundos e limitado antes das atualizações da simulação. Movimento, rotação, IA, cooldowns, lifetime de projétil, duração de buff, cadência de spawn e duração da partida usam tempo decorrido da simulação.
+`deltaMS` do ticker é convertido para segundos e limitado a no máximo 0,05 s por update. Movimento, IA, cooldowns, lifetime de projétil, buffs, timers de suporte, spawn e duração usam tempo de simulação.
 
-A duração salva ao final vem do relógio da simulação. Tempo pausado não entra na duração porque ticks pausados não avançam `elapsed`.
+Ticks pausados não avançam `elapsed`, então a duração salva não inclui tempo em pausa.
 
-Para E2E, `?e2e=1` fixa a seed e expõe um hook exclusivo de teste `advanceTime(seconds)` que avança o mesmo caminho de atualização da simulação em passos fixos.
+Em E2E, `?e2e=1` fixa a seed em `1337` e expõe `advanceTime(seconds)`, que avança o mesmo caminho da simulação em passos fixos.
 
-## Semântica de pausa
+## Modelo de input
 
-Pausa manual e pausa automática por blur/aba oculta usam o mesmo caminho. Pausar desabilita e limpa input e define velocidade do ticker como zero. Recuperar foco não retoma automaticamente. O jogador precisa retomar explicitamente, evitando que inputs mantidos/disparados durante a perda de foco sejam acumulados.
+Teclado e touch mapeiam para o mesmo conjunto de `GameAction`. Desktop usa teclas mantidas; botões touch usam pointer capture para permitir movimento e ataque simultâneos.
+
+A artilharia normal usa recargas independentes de frontal/lateral e um lock global curto:
+
+- cooldown frontal: 0,38 s por padrão;
+- cooldown lateral compartilhado: 1,10 s por padrão;
+- lock frontal ↔ lateral: 0,25 s;
+- buffer de ação touch rápida: 0,32 s.
+
+Pólvora Viva é a exceção deliberada: ignora a regra normal de troca e dispara automaticamente frontal + as duas laterais até o buff terminar.
+
+## Estado do dash e semântica de dano
+
+Dash é um estado temporizado, e não um teleporte instantâneo. A duração ativa padrão é 0,28 s. O deslocamento usa pequenos passos para manter colisões de arena/ilha autoritativas.
+
+`damageShip()` ignora dano ao jogador somente enquanto `isDashing()` é verdadeiro. Não existe período de graça após `finishDash()`.
+
+Se o dash intercepta um Chaser vivo, o Chaser se autodestrói, o jogador não toma dano de colisão e o dash pode continuar. O evento continua sem pontuar para preservar a regra do desafio sobre autodestruição do Chaser.
 
 ## Modelo de colisão
 
-A arena autoritativa é 1280×720. O movimento de navios é limitado à arena visível. As ilhas têm visuais procedurais irregulares, enquanto a colisão usa múltiplos círculos por ilha.
-
-Interações são separadas:
+As interações são separadas em checagens explícitas:
 
 - navio × limites da arena;
-- navio × ilha;
+- navio × colliders de ilha;
 - navio × navio;
 - projétil × ilha;
-- projétil × limites da arena;
+- projétil × saída da arena;
 - projétil do jogador × inimigo vivo;
 - projétil inimigo × jogador vivo.
 
-Projéteis usam substeps para que disparos acelerados não atravessem colliders pequenos. Um projétil é marcado inativo/removido imediatamente depois do primeiro hit válido.
+A arte das ilhas é irregular/procedural, mas a colisão usa círculos estáveis. Projéteis usam substeps para que tiros acelerados não atravessem colliders pequenos. Um projétil é removido imediatamente após o primeiro hit válido.
 
-Inimigos mortos são ignorados por movimento, IA, colisão e loops de projétil. Colisão do Chaser chama a destruição com `awardPoint = false`; kills por projétil/ataque do jogador chamam com `true`.
+Inimigos mortos são ignorados pelos loops de movimento, IA, colisão e projéteis.
 
 ## Spawn e IA inimiga
 
-Tipos de inimigo são distribuídos de forma determinística por sequência para garantir Chaser e Shooter em uma partida normal. Candidatos de spawn são gerados nas bordas da arena e validados contra:
+A ordem de tipos segue o padrão determinístico `['chaser', 'shooter']`, garantindo os dois tipos exigidos numa partida normal.
 
-- distância mínima do jogador;
-- colisão com ilha;
-- espaçamento de inimigos ativos;
-- limites da arena.
+Candidatos de spawn são validados contra limites da arena, ilhas, inimigos ativos e distância mínima do jogador. Se não houver ponto seguro, o spawn é tentado novamente depois em vez de forçar uma posição inválida.
 
-Se não existir posição válida, o spawn é tentado novamente depois em vez de cair para uma posição inválida.
+Um inimigo recém-spawnado recebe um telegraph visual curto de `!` preso ao navio. É apenas apresentação: IA, colisão e timing de ataque ficam ativos imediatamente.
 
-A IA usa steering, look-ahead de ilhas, linha de visão para Shooters, separação e recuperação de estado preso. Um teto dinâmico de inimigos ativos protege justiça e performance na configuração de spawn a cada 1 segundo.
+Chasers usam perseguição/steering, desvio de ilha e recuperação de stuck. Shooters combinam aproximação/órbita, linha de visão, gerenciamento de alcance e ciclo de mira/disparo.
 
-## Identidade local do jogador
+Um valor determinístico de pressão derivado de `sessionTime` e `enemySpawnTime` ajusta teto de inimigos e pequenos coeficientes de suporte/balanceamento em configurações extremas.
 
-Autenticação está fora do escopo do desafio, mas identificação do jogador é obrigatória. O app cria um UUID persistente e um nome local editável. Ambos são capturados em todo registro de partida concluída, e as queries do histórico usam o UUID.
+## Pickups e diretor de suporte
+
+Existem quatro pickups: Medicina, Pólvora Viva, Vento a Favor e Casco Reforçado. Drops normais usam pressão, estado do casco e buffs ativos para escolher suporte útil.
+
+Com ≤35% de casco, `maybeSpawnEmergencyDrop()` procura Medicina/Armadura próxima. Se não houver e o cooldown de emergência de 12 s estiver pronto, tenta posicionar uma caixa defensiva a 105–180 px do jogador. Quando o limite normal de pickups já está cheio, pode substituir uma caixa menos útil/mais distante para a emergência não ser bloqueada silenciosamente.
+
+Buffs repetidos estendem a duração com limite, em vez de resetar sem teto.
+
+## Barril de pólvora
+
+O jogador pode manter até três barris ativos. Um barril arma após 0,48 s, dura 10,5 s e dispara quando um inimigo entra no raio de gatilho.
+
+O inimigo que aciona é uma kill garantida e pontuável. Outros inimigos dentro do raio de explosão de 170 px recebem dano com falloff limitado para nunca finalizá-los; ficam com no mínimo 1 HP. A explosão do próprio barril nunca causa dano ao jogador.
+
+Isso mantém a armadilha útil contra grupos densos sem transformar um barril em chain-kill automático.
+
+## Painéis de reação e ownership de áudio
+
+Painéis de dano, vitória, idle e mecânicas são overlays Pixi. O posicionamento evita a zona de segurança do jogador e tenta evitar sobreposição entre painéis ativos.
+
+Painéis idle são o único caminho que reproduz `idle_captain_chirp.wav`. Dash/pickups/barril não reutilizam esse chirp. A destruição do jogador controla o próprio som de explosão para que um tiro fatal produza hit + explosão final; colisão de Chaser evita duplicar o mesmo evento sonoro.
+
+## Semântica de pausa
+
+Pausa manual e pausa automática por blur/aba oculta usam o mesmo caminho. Pausar desabilita/limpa input e define o ticker como zero. Recuperar foco nunca retoma sozinho; o jogador precisa agir explicitamente.
+
+## Identidade e persistência do jogador
+
+O app cria um UUID local e um display name editável de até 24 caracteres. Partidas concluídas capturam os dois. History é consultado pelo UUID; ranking mostra o nome capturado.
+
+Opções de gameplay são sanitizadas ao carregar/salvar. O último resultado concluído é persistido separadamente da flag que decide se a tela de resultado deve reaparecer após refresh.
 
 ## Registro de partida e outbox
 
-Partidas concluídas são representadas por um UUID `matchId` estável antes de qualquer chamada de rede. O cliente grava a partida numa outbox persistente antes do POST.
+Um `matchId` estável é criado antes de qualquer request. `useRegisterMatch()` coloca o resultado na outbox antes do POST; sucesso remove somente esse id.
 
-A outbox é `MatchResult[]`, não um único slot pendente. Isso permite:
+A outbox é `MatchResult[]`, permitindo múltiplas pendências. Ela sobrevive ao refresh e é reenviada no bootstrap e ao retornar ao menu.
 
-```text
-Partida A -> pendente
-Partida B -> confirmada
-Partida C -> pendente
-```
+O MSW persiste registros confirmados num banco mock separado e trata `matchId` como idempotente. Assim, “servidor salvou mas a resposta expirou” recupera sem duplicação.
 
-sem bloquear uma nova partida.
+## Consistência das queries de ranking/history
 
-No sucesso, apenas o `matchId` correspondente é removido. Em falha/timeout, ele permanece. O app tenta reenviar registros pendentes no bootstrap e novamente ao retornar ao menu.
+Chaves de ranking incluem duração, intervalo de spawn, página e cenário de rede atual. Chaves de history incluem player id, página e cenário.
 
-MSW armazena registros confirmados por `matchId` e devolve um registro já existente em retries duplicados. Isso fornece idempotência ao caso “salvo no servidor, resposta expirou, cliente tenta novamente”.
+GETs recebem o `AbortSignal` do TanStack Query e repassam ao Axios. Registro bem-sucedido invalida ranking e history. `keepPreviousData` estabiliza transições de paginação enquanto a nova página carrega.
 
-## Consistência das queries de ranking/histórico
+## Renderização responsiva e performance touch
 
-As query keys de ranking incluem duração, intervalo de spawn e página. As de histórico incluem `playerId` e página. TanStack Query é responsável por cache e invalidação.
+Coordenadas do mundo e regras nunca mudam conforme a viewport. O canvas é escalado uniformemente por CSS para caber no espaço disponível.
 
-As funções de query recebem o `AbortSignal` do TanStack Query e o repassam ao Axios. Requests obsoletos podem ser cancelados em vez de disputar atualização manual de estado no componente. O cenário MSW de respostas fora de ordem aplica delays alternados de propósito para exercitar esse comportamento.
+Desktop:
 
-Cada `matchId` confirmado permanece como uma entrada individual do ranking, ordenada por critérios determinísticos.
+- antialias ligado;
+- resolução limitada ao DPR 2;
+- densidade completa de decoração/efeitos.
 
-## Persistência de resultado vs partidas abandonadas
+Perfil touch/coarse-pointer:
 
-Um resultado concluído é persistido localmente e marcado como retomável para que um refresh na tela de resultado restaure essa tela. Escolher Main Menu ou Play Again remove apenas o marcador “retomar tela de resultado”, não o registro do último resultado.
+- resolução do renderer fixada em 1;
+- antialias Pixi desligado;
+- ticker limitado a 50 FPS;
+- `BlurFilter`s caros ignorados;
+- menos caustics, reefs, wavelets e ripples;
+- limite de partículas visuais reduzido de 120 para 48;
+- menor probabilidade/orçamento de trail de projétil, frequência de wake e debris de explosão.
 
-Sair/recarregar durante combate apenas destrói a engine da partida. Como nenhum callback de conclusão é executado, partidas abandonadas nunca entram na outbox, ranking ou histórico.
-
-## Renderização responsiva
-
-As coordenadas do mundo nunca mudam com o tamanho da viewport. O canvas Pixi é escalado uniformemente para caber no espaço disponível. DPR é limitado a 2. Mobile/tablet usa a mesma simulação e dimensões de mundo com overlay touch e shell landscape-first.
+Essas mudanças são apenas de apresentação/performance. IA, dano, colisão, timers, spawn e score são idênticos.
 
 ## Internacionalização
 
-Inglês é o padrão da primeira execução. O estado de idioma é global e a engine Pixi consulta o idioma atual ao criar novos labels/reacts. Trocar idioma durante combate altera a UI React imediatamente sem remontar `GameEngine`; novos textos emitidos pelo Pixi usam o novo idioma.
+Inglês é o idioma padrão da primeira execução. Português e espanhol são alternativas ao vivo. A UI React muda imediatamente; a engine continua montada. Novos labels/reactions Pixi consultam o idioma global atual quando são emitidos.

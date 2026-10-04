@@ -1,10 +1,10 @@
 # Cannon Riot
 
-Cannon Riot é um shooter naval 2D top-down criado para o desafio técnico **React & PixiJS — Pirate Battle**. O React é responsável pela interface da aplicação e pelas telas de dados remotos; o PixiJS é responsável pela arena de combate em tempo real. O TypeScript roda em modo strict, Axios + TanStack Query consomem endpoints REST simulados com MSW e Playwright cobre os fluxos no navegador.
+Cannon Riot é um shooter naval 2D top-down criado para o desafio técnico **React & PixiJS — Pirate Battle**. O React controla a interface da aplicação e as telas de dados remotos; o PixiJS controla a arena de combate em tempo real. O projeto usa TypeScript strict, Axios + TanStack Query para dados REST, MSW para a simulação de API no navegador e Playwright para E2E.
 
-> Documentação padrão da entrega em inglês: [README.md](README.md)
+> Documentação padrão em inglês: [README.md](README.md)
 
-## Netlify
+## Build público
 
 https://cannonriot-react.netlify.app/
 
@@ -12,7 +12,7 @@ https://cannonriot-react.netlify.app/
 
 Requisitos:
 
-- Node.js 22 LTS
+- Node.js 22 (`.nvmrc` e `package.json` apontam para Node 22)
 - npm
 
 ```bash
@@ -20,26 +20,24 @@ npm ci
 npm run dev
 ```
 
-No Windows, também é possível executar `start-windows.bat`.
-
-Não existem variáveis de ambiente obrigatórias. Ranking e histórico de partidas são simulados no navegador pelo MSW em desenvolvimento, preview e build publicado.
+Não existem variáveis de ambiente obrigatórias. Ranking e histórico são simulados no navegador pelo MSW em desenvolvimento, preview, testes e build publicado.
 
 ## Comandos
 
 ```bash
-npm run dev              # servidor de desenvolvimento Vite
-npm run build            # projetos TypeScript strict + build de produção Vite
+npm run dev              # servidor Vite de desenvolvimento
+npm run build            # projetos TypeScript strict + build Vite de produção
 npm run preview          # preview do build de produção
-npm run lint             # verificações de higiene do repositório
+npm run lint             # checagens de higiene do repositório
 npm run typecheck        # verificação TypeScript strict
-npm run test:e2e         # suíte Playwright Chromium (desktop + mobile)
+npm run test:e2e         # suíte Playwright Chromium
 npm run test:e2e:ui      # modo UI do Playwright
-npm run test:e2e:update  # atualiza baselines visuais de forma intencional
-npm run test:e2e:report  # abre o relatório HTML
-npm run check            # lint + typecheck + build de produção
+npm run test:e2e:update  # atualiza baselines visuais intencionalmente
+npm run test:e2e:report  # abre relatório HTML
+npm run check            # lint + typecheck + build
 ```
 
-Instale o navegador do Playwright uma vez quando necessário:
+Quando necessário, instale o Chromium do Playwright uma vez:
 
 ```bash
 npx playwright install chromium
@@ -51,51 +49,65 @@ npx playwright install chromium
 
 | Ação | Controle |
 | --- | --- |
-| Avançar | `W` / `Seta para cima` |
+| Avançar | `W` / `Arrow Up` |
 | Girar esquerda/direita | `A` / `D` ou setas |
-| Canhão frontal | `Espaço` |
+| Canhão frontal | `Space` |
 | Salva lateral esquerda/direita | `Q` / `E` |
 | Dash | `Ctrl` |
 | Barril de pólvora | `R` |
 | Pausar/retomar | `P` / `Esc` |
 
-### Touch
+### Touch/mobile/tablet
 
-Dispositivos touch usam um leme virtual à esquerda e controles de artilharia à direita. Movimento e disparo podem ser mantidos simultaneamente. A orientação suportada é landscape. Quando o navegador permite bloquear orientação, o app solicita landscape após um gesto do usuário; caso contrário, a camada touch preserva uma viewport horizontal para o jogo.
+Dispositivos touch usam botões de navegação mantidos à esquerda — **girar à esquerda, avançar, girar à direita** — mais um botão dedicado de dash. Os controles de canhão frontal/laterais e barril de pólvora ficam à direita. O uso de pointer capture permite segurar movimento e ataque ao mesmo tempo com multitouch.
 
-## Identidade do jogador
-
-O desafio exige identificação do jogador em ranking/histórico, mas não define autenticação nem cadastro de conta. Por isso, Cannon Riot cria um `playerId` local persistente uma única vez e disponibiliza um nome de exibição editável no menu principal antes de jogar. Partidas concluídas capturam os dois valores. Não existe login nem provedor externo de identidade.
+O gameplay prioriza landscape. Breakpoints touch também ativam um perfil de performance móvel sem alterar as regras da simulação.
 
 ## Regras de gameplay
 
-O mundo autoritativo é uma arena fixa de 1280×720. Redimensionamento altera apenas a escala de apresentação.
+O mundo autoritativo é uma arena fixa de **1280×720**. Redimensionar a viewport altera apenas a escala de apresentação.
 
 - O jogador avança e gira para esquerda/direita.
-- A arma frontal dispara um projétil.
-- Cada salva lateral dispara três projéteis paralelos.
-- Chasers perseguem e se autodestroem ao colidir com o jogador; essa autodestruição não dá ponto.
-- Shooters se aproximam, procuram linha de visão, mantêm distância de combate e disparam contra o jogador.
+- O canhão frontal dispara um projétil.
+- Cada lateral dispara três projéteis paralelos.
+- No modo normal, frontal e lateral são separados por um **lock global de troca de arma de 0,25 s**; taps touch rápidos podem ficar em buffer por **0,32 s**.
+- Chasers perseguem o jogador e se autodestroem ao colidir com ele. Essa colisão não pontua.
+- Shooters buscam posição de ataque, linha de visão e disparam à distância.
 - Ilhas e limites da arena bloqueiam navios; ilhas também bloqueiam projéteis.
-- Cada projétil pode aplicar dano uma única vez e então é removido ao atingir alvo, obstáculo, expirar ou sair da arena.
-- Cada inimigo destruído por ataques do jogador vale exatamente um ponto.
-- A partida termina quando o tempo ativo da simulação acaba ou quando o casco do jogador chega a zero.
-- Pausa manual, blur e aba oculta suspendem simulação/cooldowns. A retomada sempre exige ação do jogador.
-- Reiniciar cria uma nova instância limpa da engine e um novo id/seed de partida.
+- Projéteis aplicam dano uma única vez e são removidos ao acertar, encontrar obstáculo, expirar ou sair da arena.
+- Cada inimigo destruído por um ataque pontuável do jogador vale exatamente um ponto.
+- A partida termina quando o tempo ativo acaba ou o casco do jogador chega a zero.
+- Pausa manual, blur da janela e aba oculta suspendem simulação/cooldowns. A retomada exige ação explícita do jogador.
+- Reiniciar cria uma engine limpa e novo match id/seed.
 
-A partida padrão dura 120 segundos e usa intervalo de spawn de 3 segundos. Options expõe os limites exigidos pelo desafio: 60–180 segundos e 1–8 segundos.
+Configuração padrão: partida de **120 s** e spawn de inimigo a cada **3 s**. Options expõe os intervalos do desafio: **60–180 s** e **1–8 s**.
 
-## Mecânicas arcade extras
+## Mecânicas arcade e balanceamento de alta pressão
 
-Dash, caixas de reparo, powerups temporários e barris de pólvora são mecânicas adicionais. Eles não alteram a regra obrigatória de um ponto por inimigo eliminado. A assistência adaptativa é derivada apenas da duração escolhida e do intervalo de spawn, para que configurações extremas continuem jogáveis sem alterar silenciosamente a chave do ranking.
+As regras exigidas pelo desafio continuam autoritativas; estas mecânicas são adicionais:
+
+- **Dash**: estado de movimento ativo por 0,28 s. O jogador fica imune a projéteis e dano de contato somente durante esse estado. Se atingir um Chaser durante o dash, o Chaser se autodestrói sem ferir o jogador e continua sem pontuar. Não existe invulnerabilidade depois do dash.
+- **Pólvora Viva**: artilharia automática temporária. Frontal + as duas laterais disparam assim que suas recargas aceleradas ficam prontas, até o buff acabar.
+- **Vento a Favor**: aumenta velocidade de movimento e melhora distância/cooldown do dash.
+- **Casco Reforçado**: reduz temporariamente o dano recebido.
+- **Medicina**: recupera casco.
+- **Barril de Pólvora**: até três armadilhas ativas; o navio que aciona é destruído e navios próximos dentro do raio de **170 px** recebem dano forte, porém não letal. O jogador é imune à própria explosão.
+- **Suporte de emergência**: com ≤35% de casco, se não houver Medicina/Armadura próxima, o jogo tenta colocar um pickup defensivo perto do jogador. Há cooldown de 12 s e o sistema pode substituir um pickup ativo menos útil se os slots normais estiverem cheios.
+- **Alerta de spawn**: o `!` curto é apenas visual; inimigos recém-spawnados continuam ativos imediatamente.
+
+A assistência de dificuldade é derivada de forma determinística pela duração e intervalo de spawn escolhidos. Ela altera cadência de suporte, teto de inimigos e pequenos coeficientes, mas nunca muda a chave do ranking nem o valor do ponto.
 
 Veja [docs/pt-BR/GAMEPLAY-BALANCE.md](docs/pt-BR/GAMEPLAY-BALANCE.md).
 
-## Configuração da partida e comparabilidade do ranking
+## Identidade do jogador e registros
 
-Cada partida recebe um snapshot via `structuredClone` da configuração atual quando começa. Alterar Options depois não modifica uma partida em andamento.
+Autenticação está fora do escopo. O Cannon Riot cria um `playerId` local persistente e expõe um nome editável (máximo de 24 caracteres) no menu. Partidas concluídas capturam os dois valores.
 
-A comparabilidade do ranking é deliberadamente limitada aos dois parâmetros editáveis exigidos pelo desafio:
+Um registro concluído contém UUID `matchId`, identidade do jogador, data, score, duração efetiva da simulação, motivo de encerramento, snapshot completo da configuração e seed.
+
+## Comparabilidade do ranking
+
+A chave do ranking usa apenas os dois parâmetros editáveis pelo jogador:
 
 ```ts
 {
@@ -104,83 +116,65 @@ A comparabilidade do ranking é deliberadamente limitada aos dois parâmetros ed
 }
 ```
 
-Uma partida de 120s / 3s nunca concorre diretamente com uma de 180s / 1s. Cada partida confirmada permanece como uma entrada individual no ranking. A ordenação é: pontuação decrescente, duração efetiva crescente, timestamp da partida crescente e, por fim, `matchId` para desempate totalmente determinístico.
+Assim, uma partida 120 s / 3 s não compete diretamente com uma 180 s / 1 s. A ordenação é score decrescente, duração crescente, data crescente e por fim match id.
 
-## Registros de partida, idempotência e recuperação
+## Registro, idempotência e recuperação
 
-Uma partida concluída recebe um UUID antes da requisição. O registro contém identidade da partida/jogador, data, pontuação, duração efetiva da simulação, motivo do fim, snapshot de configuração e seed.
+Antes do POST, uma partida concluída entra numa **outbox** local persistente. A outbox é um array, então uma falha não bloqueia partidas seguintes.
 
-Antes do POST, a partida é adicionada a uma **outbox** local. A outbox é um array, e não um único slot pendente; portanto um envio com falha nunca bloqueia outra partida. Envios bem-sucedidos removem apenas o próprio `matchId`.
+O MSW armazena registros confirmados por `matchId`; reenviar o mesmo id devolve o registro existente em vez de duplicar. Pendências sobrevivem ao refresh e são reenviadas no bootstrap e ao retornar ao menu. Partidas abandonadas nunca são registradas.
 
-O MSW trata `matchId` de forma idempotente: um retry depois de timeout devolve o registro já armazenado em vez de inserir duplicata. Entradas pendentes sobrevivem a refresh. Cannon Riot tenta reenviar a outbox no bootstrap e também quando retorna ao menu principal, tornando reproduzível o fluxo “backend indisponível no game over → restaurar rede → recuperar”.
+## TanStack Query, Axios e MSW
 
-Partidas abandonadas nunca entram na outbox, ranking ou histórico.
+- Chave de ranking: configuração + página + cenário de rede atual.
+- Chave de histórico: `playerId` local + página + cenário de rede atual.
+- Timeout Axios: 3500 ms.
+- O `AbortSignal` do TanStack Query é repassado ao Axios nos GETs de ranking/history.
+- Registro bem-sucedido invalida ranking e history.
+- Registros confirmados do mock ficam persistidos em `localStorage`.
 
-## TanStack Query e Axios
+Os cenários de rede ficam escondidos no uso normal. Abra com `?dev=1` (ou `?e2e=1`) e use **Options → Network Scenario**. Veja [docs/pt-BR/NETWORK-SCENARIOS.md](docs/pt-BR/NETWORK-SCENARIOS.md).
 
-- Chave do Ranking: configuração + página.
-- Chave do History: `playerId` local + página.
-- Axios recebe o `AbortSignal` do TanStack Query, então requests cancelados/obsoletos param também no cliente HTTP.
-- Ranking e histórico são invalidados depois de um registro bem-sucedido.
-- As queries refazem fetch quando a aba correspondente é exibida novamente.
-- Estados de loading, vazio e erro são renderizados explicitamente.
-- Cache/background update ficam sob responsabilidade do TanStack Query, em vez de estado manual no componente.
+## Carregamento de assets e diagnóstico
 
-## Cenários de rede
+O preloader global inicia o MSW e depois carrega texturas Pixi, wallpapers de tela, SFX e músicas antes do uso normal do menu. Texturas Pixi têm no máximo **3 tentativas** e concorrência limitada. Uma falha definitiva de textura/áudio/imagem é registrada com o prefixo `[Cannon Riot preload]` e um diagnóstico HTTP `HEAD` antes da tela de erro/retry do boot.
 
-Os controles de cenário de rede ficam ocultos da interface normal do jogador. Abra o app com `?dev=1` (ou `?e2e=1` nos testes automatizados) e então use **Options → Network Scenario**. Os cenários MSW selecionáveis são:
+Áudios são baixados para object URLs e reutilizados. As URLs de imagens de runtime não recebem query string de cache-busting.
 
-- sucesso normal;
-- listas vazias;
-- múltiplas páginas;
-- resposta lenta;
-- timeout genérico da requisição;
-- latência variável determinística;
-- respostas fora de ordem;
-- falha de conexão;
-- HTTP 422;
-- HTTP 503;
-- falha somente no ranking;
-- falha somente no histórico;
-- timeout depois de o servidor já ter armazenado a partida;
-- backend indisponível no encerramento da partida.
+Veja [docs/pt-BR/ASSETS.md](docs/pt-BR/ASSETS.md).
 
-**Restore calm seas** restaura o cenário normal e limpa o banco mock. A outbox do cliente é preservada de propósito para que a recuperação possa ser demonstrada depois que a rede for restaurada.
+## Internacionalização e áudio
 
-Veja [docs/pt-BR/NETWORK-SCENARIOS.md](docs/pt-BR/NETWORK-SCENARIOS.md).
+Inglês é o idioma padrão da primeira execução. Português e espanhol são alternativas ao vivo. O dock fixo de idioma/áudio continua disponível entre telas e durante o gameplay. Trocar idioma não remonta a engine.
 
-## Internacionalização
-
-Inglês é o idioma padrão na primeira execução, atendendo ao requisito do desafio de que a solução seja apresentada em inglês. Português e espanhol são traduções extras em tempo real. Os controles globais de idioma usam artes de bandeira dos Estados Unidos, Brasil e Espanha, aparecem desde a primeira tela de loading e continuam disponíveis durante o gameplay. Trocar idioma não recria a engine PixiJS.
+O chirp fofo da capitã é exclusivo dos painéis de reação idle; reacts de mecânica como dash/pickups usam o feedback da própria ação e não reproduzem o chirp de idle.
 
 ## Arquitetura
 
-O projeto mantém o estado contínuo de combate dentro de `GameEngine`; o React recebe snapshots com frequência limitada, em vez de estado a cada frame. Input fica isolado em `InputManager`; balanceamento é centralizado em configuração tipada; assets de renderização e tipos de entidade ficam em módulos separados. O cleanup para Strict Mode destrói a aplicação Pixi, remove listeners de teclado/visibilidade, desconecta `ResizeObserver` e remove callbacks de ticker.
+Estado contínuo de combate fica em `GameEngine`; React recebe snapshots limitados (aproximadamente a cada 80 ms), e não state por frame. Input fica isolado em `InputManager`, balanceamento em configuração tipada e tipos/assets de runtime em módulos separados.
 
 Veja [ARCHITECTURE.pt-BR.md](ARCHITECTURE.pt-BR.md).
 
 ## Testes
 
-Playwright está configurado para Chromium desktop e para um perfil touch em landscape. A suíte E2E usa seed fixa (`?e2e=1`) e um hook explícito de relógio de simulação somente para testes, mantendo regras reais de gameplay, colisões e caminhos de input.
+Playwright está configurado para Chromium desktop e um perfil touch landscape de Pixel 7. `?e2e=1` fixa a seed do gameplay em `1337` e expõe hooks exclusivos de estado/tempo, mantendo o caminho real da simulação.
 
-O mapeamento para cada categoria do desafio está em [docs/pt-BR/TESTING.md](docs/pt-BR/TESTING.md).
+Os testes atuais cobrem lock entre armas, auto-fire da Pólvora Viva, i-frame do dash, suporte de emergência e splash ampliado do barril. Veja [docs/pt-BR/TESTING.md](docs/pt-BR/TESTING.md) para o status atual da suíte e as evidências ainda necessárias para avaliação.
 
 ## Performance
 
-O renderer limita DPR a 2, limita delta da simulação, restringe densidade de inimigos em configurações extremas, aplica orçamento de partículas, reutiliza texturas pré-carregadas e remove callbacks temporários de ticker quando os efeitos terminam.
+Desktop mantém antialias e limita a resolução Pixi ao DPR 2. Dispositivos touch/coarse-pointer usam um perfil visual separado: resolução do renderer em 1, sem antialias Pixi, máximo de 50 FPS, menos decoração da água/partículas/trails, wake menos frequente e sem blur filters pesados. Timing de gameplay, IA, dano, colisão e spawn não mudam.
 
-O desafio também exige profiling empírico do build otimizado (partida de 3 minutos + cinco ciclos entrar/jogar/sair). O procedimento e os campos de evidência estão em [docs/pt-BR/PERFORMANCE.md](docs/pt-BR/PERFORMANCE.md). Números de runtime precisam ser medidos na máquina/navegador da entrega final; não devem ser inventados.
+Veja [docs/pt-BR/PERFORMANCE.md](docs/pt-BR/PERFORMANCE.md).
 
 ## Documentação
 
 - [ARCHITECTURE.pt-BR.md](ARCHITECTURE.pt-BR.md)
 - [docs/pt-BR/CHALLENGE-COMPLIANCE.md](docs/pt-BR/CHALLENGE-COMPLIANCE.md)
+- [docs/pt-BR/GAMEPLAY-BALANCE.md](docs/pt-BR/GAMEPLAY-BALANCE.md)
 - [docs/pt-BR/TESTING.md](docs/pt-BR/TESTING.md)
 - [docs/pt-BR/NETWORK-SCENARIOS.md](docs/pt-BR/NETWORK-SCENARIOS.md)
-- [docs/pt-BR/GAMEPLAY-BALANCE.md](docs/pt-BR/GAMEPLAY-BALANCE.md)
 - [docs/pt-BR/PERFORMANCE.md](docs/pt-BR/PERFORMANCE.md)
 - [docs/pt-BR/ASSETS.md](docs/pt-BR/ASSETS.md)
 - [docs/pt-BR/ART-DIRECTION.md](docs/pt-BR/ART-DIRECTION.md)
 - [docs/pt-BR/THIRD-PARTY-NOTICES.txt](docs/pt-BR/THIRD-PARTY-NOTICES.txt)
-
-As versões em inglês permanecem na raiz e em `docs/`, como documentação padrão da entrega.

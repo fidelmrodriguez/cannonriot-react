@@ -3,9 +3,9 @@
     "app": "Cannon Riot",
     "version": 1,
     "format": "loose-assets",
-    "generatedBy": "scripts/generate-asset-manifest.mjs",
+    "generatedBy": "repository documentation/assets audit",
     "publicPathBase": "/assets/",
-    "note": "This project uses direct asset files rather than a packed UI atlas. Pixel ratio is declared only when encoded in the filename."
+    "note": "Runtime uses direct asset files. Metadata was refreshed against the current optimized files; pixelRatio is retained only when encoded by the asset naming convention."
   },
   "assets": [
     {
@@ -372,11 +372,11 @@
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 1693716,
-      "sha256": "d00755ea0ba266dedab4c2538983ac6710d0313990335dbc8de935ddc73888d0",
+      "bytes": 513498,
+      "sha256": "12cb17511a93450855bed92f3c616cb05ac2ea1bd037684293163f22b4ebfb56",
       "dimensions": {
-        "width": 1448,
-        "height": 1086
+        "width": 724,
+        "height": 543
       },
       "pixelRatio": 2
     },
@@ -386,11 +386,11 @@
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 1738783,
-      "sha256": "d9f09a9566f16e23d418a9d8ebcc52414b13c594b47eeb4a9a6ea121b9c27ab2",
+      "bytes": 529596,
+      "sha256": "a8aa42428d359bb8b8a09b434440ee4aa04a46b60b8170872402226433087823",
       "dimensions": {
-        "width": 1448,
-        "height": 1086
+        "width": 724,
+        "height": 543
       },
       "pixelRatio": 2
     },
@@ -400,11 +400,11 @@
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 1683434,
-      "sha256": "b3c38bded8eeffdeffa58c126416f3f5cdee60c2dda320e40b0adfccef12a345",
+      "bytes": 512226,
+      "sha256": "161517a61af5ceae12a2dd8ce84d557b82b86d7c50d83205bc8d606827e5f6b4",
       "dimensions": {
-        "width": 1448,
-        "height": 1086
+        "width": 724,
+        "height": 543
       },
       "pixelRatio": 2
     },
@@ -414,11 +414,11 @@
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 1789128,
-      "sha256": "7ccbb525fad7a4b94120e3b54b6e34f2330ced8cc85d1f6162950583e27afc18",
+      "bytes": 546686,
+      "sha256": "18c7f83de720131008889032d5a8dec40f2f082c274c8a2927df63b5514404eb",
       "dimensions": {
-        "width": 1448,
-        "height": 1086
+        "width": 724,
+        "height": 543
       },
       "pixelRatio": 2
     },
@@ -428,11 +428,11 @@
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 1683449,
-      "sha256": "52301dbc94c9e7ac8151a2bc132d8b2044ab067e86e9ca34dde4b596d5644429",
+      "bytes": 510191,
+      "sha256": "299d72269c9f4aec4fcedc1e0f9586f81478221a73f6207019bc9998c73a3223",
       "dimensions": {
-        "width": 1448,
-        "height": 1086
+        "width": 724,
+        "height": 543
       },
       "pixelRatio": 2
     },
@@ -442,11 +442,11 @@
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 1667125,
-      "sha256": "4baacba3af745fa30c90108a60fbf27dfb15adaa2611e6ac976937597a257fc2",
+      "bytes": 500512,
+      "sha256": "8f7157fe962c5fbe3c1936748925cb92b3b7aa266e261bf353bd9e66a02bae99",
       "dimensions": {
-        "width": 1448,
-        "height": 1086
+        "width": 724,
+        "height": 543
       },
       "pixelRatio": 2
     },
@@ -456,11 +456,11 @@
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 1721843,
-      "sha256": "2036bc7a12cd0a26e00d41cf4ceb9551208147c2046ab0f22ce478df64163a84",
+      "bytes": 520065,
+      "sha256": "243d2c280c67a3d5f45ef438988014874bd6916b0916c2e3fb4684db02d77f84",
       "dimensions": {
-        "width": 1448,
-        "height": 1086
+        "width": 724,
+        "height": 543
       },
       "pixelRatio": 2
     },
@@ -470,11 +470,11 @@
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 1812092,
-      "sha256": "02610f97f82c75fde0f810d6a911c181d95f75267053182072417abb010c65cf",
+      "bytes": 552436,
+      "sha256": "ea7605a7a8107a44e0bf1b26c618757b1a4469e9a0631b6f002f9cba605d2778",
       "dimensions": {
-        "width": 1448,
-        "height": 1086
+        "width": 724,
+        "height": 543
       },
       "pixelRatio": 2
     },
@@ -484,11 +484,11 @@
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 1792845,
-      "sha256": "d392fd4e070768b218af633fe3bfa6f1958dfd6e348076db03185c73ca21420f",
+      "bytes": 534681,
+      "sha256": "1dc4dcbc4ae8b3eeba56890a564e2f73296314db363878896cc348f91eaa56bb",
       "dimensions": {
-        "width": 1448,
-        "height": 1086
+        "width": 724,
+        "height": 543
       },
       "pixelRatio": 2
     },
@@ -498,11 +498,11 @@
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 1680852,
-      "sha256": "7f6e33797a0337ddcd4bd4fd9e0b6286b670706e6d34f55667d4f56cb703a4d8",
+      "bytes": 511526,
+      "sha256": "32021b700ad756a575c08c366d0b6aa56cbb7e59ebc7d5a5e96534c9b7477084",
       "dimensions": {
-        "width": 1448,
-        "height": 1086
+        "width": 724,
+        "height": 543
       },
       "pixelRatio": 2
     },
@@ -512,11 +512,11 @@
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 3014463,
-      "sha256": "f1c8a5ba363480e668fac6355f2d665880d5f1173a0d484b50dfa6916e148429",
+      "bytes": 740416,
+      "sha256": "e54be804c1938b4a31e9edc9435ca83efa8931b6aa8bddbeed18dec9ec1b245c",
       "dimensions": {
-        "width": 1254,
-        "height": 1254
+        "width": 640,
+        "height": 640
       }
     },
     {
@@ -525,11 +525,11 @@
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 2888887,
-      "sha256": "0fe05919011d2442f1f3d136bf611beddf11c6d3a82aa0a2a415d6572bfec502",
+      "bytes": 711970,
+      "sha256": "da0ce7c69c0ce943f58eaf4b3576ec72e3503755624f86c2d4a45863d435ca5f",
       "dimensions": {
-        "width": 1254,
-        "height": 1254
+        "width": 640,
+        "height": 640
       }
     },
     {
@@ -538,11 +538,11 @@
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 3095714,
-      "sha256": "fec6e4e9f316de41f0caea4e67719d5e4ff0f0b39776f485d90ffd7ec9ddd093",
+      "bytes": 759627,
+      "sha256": "b208383b4d31db558114adc2428205753fdcc05ce9d92bdfff6f49dc0747ed1b",
       "dimensions": {
-        "width": 1254,
-        "height": 1254
+        "width": 640,
+        "height": 640
       }
     },
     {
@@ -551,11 +551,11 @@
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 3111432,
-      "sha256": "10035e388476107e2c3efdd183ef22e209445a081dd8b04a95cd822cbbcc0f88",
+      "bytes": 770183,
+      "sha256": "65df15d4a6016622e873cfca2e74518f68a8af529a53a8216516bf9f815223a7",
       "dimensions": {
-        "width": 1254,
-        "height": 1254
+        "width": 640,
+        "height": 640
       }
     },
     {
@@ -564,11 +564,11 @@
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 3184785,
-      "sha256": "ee31adc90c6ba78ce21b61f63012452f8828e5cfa96788cbf75973e729910502",
+      "bytes": 799386,
+      "sha256": "4590c3515656e57a1407da1d41ec03323a45edabbbf1f50d91685760e33cffcf",
       "dimensions": {
-        "width": 1254,
-        "height": 1254
+        "width": 640,
+        "height": 640
       }
     },
     {
@@ -577,11 +577,11 @@
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 2977995,
-      "sha256": "1bdff01df55395a84dce5d9408fa8d8cb71b8558433804b87533613f10d4f00a",
+      "bytes": 715563,
+      "sha256": "defe3b35f44dadf11f3876699fc58a385dd90448cb8f6c164db9da49b84b9d54",
       "dimensions": {
-        "width": 1254,
-        "height": 1254
+        "width": 640,
+        "height": 640
       }
     },
     {
