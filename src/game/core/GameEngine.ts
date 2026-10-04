@@ -127,6 +127,8 @@ export class GameEngine {
   private pressure = 1;
   private maxActiveEnemies = 11;
   private visualParticleCount = 0;
+  private mobilePerformanceMode = false;
+  private maxVisualParticles = 120;
   private supportClock = 0;
   private supportInterval = 16;
   private emergencyDropCooldown = 0;
@@ -158,6 +160,8 @@ export class GameEngine {
   ) {
     this.rng = new SeededRandom(seed);
     this.uiRng = new SeededRandom(seed ^ 0x9e3779b9);
+    this.mobilePerformanceMode = typeof window !== 'undefined' && window.matchMedia('(any-pointer: coarse)').matches;
+    this.maxVisualParticles = this.mobilePerformanceMode ? 48 : 120;
     this.pressure = clamp((EXTRA_BALANCE.adaptive.referenceSpawnTime / Math.max(0.5, config.enemySpawnTime)) * Math.pow(config.sessionTime / EXTRA_BALANCE.adaptive.referenceSessionTime, 0.32), EXTRA_BALANCE.adaptive.minPressure, EXTRA_BALANCE.adaptive.maxPressure);
     const sessionDensity = clamp((config.sessionTime - 60) / 120, 0, 1);
     this.maxActiveEnemies = Math.round(clamp(7.2 + this.pressure * 3.45 + sessionDensity * 1.1, EXTRA_BALANCE.adaptive.minEnemyCap, EXTRA_BALANCE.adaptive.maxEnemyCap));
@@ -172,11 +176,15 @@ export class GameEngine {
       await this.app.init({
         width: WORLD_W,
         height: WORLD_H,
-        antialias: true,
+        antialias: !this.mobilePerformanceMode,
         autoDensity: true,
-        resolution: Math.min(window.devicePixelRatio || 1, 2),
+        // High-DPI mobile screens can otherwise render the 1280x720 arena at
+        // several million pixels every frame. One device pixel is enough for
+        // the touch layout and keeps gameplay responsive on weaker phones.
+        resolution: this.mobilePerformanceMode ? 1 : Math.min(window.devicePixelRatio || 1, 2),
         backgroundAlpha: 0,
       });
+      if (this.mobilePerformanceMode) this.app.ticker.maxFPS = 50;
       this.initialized = true;
       if (this.destroyed) { this.app.destroy(true); return; }
       this.callbacks.onLoadProgress?.(0.22);
@@ -251,7 +259,7 @@ export class GameEngine {
     this.world.addChild(bg);
 
     const deepBloom = new Graphics().ellipse(WORLD_W * 0.5, WORLD_H * 0.56, 620, 360).fill({ color: 0x73ffe8, alpha: 0.14 });
-    deepBloom.filters = [new BlurFilter({ strength: 28 })];
+    if (!this.mobilePerformanceMode) deepBloom.filters = [new BlurFilter({ strength: 28 })];
     this.world.addChild(deepBloom);
 
     const currentBands = new Graphics();
@@ -266,7 +274,8 @@ export class GameEngine {
     this.world.addChild(currentBands);
 
     const caustics = new Graphics();
-    for (let i = 0; i < 18; i++) {
+    const causticCount = this.mobilePerformanceMode ? 9 : 18;
+    for (let i = 0; i < causticCount; i++) {
       const x = 80 + i * 68;
       const y = this.uiRng.range(90, WORLD_H - 90);
       caustics
@@ -274,11 +283,12 @@ export class GameEngine {
         .stroke({ color: 0xcafef5, width: this.uiRng.range(2, 4), alpha: 0.1 });
     }
     caustics.rotation = -0.15;
-    caustics.filters = [new BlurFilter({ strength: 2 })];
+    if (!this.mobilePerformanceMode) caustics.filters = [new BlurFilter({ strength: 2 })];
     this.world.addChild(caustics);
 
     const reefs = new Graphics();
-    for (let i = 0; i < 11; i++) {
+    const reefCount = this.mobilePerformanceMode ? 5 : 11;
+    for (let i = 0; i < reefCount; i++) {
       reefs.ellipse(
         this.uiRng.range(70, WORLD_W - 70),
         this.uiRng.range(80, WORLD_H - 80),
@@ -287,10 +297,11 @@ export class GameEngine {
       ).fill({ color: i % 2 === 0 ? 0x45d7cf : 0x2eb8b0, alpha: 0.08 });
     }
     reefs.rotation = 0.1;
-    reefs.filters = [new BlurFilter({ strength: 10 })];
+    if (!this.mobilePerformanceMode) reefs.filters = [new BlurFilter({ strength: 10 })];
     this.world.addChild(reefs);
 
-    for (let i = 0; i < 54; i++) {
+    const waveletCount = this.mobilePerformanceMode ? 18 : 54;
+    for (let i = 0; i < waveletCount; i++) {
       const wave = new Graphics()
         .moveTo(-20, 0)
         .bezierCurveTo(-9, -8, 6, 8, 20, 0)
@@ -302,7 +313,8 @@ export class GameEngine {
       this.wavelets.push({ view: wave, speed: this.uiRng.range(8, 18), drift: this.uiRng.range(-1.6, 1.6) });
     }
 
-    for (let i = 0; i < 24; i++) {
+    const rippleCount = this.mobilePerformanceMode ? 8 : 24;
+    for (let i = 0; i < rippleCount; i++) {
       const ripple = new Graphics().circle(0, 0, this.uiRng.range(8, 20)).stroke({ color: 0xffffff, width: 1.5, alpha: this.uiRng.range(0.05, 0.11) });
       ripple.position.set(this.uiRng.range(24, WORLD_W - 24), this.uiRng.range(24, WORLD_H - 24));
       ripple.scale.set(this.uiRng.range(0.6, 1.3), this.uiRng.range(0.24, 0.48));
@@ -311,7 +323,7 @@ export class GameEngine {
     }
 
     const vignette = new Graphics().ellipse(WORLD_W * 0.5, WORLD_H * 0.48, 600, 316).fill({ color: 0xffffff, alpha: 0.04 });
-    vignette.filters = [new BlurFilter({ strength: 18 })];
+    if (!this.mobilePerformanceMode) vignette.filters = [new BlurFilter({ strength: 18 })];
     this.world.addChild(vignette);
   }
 
@@ -431,7 +443,7 @@ export class GameEngine {
     const points = this.buildBlobPoints(lobes, scale, offsetX, offsetY);
     g.poly(points).fill({ color, alpha });
     if (strokeWidth > 0) g.poly(points).stroke({ color: strokeColor, width: strokeWidth, alpha: 0.95 });
-    if (blur > 0) g.filters = [new BlurFilter({ strength: blur })];
+    if (blur > 0 && !this.mobilePerformanceMode) g.filters = [new BlurFilter({ strength: blur })];
     return g;
   }
 
@@ -451,7 +463,7 @@ export class GameEngine {
     outline.alpha = 0.98;
     const sprite = this.makeShipSprite(texture, tint, scale);
     const damageGlow = new Graphics().ellipse(-3, -14, 16, 11).fill({ color: 0xff8d4d, alpha: 0.32 });
-    damageGlow.filters = [new BlurFilter({ strength: 6 })];
+    if (!this.mobilePerformanceMode) damageGlow.filters = [new BlurFilter({ strength: 6 })];
     damageGlow.alpha = 0;
     const damageFx = new Sprite(Texture.from(GAME_ASSETS.fire));
     damageFx.anchor.set(0.5, 0.82); damageFx.position.set(-4, -20); damageFx.scale.set(0.74); damageFx.alpha = 0;
@@ -616,10 +628,12 @@ export class GameEngine {
       const nx = this.player.x + Math.cos(this.player.rotation) * moveSpeed * dt;
       const ny = this.player.y + Math.sin(this.player.rotation) * moveSpeed * dt;
       this.tryMove(this.player, nx, ny);
+      const wakeInterval = this.mobilePerformanceMode ? 0.11 : 0.055;
       this.wakeClock += dt;
-      if (this.wakeClock >= 0.055) { this.wakeClock = 0; this.spawnWake(); }
+      if (this.wakeClock >= wakeInterval) { this.wakeClock = 0; this.spawnWake(); }
     } else {
-      this.wakeClock = Math.min(this.wakeClock + dt, 0.055);
+      const wakeInterval = this.mobilePerformanceMode ? 0.11 : 0.055;
+      this.wakeClock = Math.min(this.wakeClock + dt, wakeInterval);
     }
 
     const turning = (this.input.isDown('left') ? -1 : 0) + (this.input.isDown('right') ? 1 : 0);
@@ -738,7 +752,7 @@ export class GameEngine {
     const view = new Container();
     const shadow = new Graphics().ellipse(0, 13, 26, 9).fill({ color: 0x032334, alpha: 0.32 });
     const halo = new Graphics().circle(0, 0, 23).stroke({ color: 0xff775d, width: 5, alpha: 0.3 });
-    halo.filters = [new BlurFilter({ strength: 4 })];
+    if (!this.mobilePerformanceMode) halo.filters = [new BlurFilter({ strength: 4 })];
     const body = new Graphics()
       .roundRect(-15, -18, 30, 36, 9)
       .fill(0x9a5638)
@@ -1182,7 +1196,9 @@ export class GameEngine {
         projectile.shadow.alpha = 0.34 * (1 - arcHeight / 22);
         projectile.shadow.scale.set(1 - arcHeight / 38, 1 - arcHeight / 52);
       }
-      if (projectile.owner === 'player' && this.visualParticleCount < 96 && this.uiRng.next() < 0.12) {
+      const trailLimit = this.mobilePerformanceMode ? 28 : 96;
+      const trailChance = this.mobilePerformanceMode ? 0.045 : 0.12;
+      if (projectile.owner === 'player' && this.visualParticleCount < trailLimit && this.uiRng.next() < trailChance) {
         this.spawnSparkBurst(projectile.x - stepX * 0.6, projectile.y - stepY * 0.6, 0xfff2a8, 1);
       }
     }
@@ -1508,7 +1524,7 @@ export class GameEngine {
     const shadow = new Graphics().ellipse(0, 14, 27, 10).fill({ color: 0x032334, alpha: 0.28 });
     const ring = new Graphics().circle(0, 0, 25).stroke({ color: 0xffffff, width: 4, alpha: 0.88 });
     const halo = new Graphics().circle(0, 0, 31).stroke({ color, width: 7, alpha: 0.34 });
-    halo.filters = [new BlurFilter({ strength: 5 })];
+    if (!this.mobilePerformanceMode) halo.filters = [new BlurFilter({ strength: 5 })];
     const body = new Graphics().roundRect(-16, -16, 32, 32, 8).fill(color).stroke({ color: 0x071b36, width: 5 });
     const icon = new Graphics();
     if (kind === 'medicine') {
@@ -2139,7 +2155,7 @@ export class GameEngine {
   }
 
   private spawnSparkBurst(x: number, y: number, color: number, count: number): void {
-    const budget = Math.max(0, 120 - this.visualParticleCount);
+    const budget = Math.max(0, this.maxVisualParticles - this.visualParticleCount);
     const actual = Math.min(count, budget);
     for (let i = 0; i < actual; i++) {
       this.visualParticleCount += 1;
@@ -2170,7 +2186,7 @@ export class GameEngine {
   }
 
   private spawnActionLines(x: number, y: number, heading: number, color: number, count: number): void {
-    const budget = Math.max(0, 120 - this.visualParticleCount);
+    const budget = Math.max(0, this.maxVisualParticles - this.visualParticleCount);
     const actual = Math.min(count, budget);
     for (let i = 0; i < actual; i++) {
       this.visualParticleCount += 1;
@@ -2211,8 +2227,9 @@ export class GameEngine {
     const ny = dy / distance;
     const sideX = -ny;
     const sideY = nx;
-    for (let i = 0; i < 7; i++) {
-      const t = i / 6;
+    const streakCount = this.mobilePerformanceMode ? 4 : 7;
+    for (let i = 0; i < streakCount; i++) {
+      const t = i / Math.max(1, streakCount - 1);
       const x = startX + dx * t + sideX * this.uiRng.range(-12, 12);
       const y = startY + dy * t + sideY * this.uiRng.range(-12, 12);
       const streak = new Graphics().roundRect(-18, -3, 36, 6, 3).fill({ color: i % 2 ? 0xffffff : 0x78efff, alpha: 0.62 });
@@ -2232,7 +2249,7 @@ export class GameEngine {
       };
       this.app.ticker.add(update);
     }
-    this.spawnSparkBurst(endX, endY, 0xb6fff5, 8);
+    this.spawnSparkBurst(endX, endY, 0xb6fff5, this.mobilePerformanceMode ? 4 : 8);
   }
 
   private spawnPickupBurst(x: number, y: number, kind: PickupKind): void {
@@ -2332,7 +2349,8 @@ export class GameEngine {
       if (life <= 0) { this.app.ticker.remove(update); sprite.destroy(); ring.destroy(); }
     };
     this.app.ticker.add(update);
-    for (let i = 0; i < 7; i++) {
+    const debrisCount = this.mobilePerformanceMode ? 3 : 7;
+    for (let i = 0; i < debrisCount; i++) {
       const debris = new Graphics().rect(-3, -3, 6, 6).fill(i % 2 ? 0xffe45a : 0xff5964);
       debris.position.set(x, y); debris.rotation = this.uiRng.range(0, Math.PI); this.fx.addChild(debris);
       const a = this.uiRng.range(0, Math.PI * 2); const speed = this.uiRng.range(70, 170); let debrisLife = this.uiRng.range(0.3, 0.56); const full = debrisLife;

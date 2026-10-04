@@ -4459,3 +4459,153 @@ body {
     padding: .65rem .8rem .75rem;
   }
 }
+
+
+/* ========================================================================== */
+/* Mobile/tablet follow-up: full tips, compact left navigation, lighter UI.    */
+/* Desktop/fine-pointer styles intentionally remain untouched.                 */
+/* ========================================================================== */
+@media (any-pointer: coarse) {
+  /* Never throw away instructions on short phones. Older compact rules hid
+     tips 03/04; all four now remain available and the pane scrolls if needed. */
+  .menu-bullet-list span:nth-child(n+3) {
+    display: grid !important;
+  }
+
+  .menu-side-card .home-pane-side-info {
+    overflow-y: auto !important;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Keep the complete steering cluster in the lower-left control lane. The
+     dash no longer floats above the arena; it sits beside the three arrows. */
+  .touch-nav-zone {
+    left: max(8px, env(safe-area-inset-left)) !important;
+    bottom: max(8px, env(safe-area-inset-bottom)) !important;
+    width: 258px !important;
+    height: 62px !important;
+  }
+
+  .touch-steering-pad {
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 188px !important;
+    height: 62px !important;
+  }
+
+  .touch-steer {
+    top: auto !important;
+    right: auto !important;
+    bottom: 0 !important;
+    width: 56px !important;
+    height: 56px !important;
+    border-width: 3px !important;
+    box-shadow: 3px 4px 0 rgba(7,16,24,.78) !important;
+    transform: none !important;
+  }
+
+  .touch-turn-left { left: 0 !important; }
+  .touch-forward { left: 64px !important; background: #fff6d6; }
+  .touch-turn-right { left: 128px !important; }
+
+  .touch-steer:active,
+  .touch-turn-left:active,
+  .touch-forward:active,
+  .touch-turn-right:active {
+    transform: translate(1px, 2px) !important;
+    box-shadow: 1px 2px 0 rgba(7,16,24,.82) !important;
+  }
+
+  .touch-steer strong {
+    font-size: 1.25rem !important;
+  }
+
+  .touch-dash {
+    top: auto !important;
+    right: auto !important;
+    left: 196px !important;
+    bottom: 0 !important;
+    width: 56px !important;
+    height: 56px !important;
+    border-radius: 14px !important;
+  }
+
+  /* Expensive CSS filters add little on touch screens and compete with the
+     WebGL canvas for GPU time. */
+  .menu-noise,
+  .game-noise {
+    animation: none !important;
+  }
+}
+
+@media (any-pointer: coarse) and (max-height: 430px) {
+  .home-pane-side-info {
+    padding: .42rem .5rem .5rem !important;
+  }
+
+  .home-pane-side-info .eyebrow {
+    margin-bottom: .25rem !important;
+  }
+
+  .home-pane-side-info h2 {
+    margin: .2rem 0 .28rem !important;
+    font-size: clamp(1.15rem, 4.3vh, 1.55rem) !important;
+  }
+
+  .home-pane-side-info > p {
+    margin: .15rem 0 .3rem !important;
+    font-size: .54rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .menu-bullet-list {
+    margin-top: .25rem !important;
+    gap: .2rem !important;
+  }
+
+  .menu-bullet-list span {
+    min-height: 0 !important;
+    padding: .22rem .28rem !important;
+    font-size: .52rem !important;
+    line-height: 1.08 !important;
+  }
+
+  .menu-bullet-list b {
+    min-width: 23px !important;
+    height: 21px !important;
+    font-size: .54rem !important;
+  }
+
+  .touch-nav-zone {
+    width: 230px !important;
+    height: 54px !important;
+  }
+
+  .touch-steering-pad {
+    width: 168px !important;
+    height: 54px !important;
+  }
+
+  .touch-steer,
+  .touch-dash {
+    width: 49px !important;
+    height: 49px !important;
+  }
+
+  .touch-turn-left { left: 0 !important; }
+  .touch-forward { left: 57px !important; }
+  .touch-turn-right { left: 114px !important; }
+  .touch-dash { left: 176px !important; }
+
+  .touch-steer strong,
+  .touch-dash strong {
+    font-size: 1.05rem !important;
+  }
+
+  .touch-steer small,
+  .touch-dash span,
+  .touch-dash small {
+    font-size: .36rem !important;
+  }
+}
