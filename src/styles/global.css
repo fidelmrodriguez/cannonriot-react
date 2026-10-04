@@ -4079,3 +4079,49 @@ body {
     padding-right: 6.2rem;
   }
 }
+
+/* ========================================================================== */
+/* Crisp hover interactions.                                                   */
+/* Avoid animating transforms on text-bearing controls: fractional transform   */
+/* interpolation can make the chunky display font look warped on desktop.      */
+/* Keep the comic-book feedback through color and shadow instead.              */
+/* ========================================================================== */
+@media (hover: hover) and (pointer: fine) {
+  .arcade-button {
+    transition: box-shadow .12s ease, background-color .12s ease, color .12s ease;
+  }
+
+  .arcade-button:hover {
+    transform: rotate(-1deg);
+    animation: none !important;
+  }
+
+  .quick-start-card .arcade-button.mega:hover {
+    transform: rotate(-1.2deg);
+    animation: none !important;
+  }
+
+  .tabs button:hover {
+    animation: none !important;
+  }
+
+  .jukebox-track:hover {
+    transform: rotate(var(--track-tilt, -.25deg));
+  }
+
+  .options-link {
+    transition: box-shadow .12s ease, background-color .12s ease, color .12s ease;
+  }
+
+  .options-link:hover {
+    transform: rotate(-1.1deg);
+  }
+}
+
+/* Restore a little breathing room between the primary CTA and Options on
+   notebook-height layouts without making the left rail overflow again. */
+@media (min-width: 981px) and (min-height: 760px) and (max-height: 1000px) and (any-pointer: fine) {
+  .quick-start-card .options-link {
+    margin-top: .82rem !important;
+  }
+}
