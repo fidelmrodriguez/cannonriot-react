@@ -5,6 +5,49 @@ import { t } from './i18n';
 
 const audioObjectUrls = new Map<string, string>();
 let mockWorkerStarted = false;
+const PRELOAD_LOG = '[Cannon Riot preload]';
+
+function absoluteAssetUrl(url: string): string {
+  try {
+    return new URL(url, window.location.href).href;
+  } catch {
+    return url;
+  }
+}
+
+async function logFailedRequestDetails(kind: string, url: string, originalError: unknown): Promise<void> {
+  const absoluteUrl = absoluteAssetUrl(url);
+  console.error(`${PRELOAD_LOG} ${kind} failed permanently`, {
+    url,
+    absoluteUrl,
+    online: navigator.onLine,
+    page: window.location.href,
+    error: originalError,
+  });
+
+  // Diagnostic only: same URL, no query string/cache-busting. A HEAD request helps
+  // distinguish an HTTP/deploy problem from a Pixi/browser decoding failure.
+  try {
+    const response = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+    console.error(`${PRELOAD_LOG} ${kind} HTTP diagnostic`, {
+      url,
+      absoluteUrl,
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      contentType: response.headers.get('content-type'),
+      contentLength: response.headers.get('content-length'),
+      cacheControl: response.headers.get('cache-control'),
+      etag: response.headers.get('etag'),
+    });
+  } catch (diagnosticError) {
+    console.error(`${PRELOAD_LOG} ${kind} HTTP diagnostic could not run`, {
+      url,
+      absoluteUrl,
+      error: diagnosticError,
+    });
+  }
+}
 
 const GAME_TEXTURE_URLS = [
   GAME_ASSETS.player,
@@ -49,33 +92,74 @@ const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(re
 async function preloadPixiTexture(url: string): Promise<void> {
   let lastError: unknown;
   for (let attempt = 0; attempt < 3; attempt += 1) {
+    const attemptNumber = attempt + 1;
+    console.info(`${PRELOAD_LOG} texture start`, {
+      url,
+      absoluteUrl: absoluteAssetUrl(url),
+      attempt: attemptNumber,
+      maxAttempts: 3,
+    });
     try {
       await Assets.load(url);
+      console.info(`${PRELOAD_LOG} texture loaded`, { url, attempt: attemptNumber });
       return;
     } catch (error) {
       lastError = error;
-      if (attempt < 2) await wait(180 * (attempt + 1));
+      if (attempt < 2) {
+        console.warn(`${PRELOAD_LOG} texture attempt failed; retrying`, {
+          url,
+          absoluteUrl: absoluteAssetUrl(url),
+          attempt: attemptNumber,
+          error,
+        });
+        await wait(180 * attemptNumber);
+      }
     }
   }
+  await logFailedRequestDetails('texture', url, lastError);
   throw lastError;
 }
 
 async function preloadDomImage(url: string): Promise<void> {
-  await new Promise<void>((resolve, reject) => {
-    const image = new Image();
-    image.decoding = 'async';
-    image.onload = () => resolve();
-    image.onerror = () => reject(new Error(t('boot.imageError', { url })));
-    image.src = url;
-  });
+  console.info(`${PRELOAD_LOG} screen image start`, { url, absoluteUrl: absoluteAssetUrl(url) });
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const image = new Image();
+      image.decoding = 'async';
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error(t('boot.imageError', { url })));
+      image.src = url;
+    });
+    console.info(`${PRELOAD_LOG} screen image loaded`, { url });
+  } catch (error) {
+    await logFailedRequestDetails('screen image', url, error);
+    throw error;
+  }
 }
 
 async function preloadAudio(url: string): Promise<void> {
-  if (audioObjectUrls.has(url)) return;
-  const response = await fetch(url, { cache: 'force-cache' });
-  if (!response.ok) throw new Error(t('boot.audioError', { url }));
-  const blob = await response.blob();
-  audioObjectUrls.set(url, URL.createObjectURL(blob));
+  if (audioObjectUrls.has(url)) {
+    console.info(`${PRELOAD_LOG} audio already cached`, { url });
+    return;
+  }
+  console.info(`${PRELOAD_LOG} audio start`, { url, absoluteUrl: absoluteAssetUrl(url) });
+  try {
+    const response = await fetch(url, { cache: 'force-cache' });
+    if (!response.ok) {
+      throw new Error(`${t('boot.audioError', { url })} (HTTP ${response.status} ${response.statusText})`);
+    }
+    const blob = await response.blob();
+    audioObjectUrls.set(url, URL.createObjectURL(blob));
+    console.info(`${PRELOAD_LOG} audio loaded`, {
+      url,
+      status: response.status,
+      type: blob.type,
+      bytes: blob.size,
+    });
+  } catch (error) {
+    await logFailedRequestDetails('audio', url, error);
+    throw error;
+  }
 }
 
 async function runWithConcurrency(tasks: (() => Promise<void>)[], concurrency: number, onDone: () => void): Promise<void> {
@@ -93,6 +177,17 @@ async function runWithConcurrency(tasks: (() => Promise<void>)[], concurrency: n
 }
 
 export async function preloadAllAssets(onProgress: (progress: number, stage: string) => void): Promise<void> {
+  console.info(`${PRELOAD_LOG} boot started`, {
+    page: window.location.href,
+    origin: window.location.origin,
+    baseURI: document.baseURI,
+    online: navigator.onLine,
+    textureCount: GAME_TEXTURE_URLS.length,
+    screenImageCount: SCREEN_IMAGE_URLS.length,
+    sfxCount: SFX_URLS.length,
+    musicCount: MUSIC_URLS.length,
+    total: PRELOAD_ASSET_COUNT,
+  });
   onProgress(0, 'boot.network');
   if (!mockWorkerStarted) {
     const { worker } = await import('./mocks/browser');
@@ -134,4 +229,5 @@ export async function preloadAllAssets(onProgress: (progress: number, stage: str
   await runWithConcurrency(musicTasks, 3, () => undefined);
 
   onProgress(1, 'boot.done');
+  console.info(`${PRELOAD_LOG} boot completed`, { loaded, total });
 }
