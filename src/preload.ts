@@ -44,8 +44,20 @@ export function getPreloadedAudioUrl(url: string): string {
   return audioObjectUrls.get(url) ?? url;
 }
 
+const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+
 async function preloadPixiTexture(url: string): Promise<void> {
-  await Assets.load(url);
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await Assets.load(url);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt < 2) await wait(180 * (attempt + 1));
+    }
+  }
+  throw lastError;
 }
 
 async function preloadDomImage(url: string): Promise<void> {
@@ -101,7 +113,7 @@ export async function preloadAllAssets(onProgress: (progress: number, stage: str
     await preloadPixiTexture(url);
     step('boot.textures');
   });
-  await runWithConcurrency(textureTasks, 6, () => undefined);
+  await runWithConcurrency(textureTasks, 3, () => undefined);
 
   const screenTasks = SCREEN_IMAGE_URLS.map((url) => async () => {
     await preloadDomImage(url);
