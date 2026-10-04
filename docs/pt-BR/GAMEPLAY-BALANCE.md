@@ -29,13 +29,15 @@ Partidas de alta pressão recebem mais drops de suporte e um teto de inimigos at
 - **Pólvora Viva** acelera e fortalece temporariamente a artilharia e dispara automaticamente o canhão frontal + os dois lados sempre que as recargas aceleradas ficam prontas. A rajada começa ao pegar o power-up e só para quando o efeito termina.
 - **Wind at Your Back** aumenta velocidade de movimento e melhora o dash.
 - **Reinforced Hull** reduz temporariamente o dano recebido.
-- **Powder Barrel** destrói o inimigo que o aciona e causa dano forte porém não letal nos inimigos próximos; o navio do jogador é imune ao próprio barril.
+- **Powder Barrel** destrói o inimigo que o aciona e causa dano forte porém não letal em um raio ampliado de 170 px, atingindo grupos densos; o navio do jogador é imune ao próprio barril.
 
-Drops de buff priorizam um buff ainda inativo; buffs repetidos estendem a duração em vez de serem desperdiçados.
+Drops de buff priorizam um buff ainda inativo; buffs repetidos estendem a duração em vez de serem desperdiçados. Abaixo de 35% de casco, uma checagem de emergência garante Medicine/Reinforced Hull por perto quando não há suporte adequado próximo, com cooldown de 12 s entre drops de emergência.
 
 ## Salvaguardas de justiça
 
 - nenhum inimigo nasce dentro de ilha ou perto demais do jogador;
+- inimigos recém-spawnados recebem apenas um telegraph visual curto de `!`; a IA e o timing de ataque não sofrem atraso;
+- o dash dura 0,28 s e concede imunidade a projéteis/colisão de aríete somente enquanto o estado de dash está ativo; uma colisão com Chaser nessa janela faz o inimigo se autodestruir sem ferir o jogador e continua sem pontuar, sem tempo extra de proteção depois do dash;
 - teto de inimigos ativos escala dentro de limites seguros;
 - autodestruição do Chaser não pontua;
 - splash do barril não pode causar chain-kill nos navios ao redor;

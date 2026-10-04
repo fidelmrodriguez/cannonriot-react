@@ -30,13 +30,15 @@ High-pressure matches receive more support drops and a tighter active-enemy cap.
 - **Living Powder** temporarily accelerates and boosts artillery and automatically fires the front cannon + both broadsides whenever their boosted reloads are ready. The barrage starts on pickup, bypasses the normal 0.25 s direction lock, and stops when the power-up expires.
 - **Wind at Your Back** increases movement speed and improves dash.
 - **Reinforced Hull** reduces incoming damage temporarily.
-- **Powder Barrel** destroys the triggering enemy and deals strong non-lethal splash damage to nearby enemies; the player's ship is immune to its own barrel.
+- **Powder Barrel** destroys the triggering enemy and deals strong non-lethal splash damage in a wider 170 px blast radius so dense groups are affected; the player's ship is immune to its own barrel.
 
-Buff drops prefer an inactive buff; repeated buffs extend duration instead of being wasted.
+Buff drops prefer an inactive buff; repeated buffs extend duration instead of being wasted. Below 35% hull, an emergency support check guarantees a nearby Medicine/Reinforced Hull drop when no suitable support is already close, with a 12 s emergency cooldown.
 
 ## Fairness safeguards
 
 - no enemy spawn inside islands or near the player;
+- newly spawned enemies get a short visual `!` telegraph only; their AI and attack timing remain unchanged;
+- dash lasts 0.28 s and grants projectile/ram collision immunity only while the dash state is active; a Chaser collision during that window self-destructs without hurting the player and remains non-scoring, with no post-dash grace period;
 - active enemy cap scales between safe limits;
 - Chaser self-destruction does not score;
 - barrel splash cannot chain-kill surrounding ships;

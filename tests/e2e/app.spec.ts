@@ -306,15 +306,50 @@ test.describe('application and gameplay', () => {
     expect(after.projectiles.filter((shot: any) => shot.owner === 'player')).toHaveLength(0);
   });
 
-  test('dash respects cooldown and arena bounds', async ({ page, isMobile }) => {
+  test('dash has a short active i-frame, counters Chasers and ends protection immediately', async ({ page, isMobile }) => {
     test.skip(isMobile, 'Keyboard dash assertion.');
     await startGame(page);
-    await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.setPlayerPose(640, 360, 0));
+    const dashTargetId = await page.evaluate(() => {
+      const api = (window as any).__CANNON_RIOT_TEST__;
+      api.setPlayerPose(640, 360, 0);
+      return api.spawnEnemy('chaser', 710, 360, 30);
+    });
     const before = await debugState(page);
-    await page.keyboard.press('ControlLeft');
-    const after = await debugState(page);
-    expect(after.player.x).toBeGreaterThan(before.player.x + 40);
-    expect(after.cooldowns.dash).toBeGreaterThan(1);
+    await page.keyboard.down('ControlLeft');
+    await page.waitForTimeout(60);
+    await page.keyboard.up('ControlLeft');
+    await page.waitForTimeout(110);
+    const during = await debugState(page);
+    expect(during.player.health).toBeCloseTo(before.player.health, 3);
+    expect(during.player.x).toBeGreaterThan(before.player.x + 40);
+    expect(during.enemies.some((enemy: any) => enemy.id === dashTargetId)).toBeFalsy();
+    expect(during.score).toBe(0);
+    expect(during.cooldowns.dash).toBeGreaterThan(1);
+
+    await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.advanceTime(0.35));
+    const ended = await debugState(page);
+    expect(ended.dashActive).toBeFalsy();
+    await page.evaluate(() => {
+      const api = (window as any).__CANNON_RIOT_TEST__;
+      const state = api.getState();
+      api.spawnEnemy('chaser', state.player.x + 8, state.player.y, 100);
+      api.advanceTime(0.12);
+    });
+    const vulnerableAgain = await debugState(page);
+    expect(vulnerableAgain.player.health).toBeLessThan(before.player.health);
+  });
+
+  test('low hull guarantees a nearby medicine or armor emergency drop with cooldown', async ({ page }) => {
+    await startGame(page);
+    await page.evaluate(() => {
+      const api = (window as any).__CANNON_RIOT_TEST__;
+      api.damagePlayer(70);
+      api.advanceTime(0.12);
+    });
+    const state = await debugState(page);
+    expect(state.player.health).toBeLessThanOrEqual(35);
+    expect(state.pickups.some((pickup: any) => pickup.kind === 'medicine' || pickup.kind === 'armor')).toBeTruthy();
+    expect(state.emergencyDropCooldown).toBeGreaterThan(11);
   });
 
   test('medicine heals and temporary buffs stop while paused', async ({ page, isMobile }) => {
@@ -360,7 +395,7 @@ test.describe('application and gameplay', () => {
     const barrel = state.barrels[0];
     const player = state.player;
     const playerHealth = player.health;
-    await page.evaluate(({ barrel, player }) => {
+    const farSplashId = await page.evaluate(({ barrel, player }) => {
       const api = (window as any).__CANNON_RIOT_TEST__;
       const dx = barrel.x - player.x;
       const dy = barrel.y - player.y;
@@ -371,6 +406,7 @@ test.describe('application and gameplay', () => {
       const py = ux;
       api.spawnEnemy('chaser', barrel.x + ux * 24, barrel.y + uy * 24, 100);
       api.spawnEnemy('shooter', barrel.x + ux * 58 + px * 6, barrel.y + uy * 58 + py * 6, 100);
+      return api.spawnEnemy('shooter', barrel.x + ux * 145 - px * 12, barrel.y + uy * 145 - py * 12, 100);
     }, { barrel, player });
     await page.waitForTimeout(850);
     state = await debugState(page);
@@ -379,6 +415,9 @@ test.describe('application and gameplay', () => {
     const splash = state.enemies.find((enemy: any) => enemy.kind === 'shooter' && enemy.id.startsWith('debug-enemy'));
     expect(splash.health).toBeGreaterThanOrEqual(1);
     expect(splash.health).toBeLessThan(100);
+    const farSplash = state.enemies.find((enemy: any) => enemy.id === farSplashId);
+    expect(farSplash.health).toBeGreaterThanOrEqual(1);
+    expect(farSplash.health).toBeLessThan(100);
   });
 
   test('timeout result persists across refresh and clean restart resets match state', async ({ page }) => {

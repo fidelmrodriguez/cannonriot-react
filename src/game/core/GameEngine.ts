@@ -113,6 +113,11 @@ export class GameEngine {
   private dashCooldown = 0;
   private dashCooldownMax: number = EXTRA_BALANCE.dash.baseCooldown;
   private dashWasDown = false;
+  private dashTimeRemaining = 0;
+  private dashDirection = 0;
+  private dashDistanceRemaining = 0;
+  private dashStartX = 0;
+  private dashStartY = 0;
   private barrelCooldown = 0;
   private barrelCooldownMax: number = EXTRA_BALANCE.powderBarrel.baseCooldown;
   private barrelWasDown = false;
@@ -124,6 +129,7 @@ export class GameEngine {
   private visualParticleCount = 0;
   private supportClock = 0;
   private supportInterval = 16;
+  private emergencyDropCooldown = 0;
   private paused = false;
   private ended = false;
   private started = false;
@@ -531,6 +537,9 @@ export class GameEngine {
     enemy.body.rotation = enemy.rotation - Math.PI / 2;
     this.enemies.push(enemy);
     this.popLabel(engineText(kind === 'chaser' ? 'chaser' : 'shooter'), position.x, position.y - 48, tint, 0.75);
+    // Purely visual spawn telegraph: enemies remain fully active immediately.
+    // This helps players notice fresh threats without changing AI timing or DPS.
+    this.showEnemySpawnAlert(enemy, tint);
     return true;
   }
 
@@ -545,6 +554,7 @@ export class GameEngine {
     this.bufferedWeaponActionTime = Math.max(0, this.bufferedWeaponActionTime - dt);
     if (this.bufferedWeaponActionTime <= 0) this.bufferedWeaponAction = null;
     this.dashCooldown = Math.max(0, this.dashCooldown - dt);
+    this.emergencyDropCooldown = Math.max(0, this.emergencyDropCooldown - dt);
     this.barrelCooldown = Math.max(0, this.barrelCooldown - dt);
     this.powderTime = Math.max(0, this.powderTime - dt);
     this.windTime = Math.max(0, this.windTime - dt);
@@ -572,6 +582,7 @@ export class GameEngine {
     for (const enemy of this.enemies) if (enemy.alive) this.animateShipDamageFx(enemy);
     this.updatePowderBarrels(dt);
     this.updatePickups(dt);
+    this.maybeSpawnEmergencyDrop();
     this.maybeSpawnSupportDrop();
 
     if (this.spawnClock >= this.config.enemySpawnTime) {
@@ -597,7 +608,10 @@ export class GameEngine {
     this.barrelWasDown = barrelDown;
 
     const speedBoost = this.windTime > 0 ? EXTRA_BALANCE.powerups.windSpeedMultiplier : 1;
-    if (this.input.isDown('forward')) {
+    if (this.isDashing()) {
+      this.updateDashMovement(dt);
+      this.wakeClock = 0;
+    } else if (this.input.isDown('forward')) {
       const moveSpeed = this.config.playerSpeed * speedBoost;
       const nx = this.player.x + Math.cos(this.player.rotation) * moveSpeed * dt;
       const ny = this.player.y + Math.sin(this.player.rotation) * moveSpeed * dt;
@@ -611,7 +625,7 @@ export class GameEngine {
     const turning = (this.input.isDown('left') ? -1 : 0) + (this.input.isDown('right') ? 1 : 0);
     this.player.sprite.skew.x = turning * 0.08;
     this.player.outline.skew.x = turning * 0.08;
-    this.player.outline.tint = this.armorTime > 0 ? 0xffd34d : 0x071b36;
+    this.player.outline.tint = this.isDashing() ? 0x9bfff5 : this.armorTime > 0 ? 0xffd34d : 0x071b36;
     this.player.body.rotation = this.player.rotation - Math.PI / 2;
     this.player.body.y = Math.sin(this.elapsed * 4.6) * 1.6;
     const powderBoost = this.powderTime > 0;
@@ -641,31 +655,55 @@ export class GameEngine {
   }
 
   private performDash(): void {
+    if (this.isDashing()) return;
     const cooldownBase = EXTRA_BALANCE.dash.baseCooldown;
     const pressureAssist = clamp(1 - Math.max(0, this.pressure - 1) * 0.09, 0.78, 1);
     const windAssist = this.windTime > 0 ? 0.72 : 1;
     this.dashCooldownMax = cooldownBase * pressureAssist * windAssist;
     this.dashCooldown = this.dashCooldownMax;
+    this.dashTimeRemaining = EXTRA_BALANCE.dash.duration;
+    this.dashDirection = this.player.rotation;
+    this.dashDistanceRemaining = this.windTime > 0 ? EXTRA_BALANCE.dash.windDistance : EXTRA_BALANCE.dash.distance;
+    this.dashStartX = this.player.x;
+    this.dashStartY = this.player.y;
     this.playSound('dash');
+    this.spawnActionLines(this.player.x, this.player.y, this.player.rotation, 0x9bfff5, 9);
+    this.shake(4, 0.1);
+    this.showMechanicComicPanel('dash', gameLines('dash'));
+  }
 
-    const totalDistance = this.windTime > 0 ? EXTRA_BALANCE.dash.windDistance : EXTRA_BALANCE.dash.distance;
-    const steps = 11;
-    const stepDistance = totalDistance / steps;
-    const startX = this.player.x;
-    const startY = this.player.y;
+  private isDashing(): boolean {
+    return this.dashTimeRemaining > 0 && this.dashDistanceRemaining > 0;
+  }
+
+  private updateDashMovement(dt: number): void {
+    if (!this.isDashing()) return;
+    const activeTime = Math.min(dt, this.dashTimeRemaining);
+    const dashSpeed = (this.windTime > 0 ? EXTRA_BALANCE.dash.windDistance : EXTRA_BALANCE.dash.distance) / EXTRA_BALANCE.dash.duration;
+    const desiredDistance = Math.min(this.dashDistanceRemaining, dashSpeed * activeTime);
+    const steps = Math.max(1, Math.ceil(desiredDistance / 10));
+    const stepDistance = desiredDistance / steps;
+    let blocked = false;
+
     for (let i = 0; i < steps; i++) {
-      const nx = this.player.x + Math.cos(this.player.rotation) * stepDistance;
-      const ny = this.player.y + Math.sin(this.player.rotation) * stepDistance;
-      if (!this.tryMove(this.player, nx, ny)) break;
+      const nx = this.player.x + Math.cos(this.dashDirection) * stepDistance;
+      const ny = this.player.y + Math.sin(this.dashDirection) * stepDistance;
+      if (!this.tryMove(this.player, nx, ny)) {
+        blocked = true;
+        break;
+      }
+      this.dashDistanceRemaining = Math.max(0, this.dashDistanceRemaining - stepDistance);
     }
 
-    const moved = Math.hypot(this.player.x - startX, this.player.y - startY);
-    if (moved > 4) {
-      this.spawnDashWake(startX, startY, this.player.x, this.player.y);
-      this.spawnActionLines(this.player.x, this.player.y, this.player.rotation, 0x9bfff5, 9);
-      this.shake(4, 0.1);
-      this.showMechanicComicPanel('dash', gameLines('dash'));
-    }
+    this.dashTimeRemaining = Math.max(0, this.dashTimeRemaining - activeTime);
+    if (blocked || this.dashTimeRemaining <= 0 || this.dashDistanceRemaining <= 0) this.finishDash();
+  }
+
+  private finishDash(): void {
+    const moved = Math.hypot(this.player.x - this.dashStartX, this.player.y - this.dashStartY);
+    this.dashTimeRemaining = 0;
+    this.dashDistanceRemaining = 0;
+    if (moved > 4) this.spawnDashWake(this.dashStartX, this.dashStartY, this.player.x, this.player.y);
   }
 
   private deployPowderBarrel(): void {
@@ -818,6 +856,45 @@ export class GameEngine {
     // Player is intentionally immune to their own powder barrel blast.
     this.popLabel(engineText('powderBlast'), x, y - 62, 0xffe066, 0.6);
     this.powderBarrels = this.powderBarrels.filter((candidate) => candidate.alive);
+  }
+
+  private showEnemySpawnAlert(enemy: EnemyEntity, tint: number): void {
+    const alert = new Container();
+    alert.position.set(0, -68);
+    const halo = new Graphics().circle(0, 0, 20).stroke({ color: tint, width: 5, alpha: 0.72 });
+    const badge = new Text({
+      text: '!',
+      style: {
+        fontFamily: 'Impact, Arial Black, sans-serif',
+        fontSize: 28,
+        fontWeight: '900',
+        fill: 0xfff36b,
+        stroke: { color: 0x071b36, width: 5 },
+      },
+    });
+    badge.anchor.set(0.5);
+    alert.addChild(halo, badge);
+    enemy.view.addChild(alert);
+
+    let life = 0.72;
+    const update = (ticker: { deltaMS: number }) => {
+      if (alert.destroyed || enemy.view.destroyed) {
+        this.app.ticker.remove(update);
+        return;
+      }
+      life -= ticker.deltaMS / 1000;
+      const progress = clamp(1 - life / 0.72, 0, 1);
+      const pulse = 1 + Math.sin(progress * Math.PI * 5) * 0.12;
+      halo.scale.set(pulse + progress * 0.35);
+      halo.alpha = Math.max(0, life / 0.72) * 0.72;
+      badge.scale.set(0.92 + Math.sin(progress * Math.PI * 4) * 0.08);
+      alert.alpha = life < 0.18 ? Math.max(0, life / 0.18) : 1;
+      if (life <= 0) {
+        this.app.ticker.remove(update);
+        if (!alert.destroyed) alert.destroy({ children: true });
+      }
+    };
+    this.app.ticker.add(update);
   }
 
   private hasLineOfSight(ax: number, ay: number, bx: number, by: number): boolean {
@@ -1031,6 +1108,10 @@ export class GameEngine {
 
       if (enemy.kind === 'chaser' && distSq(enemy.x, enemy.y, this.player.x, this.player.y) < (enemy.radius + this.player.radius) ** 2) {
         this.playShipContactSound();
+        if (this.isDashing()) {
+          this.destroyEnemy(enemy, false);
+          continue;
+        }
         const chaserDamageMultiplier = clamp(1 - Math.max(0, this.pressure - 1) * 0.1, 0.84, 1);
         this.damageShip(this.player, this.config.chaserCollisionDamage * chaserDamageMultiplier);
         this.destroyEnemy(enemy, false, this.player.alive);
@@ -1132,6 +1213,17 @@ export class GameEngine {
       }
 
       if (playerInvolved && chaser?.alive) {
+        if (this.isDashing()) {
+          // A correctly timed dash counters a rammer: the Chaser self-destructs, the
+          // player takes no collision damage, and the dash may continue through it.
+          // It remains a non-scoring Chaser collision, preserving the scoring rule.
+          this.destroyEnemy(chaser, false);
+          if (ship.id === PLAYER_ID) {
+            ship.x = x; ship.y = y; ship.view.position.set(x, y);
+            return true;
+          }
+          return false;
+        }
         const chaserDamageMultiplier = clamp(1 - Math.max(0, this.pressure - 1) * 0.1, 0.84, 1);
         this.damageShip(this.player, this.config.chaserCollisionDamage * chaserDamageMultiplier);
         this.destroyEnemy(chaser, false, this.player.alive);
@@ -1320,6 +1412,53 @@ export class GameEngine {
     return Math.min(extended, baseDuration * EXTRA_BALANCE.adaptive.maxBuffDurationMultiplier);
   }
 
+  private maybeSpawnEmergencyDrop(): void {
+    if (!this.player.alive || this.emergencyDropCooldown > 0) return;
+    const healthRatio = this.player.health / this.player.maxHealth;
+    if (healthRatio > EXTRA_BALANCE.pickups.emergencyHealthRatio) return;
+
+    const nearbySupport = this.pickups.some((pickup) =>
+      pickup.alive
+      && (pickup.kind === 'medicine' || pickup.kind === 'armor')
+      && distSq(pickup.x, pickup.y, this.player.x, this.player.y) <= EXTRA_BALANCE.pickups.emergencyNearbyRadius ** 2
+    );
+    if (nearbySupport) return;
+
+    // Emergency support is guaranteed even if normal pickup slots are full.
+    // Prefer replacing a non-defensive pickup; otherwise replace the farthest crate.
+    const activePickups = this.pickups.filter((pickup) => pickup.alive);
+    if (activePickups.length >= EXTRA_BALANCE.pickups.maxActive) {
+      const replacement = [...activePickups]
+        .sort((a, b) => {
+          const aPriority = a.kind === 'medicine' || a.kind === 'armor' ? 1 : 0;
+          const bPriority = b.kind === 'medicine' || b.kind === 'armor' ? 1 : 0;
+          if (aPriority !== bPriority) return aPriority - bPriority;
+          return distSq(b.x, b.y, this.player.x, this.player.y) - distSq(a.x, a.y, this.player.x, this.player.y);
+        })[0];
+      if (replacement) {
+        replacement.alive = false;
+        if (!replacement.view.destroyed) replacement.view.destroy({ children: true });
+        this.pickups = this.pickups.filter((pickup) => pickup.alive);
+      }
+    }
+
+    const kind: PickupKind = healthRatio <= 0.22 || this.armorTime > 1.5 || this.rng.next() < 0.68 ? 'medicine' : 'armor';
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const angle = this.rng.range(0, Math.PI * 2);
+      const distance = this.rng.range(105, 180);
+      const x = clamp(this.player.x + Math.cos(angle) * distance, 72, WORLD_W - 72);
+      const y = clamp(this.player.y + Math.sin(angle) * distance, 72, WORLD_H - 72);
+      if (this.collidesIsland(x, y, 32)) continue;
+      if (this.enemies.some((enemy) => enemy.alive && distSq(x, y, enemy.x, enemy.y) < 88 ** 2)) continue;
+      if (this.pickups.some((pickup) => pickup.alive && distSq(x, y, pickup.x, pickup.y) < 74 ** 2)) continue;
+      this.spawnPickup(kind, x, y);
+      this.popLabel(engineText('driftCrate'), x, y - 54, 0xfff08a, 0.7);
+      this.emergencyDropCooldown = EXTRA_BALANCE.pickups.emergencyCooldown;
+      this.supportClock = 0;
+      return;
+    }
+  }
+
   private maybeSpawnSupportDrop(): void {
     if (this.supportClock < this.supportInterval || this.pickups.filter((pickup) => pickup.alive).length >= EXTRA_BALANCE.pickups.maxActive) return;
     const healthRatio = this.player.health / this.player.maxHealth;
@@ -1458,6 +1597,9 @@ export class GameEngine {
 
   private damageShip(ship: ShipEntity, amount: number): void {
     if (!ship.alive) return;
+    // Dash i-frame exists only while the timed dash state is active. There is
+    // deliberately no post-dash grace period.
+    if (ship.id === PLAYER_ID && this.isDashing()) return;
     const armorActive = ship.id === PLAYER_ID && this.armorTime > 0;
     const effectiveAmount = armorActive ? amount * EXTRA_BALANCE.powerups.armorDamageMultiplier : amount;
     ship.health = Math.max(0, ship.health - effectiveAmount);
@@ -2310,6 +2452,8 @@ export class GameEngine {
     pickups: { kind: PickupKind; x: number; y: number; lifetime: number }[];
     barrels: { x: number; y: number; armTime: number; lifetime: number }[];
     cooldowns: { front: number; broadside: number; weaponSwitch: number; dash: number; barrel: number };
+    dashActive: boolean;
+    emergencyDropCooldown: number;
     buffs: { powder: number; wind: number; armor: number };
   } {
     return {
@@ -2332,6 +2476,8 @@ export class GameEngine {
       pickups: this.pickups.filter((pickup) => pickup.alive).map((pickup) => ({ kind: pickup.kind, x: pickup.x, y: pickup.y, lifetime: pickup.lifetime })),
       barrels: this.powderBarrels.filter((barrel) => barrel.alive).map((barrel) => ({ x: barrel.x, y: barrel.y, armTime: barrel.armTime, lifetime: barrel.lifetime })),
       cooldowns: { front: this.frontCooldown, broadside: this.broadsideCooldown, weaponSwitch: this.weaponSwitchCooldown, dash: this.dashCooldown, barrel: this.barrelCooldown },
+      dashActive: this.isDashing(),
+      emergencyDropCooldown: this.emergencyDropCooldown,
       buffs: { powder: this.powderTime, wind: this.windTime, armor: this.armorTime },
     };
   }

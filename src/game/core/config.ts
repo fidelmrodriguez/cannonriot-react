@@ -32,6 +32,7 @@ export const EXTRA_BALANCE = {
   },
   dash: {
     baseCooldown: 2.65,
+    duration: 0.28,
     distance: 132,
     windDistance: 158,
   },
@@ -40,7 +41,7 @@ export const EXTRA_BALANCE = {
     lifetime: 10.5,
     armTime: 0.48,
     damage: 62,
-    blastRadius: 92,
+    blastRadius: 170,
     triggerRadius: 58,
     maxActive: 3,
   },
@@ -49,6 +50,9 @@ export const EXTRA_BALANCE = {
     baseLifetime: 9.5,
     baseMedicine: 20,
     baseBuffDuration: 6.8,
+    emergencyHealthRatio: 0.35,
+    emergencyCooldown: 12,
+    emergencyNearbyRadius: 300,
   },
   weapons: {
     switchLockSeconds: 0.25,
