@@ -70,7 +70,7 @@ For E2E, `?e2e=1` fixes the seed to `1337` and exposes a fixed-step `advanceTime
 
 ## Input model
 
-Keyboard and touch map to the same `GameAction` set. Desktop uses held keys; touch buttons use pointer capture so simultaneous movement and attack inputs can coexist.
+Keyboard and touch map to the same `GameAction` set. Desktop uses held keys; touch controls keep an independent pointer-to-action registry, so **forward + left/right** can remain active simultaneously and movement can coexist with attack inputs. Pointer capture is used when available, with per-pointer cleanup on release/cancel/lost capture.
 
 Normal artillery uses independent front/broadside reloads plus a short global switch lock:
 

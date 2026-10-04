@@ -41,7 +41,7 @@ Helpers disponíveis:
 2. inglês padrão + troca EN/PT/ES ao vivo durante partida;
 3. identidade local persistente;
 4. validação/persistência de options;
-5. controles desktop e setas/artilharia touch;
+5. controles desktop e setas/artilharia touch, incluindo avançar + esquerda/direita simultaneamente;
 6. controles/HUD touch dentro da viewport landscape;
 7. limites de movimento e colisão com ilha;
 8. rotação e ataque à distância do Shooter;

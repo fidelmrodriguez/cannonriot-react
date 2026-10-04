@@ -41,7 +41,7 @@ Available helpers:
 2. default English + live EN/PT/ES switching during a running match;
 3. persistent local player identity;
 4. options validation/persistence;
-5. desktop controls and touch arrow/artillery controls;
+5. desktop controls and touch arrow/artillery controls, including simultaneous forward + left/right steering;
 6. touch controls/HUD staying inside the landscape viewport;
 7. movement bounds and island collision;
 8. rotation and Shooter ranged attack;

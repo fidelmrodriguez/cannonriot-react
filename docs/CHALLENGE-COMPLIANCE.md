@@ -132,7 +132,7 @@ Scenario controls are available only with `?dev=1`/`?e2e=1`. **Restore calm seas
 - Desktop composition is kept separate from touch-only CSS overrides.
 - Mobile/tablet menus and remote-data panes can scroll instead of hiding required content.
 - Touch gameplay uses left/forward/right steering arrows + dedicated dash on the left and artillery/barrel controls on the right.
-- Pointer capture supports multitouch movement + attacks.
+- Per-pointer touch tracking supports simultaneous **forward + left/right** steering as well as movement + attack multitouch.
 - Touch renderer resolution is 1, antialiasing/expensive blur is disabled, visual density is reduced and ticker is capped at 50 FPS.
 - The authoritative arena/HUD remain landscape-oriented and gameplay rules are unchanged.
 

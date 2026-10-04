@@ -136,6 +136,35 @@ test.describe('application and gameplay', () => {
     }
   });
 
+  test('touch steering keeps forward and turn pressed at the same time', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'Multitouch steering assertion.');
+    await startGame(page);
+    await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.setPlayerPose(640, 360, 0));
+    const before = await debugState(page);
+
+    await page.locator('.touch-forward').evaluate((button) => {
+      button.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 41, pointerType: 'touch', isPrimary: true, buttons: 1 }));
+    });
+    await page.locator('.touch-turn-left').evaluate((button) => {
+      button.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 42, pointerType: 'touch', isPrimary: false, buttons: 1 }));
+    });
+    await page.waitForTimeout(180);
+    const combined = await debugState(page);
+
+    await page.locator('.touch-turn-left').evaluate((button) => {
+      button.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 42, pointerType: 'touch', isPrimary: false }));
+    });
+    await page.waitForTimeout(100);
+    const forwardOnly = await debugState(page);
+    await page.locator('.touch-forward').evaluate((button) => {
+      button.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 41, pointerType: 'touch', isPrimary: true }));
+    });
+
+    expect(combined.player.rotation).toBeLessThan(before.player.rotation);
+    expect(combined.player.x).toBeGreaterThan(before.player.x);
+    expect(forwardOnly.player.x).toBeGreaterThan(combined.player.x);
+  });
+
   test('landscape mobile controls stay inside the viewport', async ({ page, isMobile }) => {
     test.skip(!isMobile, 'Touch layout assertion.');
     await startGame(page);

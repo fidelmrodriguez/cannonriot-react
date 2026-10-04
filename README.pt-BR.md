@@ -59,7 +59,7 @@ npx playwright install chromium
 
 ### Touch/mobile/tablet
 
-Dispositivos touch usam botões de navegação mantidos à esquerda — **girar à esquerda, avançar, girar à direita** — mais um botão dedicado de dash. Os controles de canhão frontal/laterais e barril de pólvora ficam à direita. O uso de pointer capture permite segurar movimento e ataque ao mesmo tempo com multitouch.
+Dispositivos touch usam botões de navegação mantidos à esquerda — **girar à esquerda, avançar, girar à direita** — mais um botão dedicado de dash. Os controles de canhão frontal/laterais e barril de pólvora ficam à direita. Cada toque é rastreado de forma independente, então é possível segurar **avançar + esquerda** ou **avançar + direita** ao mesmo tempo; movimento e ataques também podem permanecer pressionados juntos via multitouch.
 
 O gameplay prioriza landscape. Breakpoints touch também ativam um perfil de performance móvel sem alterar as regras da simulação.
 
