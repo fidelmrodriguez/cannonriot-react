@@ -23,6 +23,9 @@ const dictionaries: Record<Language, Record<string, string>> = {
     'boot.sfx': 'LOADING GUNPOWDER AND NOISE...',
     'boot.music': 'STACKING RECORDS ON DECK...',
     'boot.done': 'ALL ABOARD!',
+    'boot.readyTitle': 'READY TO RIOT?',
+    'boot.readyNote': 'Everything is loaded. One last click gets the deck music rolling.',
+    'boot.enter': 'BOARD THE SHIP',
     'boot.imageError': 'A piece of the scenery failed to load.',
     'boot.audioError': 'One of the sounds failed to load.',
     'boot.genericError': 'Couldn’t get everything ready.',
@@ -231,6 +234,9 @@ const dictionaries: Record<Language, Record<string, string>> = {
     'boot.sfx': 'CARREGANDO PÓLVORA E BARULHO...',
     'boot.music': 'EMPILHANDO DISCOS NO CONVÉS...',
     'boot.done': 'TUDO A BORDO!',
+    'boot.readyTitle': 'PRONTO PRO CAOS?',
+    'boot.readyNote': 'Tá tudo carregado. Um último clique e a música do convés já entra tocando.',
+    'boot.enter': 'SUBIR A BORDO',
     'boot.imageError': 'Uma parte do cenário não carregou.',
     'boot.audioError': 'Um dos sons não carregou.',
     'boot.genericError': 'Não deu para deixar tudo pronto.',
@@ -439,6 +445,9 @@ const dictionaries: Record<Language, Record<string, string>> = {
     'boot.sfx': 'CARGANDO PÓLVORA Y RUIDO...',
     'boot.music': 'APILANDO DISCOS EN CUBIERTA...',
     'boot.done': '¡TODO A BORDO!',
+    'boot.readyTitle': '¿LISTA PARA EL CAOS?',
+    'boot.readyNote': 'Todo está cargado. Un último clic y la música de cubierta empieza a sonar.',
+    'boot.enter': 'SUBIR A BORDO',
     'boot.imageError': 'Una parte del escenario no pudo cargar.',
     'boot.audioError': 'Uno de los sonidos no pudo cargar.',
     'boot.genericError': 'No se pudo dejar todo listo.',
@@ -729,7 +738,9 @@ export type GameLineGroup =
   | 'victoryComboHigh'
   | 'victoryChaser'
   | 'victoryShooter'
-  | 'victoryGeneric';
+  | 'victoryGeneric'
+  | 'victoryDash'
+  | 'friction';
 
 const lineGroups: Record<Language, Record<GameLineGroup, string[]>> = {
   en: {
@@ -748,6 +759,8 @@ const lineGroups: Record<Language, Record<GameLineGroup, string[]>> = {
     victoryChaser: ['TO THE BOTTOM, MANIAC!!', 'RAM STOPPED!!', 'CHASER DOWN!!', 'EAT THAT, LUNATIC!!'],
     victoryShooter: ['SHUT THAT CANNON UP!!', 'NO MORE SHOTS FOR YOU!!', 'SHOOTER DOWN!!', 'SO MUCH FOR YOUR AIM!!'],
     victoryGeneric: ['TAKE THAT!!', 'SANK BEAUTIFULLY!!', 'THAT\'S IT, PIRATE!!', 'SEND THE NEXT ONE!!'],
+    victoryDash: ['OUT OF MY WAKE!!', 'WRONG SHIP TO RAM!!', 'DASHED YOU CLEAN!!', 'PIRATE EXPRESS!!', 'SHOULDA MOVED!!'],
+    friction: ['HEY! OFF MY HULL!!', 'GO SCRATCH YOUR OWN SHIP!!', 'BACK OFF MY PAINT!!', 'THIS IS NOT A DOCK!!', 'GET YOUR HULL OFF MINE!!'],
   },
   pt: {
     dash: ['SEGURA O LEME!', 'RASGA ESSA MARÉ!', 'TURBINA O CASCO!', 'VAPT NO LEME!', 'PISCA E EU SUMI!'],
@@ -765,6 +778,8 @@ const lineGroups: Record<Language, Record<GameLineGroup, string[]>> = {
     victoryChaser: ['PRO FUNDO, LOUCO!!', 'PAROU A INVESTIDA!!', 'CHASER AO CHÃO!!', 'TOMA ESSA, MALUCO!!'],
     victoryShooter: ['CALA ESSE CANHÃO!!', 'SEM TIRO AGORA!!', 'SHOOTER AO FUNDO!!', 'MIRA NADA!!'],
     victoryGeneric: ['TOMA ESSA!!', 'AFUNDOU BONITO!!', 'BOA, PIRATA!!', 'CHAMA O PRÓXIMO!!'],
+    victoryDash: ['SAI DA MINHA ESTEIRA!!', 'FOI BATER NO NAVIO ERRADO!!', 'DASH NA CARA!!', 'EXPRESSO PIRATA!!', 'ERA MELHOR TER SAÍDO!!'],
+    friction: ['EI! LARGA DO MEU CASCO!!', 'VAI RASPAR OUTRO NAVIO!!', 'TIRA ESSE CASCO DA MINHA TINTA!!', 'ISSO AQUI NÃO É PORTO!!', 'DESENCOSTA DO MEU NAVIO!!'],
   },
   es: {
     dash: ['¡AGARRA EL TIMÓN!', '¡CORTA ESA MAREA!', '¡ACELERA EL CASCO!', '¡VUELA CON EL TIMÓN!', '¡PARPADEA Y DESAPAREZCO!'],
@@ -782,6 +797,8 @@ const lineGroups: Record<Language, Record<GameLineGroup, string[]>> = {
     victoryChaser: ['¡AL FONDO, LOCO!!', '¡EMBESTIDA DETENIDA!!', '¡CHASER HUNDIDO!!', '¡TOMA ESA, MANÍACO!!'],
     victoryShooter: ['¡CALLA ESE CAÑÓN!!', '¡SE ACABARON TUS DISPAROS!!', '¡SHOOTER HUNDIDO!!', '¡Y ESA PUNTERÍA QUÉ!!'],
     victoryGeneric: ['¡TOMA ESA!!', '¡SE HUNDIÓ BONITO!!', '¡ASÍ SE HACE, PIRATA!!', '¡QUE VENGA EL SIGUIENTE!!'],
+    victoryDash: ['¡FUERA DE MI ESTELA!!', '¡EMBESTISTE AL BARCO EQUIVOCADO!!', '¡DASH EN LA CARA!!', '¡EXPRESO PIRATA!!', '¡DEBISTE APARTARTE!!'],
+    friction: ['¡EH, SUELTA MI CASCO!!', '¡VE A RASPAR OTRO BARCO!!', '¡ALÉJATE DE MI PINTURA!!', '¡ESTO NO ES UN MUELLE!!', '¡SEPARA TU CASCO DEL MÍO!!'],
   },
 };
 
@@ -835,13 +852,13 @@ export function idleLineGroup(index: number, language: Language = currentLanguag
 export function engineText(key: string, vars: Record<string, string | number> = {}, language: Language = currentLanguage): string {
   const e: Record<Language, Record<string, string>> = {
     en: {
-      playerName: 'CAPTAIN YOU', chaser: 'RAMMER!', shooter: 'GUNNER!', barrelsFull: 'TOO MANY BARRELS!', noBarrelSpace: 'NO ROOM FOR A BARREL!', barrelArmed: 'BARREL ARMED!', powderBlast: 'POWDER!', ramWarning: 'GONNA RAM !!', aim: 'AIM!', broadside: 'BROADSIDE!', driftCrate: 'DRIFTING CRATE!', supplies: 'SUPPLIES!', piratePower: 'PIRATE POWER!', medicine: '+{n} HULL', powderLive: 'LIVING POWDER!', wind: 'WIND AT YOUR BACK!', armor: 'REINFORCED HULL!', armorHeld: 'HULL HELD!', chaosScore: '+1  {n}x RIOT!', damageHeader: 'HULL HIT!!', idleHeader: 'ON DECK', massacre: 'NAVAL MASSACRE!!', comboPirate: 'PIRATE COMBO!!', sequence: 'BACK TO BACK!!', shipDown: 'SHIP DOWN!!', dashHeader: 'PIRATE DASH!!', repairHeader: 'QUICK REPAIR!!', hullBadge: '+HULL', powderHeader: 'LIVING POWDER!!', powderBadge: 'BOOST', windHeader: 'WIND AT YOUR BACK!!', sailBadge: 'SAIL', armorHeader: 'REINFORCED HULL!!', armorBadge: 'ARMOR', barrelHeader: 'BARREL ARMED!!', barrelBadge: 'BOOM', comboScore: 'COMBO X{n}!!', assetFail: 'Failed to load game assets.',
+      playerName: 'CAPTAIN YOU', chaser: 'RAMMER!', shooter: 'GUNNER!', barrelsFull: 'TOO MANY BARRELS!', noBarrelSpace: 'NO ROOM FOR A BARREL!', barrelArmed: 'BARREL ARMED!', powderBlast: 'POWDER!', ramWarning: 'GONNA RAM !!', aim: 'AIM!', broadside: 'BROADSIDE!', driftCrate: 'DRIFTING CRATE!', supplies: 'SUPPLIES!', piratePower: 'PIRATE POWER!', medicine: '+{n} HULL', powderLive: 'LIVING POWDER!', wind: 'WIND AT YOUR BACK!', armor: 'REINFORCED HULL!', armorHeld: 'HULL HELD!', chaosScore: '+1  {n}x RIOT!', damageHeader: 'HULL HIT!!', idleHeader: 'ON DECK', massacre: 'NAVAL MASSACRE!!', comboPirate: 'PIRATE COMBO!!', sequence: 'BACK TO BACK!!', shipDown: 'SHIP DOWN!!', frictionHeader: 'HULL GRIND!!', frictionBadge: 'GRR', dashHeader: 'PIRATE DASH!!', repairHeader: 'QUICK REPAIR!!', hullBadge: '+HULL', powderHeader: 'LIVING POWDER!!', powderBadge: 'BOOST', windHeader: 'WIND AT YOUR BACK!!', sailBadge: 'SAIL', armorHeader: 'REINFORCED HULL!!', armorBadge: 'ARMOR', barrelHeader: 'BARREL ARMED!!', barrelBadge: 'BOOM', comboScore: 'COMBO X{n}!!', assetFail: 'Failed to load game assets.',
     },
     pt: {
-      playerName: 'CAPITÃO VOCÊ', chaser: 'ARÍETE!', shooter: 'ATIRADOR!', barrelsFull: 'MUITOS BARRIS!', noBarrelSpace: 'SEM ESPAÇO PRO BARRIL!', barrelArmed: 'BARRIL ARMADO!', powderBlast: 'PÓLVORA!', ramWarning: 'VAI BATER !!', aim: 'MIRA!', broadside: 'SALVA LATERAL!', driftCrate: 'CAIXOTE À DERIVA!', supplies: 'SUPRIMENTOS!', piratePower: 'PODER PIRATA!', medicine: '+{n} CASCO', powderLive: 'PÓLVORA VIVA!', wind: 'VENTO A FAVOR!', armor: 'CASCO REFORÇADO!', armorHeld: 'CASCO SEGURA!', chaosScore: '+1  {n}x CAOS!', damageHeader: 'CASCO ATINGIDO!!', idleHeader: 'NO CONVÉS', massacre: 'MASSACRE NAVAL!!', comboPirate: 'COMBO PIRATA!!', sequence: 'EM SEQUÊNCIA!!', shipDown: 'NAVIO AO FUNDO!!', dashHeader: 'DASH PIRATA!!', repairHeader: 'REPARO EXPRESSO!!', hullBadge: '+CASCO', powderHeader: 'PÓLVORA VIVA!!', powderBadge: 'PODER', windHeader: 'VENTO A FAVOR!!', sailBadge: 'VELA', armorHeader: 'CASCO REFORÇADO!!', armorBadge: 'BLINDA', barrelHeader: 'BARRIL ARMADO!!', barrelBadge: 'BUM', comboScore: 'COMBO X{n}!!', assetFail: 'Falha ao carregar os recursos do jogo.',
+      playerName: 'CAPITÃO VOCÊ', chaser: 'ARÍETE!', shooter: 'ATIRADOR!', barrelsFull: 'MUITOS BARRIS!', noBarrelSpace: 'SEM ESPAÇO PRO BARRIL!', barrelArmed: 'BARRIL ARMADO!', powderBlast: 'PÓLVORA!', ramWarning: 'VAI BATER !!', aim: 'MIRA!', broadside: 'SALVA LATERAL!', driftCrate: 'CAIXOTE À DERIVA!', supplies: 'SUPRIMENTOS!', piratePower: 'PODER PIRATA!', medicine: '+{n} CASCO', powderLive: 'PÓLVORA VIVA!', wind: 'VENTO A FAVOR!', armor: 'CASCO REFORÇADO!', armorHeld: 'CASCO SEGURA!', chaosScore: '+1  {n}x CAOS!', damageHeader: 'CASCO ATINGIDO!!', idleHeader: 'NO CONVÉS', massacre: 'MASSACRE NAVAL!!', comboPirate: 'COMBO PIRATA!!', sequence: 'EM SEQUÊNCIA!!', shipDown: 'NAVIO AO FUNDO!!', frictionHeader: 'CASCO RASPANDO!!', frictionBadge: 'GRR', dashHeader: 'DASH PIRATA!!', repairHeader: 'REPARO EXPRESSO!!', hullBadge: '+CASCO', powderHeader: 'PÓLVORA VIVA!!', powderBadge: 'PODER', windHeader: 'VENTO A FAVOR!!', sailBadge: 'VELA', armorHeader: 'CASCO REFORÇADO!!', armorBadge: 'BLINDA', barrelHeader: 'BARRIL ARMADO!!', barrelBadge: 'BUM', comboScore: 'COMBO X{n}!!', assetFail: 'Falha ao carregar os recursos do jogo.',
     },
     es: {
-      playerName: 'CAPITANA TÚ', chaser: '¡ARIETE!', shooter: '¡ARTILLERO!', barrelsFull: '¡DEMASIADOS BARRILES!', noBarrelSpace: '¡NO HAY SITIO PARA EL BARRIL!', barrelArmed: '¡BARRIL ARMADO!', powderBlast: '¡PÓLVORA!', ramWarning: '¡VA A EMBESTIR !!', aim: '¡APUNTA!', broadside: '¡ANDANADA!', driftCrate: '¡CAJA A LA DERIVA!', supplies: '¡SUMINISTROS!', piratePower: '¡PODER PIRATA!', medicine: '+{n} CASCO', powderLive: '¡PÓLVORA VIVA!', wind: '¡VIENTO A FAVOR!', armor: '¡CASCO REFORZADO!', armorHeld: '¡EL CASCO AGUANTA!', chaosScore: '+1  ¡{n}x CAOS!', damageHeader: '¡CASCO ALCANZADO!!', idleHeader: 'EN CUBIERTA', massacre: '¡MASACRE NAVAL!!', comboPirate: '¡COMBO PIRATA!!', sequence: '¡UNO TRAS OTRO!!', shipDown: '¡BARCO HUNDIDO!!', dashHeader: '¡DASH PIRATA!!', repairHeader: '¡REPARACIÓN EXPRÉS!!', hullBadge: '+CASCO', powderHeader: '¡PÓLVORA VIVA!!', powderBadge: 'PODER', windHeader: '¡VIENTO A FAVOR!!', sailBadge: 'VELA', armorHeader: '¡CASCO REFORZADO!!', armorBadge: 'BLINDA', barrelHeader: '¡BARRIL ARMADO!!', barrelBadge: 'BUM', comboScore: '¡COMBO X{n}!!', assetFail: 'No se pudieron cargar los recursos del juego.',
+      playerName: 'CAPITANA TÚ', chaser: '¡ARIETE!', shooter: '¡ARTILLERO!', barrelsFull: '¡DEMASIADOS BARRILES!', noBarrelSpace: '¡NO HAY SITIO PARA EL BARRIL!', barrelArmed: '¡BARRIL ARMADO!', powderBlast: '¡PÓLVORA!', ramWarning: '¡VA A EMBESTIR !!', aim: '¡APUNTA!', broadside: '¡ANDANADA!', driftCrate: '¡CAJA A LA DERIVA!', supplies: '¡SUMINISTROS!', piratePower: '¡PODER PIRATA!', medicine: '+{n} CASCO', powderLive: '¡PÓLVORA VIVA!', wind: '¡VIENTO A FAVOR!', armor: '¡CASCO REFORZADO!', armorHeld: '¡EL CASCO AGUANTA!', chaosScore: '+1  ¡{n}x CAOS!', damageHeader: '¡CASCO ALCANZADO!!', idleHeader: 'EN CUBIERTA', massacre: '¡MASACRE NAVAL!!', comboPirate: '¡COMBO PIRATA!!', sequence: '¡UNO TRAS OTRO!!', shipDown: '¡BARCO HUNDIDO!!', frictionHeader: '¡CASCO RASPANDO!!', frictionBadge: 'GRR', dashHeader: '¡DASH PIRATA!!', repairHeader: '¡REPARACIÓN EXPRÉS!!', hullBadge: '+CASCO', powderHeader: '¡PÓLVORA VIVA!!', powderBadge: 'PODER', windHeader: '¡VIENTO A FAVOR!!', sailBadge: 'VELA', armorHeader: '¡CASCO REFORZADO!!', armorBadge: 'BLINDA', barrelHeader: '¡BARRIL ARMADO!!', barrelBadge: 'BUM', comboScore: '¡COMBO X{n}!!', assetFail: 'No se pudieron cargar los recursos del juego.',
     },
   };
   let value = e[language][key] ?? e.en[key] ?? key;

@@ -41,7 +41,7 @@ Sair do combate antes de um evento de conclusão apenas destrói a engine; nenhu
 3. SFX via `fetch` + object URLs;
 4. músicas pelo mesmo caminho de áudio.
 
-Texturas Pixi usam concorrência 3 e até três tentativas por textura. Falhas permanentes registram diagnósticos `[Cannon Riot preload]`, incluindo URL resolvida e checagem HTTP `HEAD`, e então propagam para a tela visível de erro/retry do boot.
+Texturas Pixi usam concorrência 3 e até três tentativas por textura. Falhas permanentes registram diagnósticos `[Cannon Riot preload]`, incluindo URL resolvida e checagem HTTP `HEAD`, e então propagam para a tela visível de erro/retry do boot. Depois que o preload chega a 100%, a tela de boot continua montada até o jogador pressionar **Subir a bordo**. Esse gesto explícito libera o áudio HTML antes de o React revelar o menu, permitindo iniciar a música do menu imediatamente em vez de depender de outro clique posterior.
 
 O loader mantém as URLs originais e não adiciona query strings de cache-busting.
 
@@ -87,7 +87,9 @@ Dash é um estado temporizado, e não um teleporte instantâneo. A duração ati
 
 `damageShip()` ignora dano ao jogador somente enquanto `isDashing()` é verdadeiro. Não existe período de graça após `finishDash()`.
 
-Se o dash intercepta um Chaser vivo, o Chaser se autodestrói, o jogador não toma dano de colisão e o dash pode continuar. O evento continua sem pontuar para preservar a regra do desafio sobre autodestruição do Chaser.
+Se o dash intercepta um Chaser vivo, o Chaser é destruído, o jogador não toma dano de colisão e o dash pode continuar. Como o dash agora é um ataque explícito do jogador, essa destruição vale um ponto e usa o pool normal de portraits de vitória com o grupo de falas `victoryDash`. Uma colisão normal, sem dash, continua sendo autodestruição sem ponto.
+
+Enquanto **Vento a Favor** está ativo, `dashCooldown` é mantido em zero. A distância continua ampliada pelo vento e todo dash concluído fica disponível imediatamente de novo até o timer do buff terminar.
 
 ## Modelo de colisão
 
@@ -104,6 +106,13 @@ As interações são separadas em checagens explícitas:
 A arte das ilhas é irregular/procedural, mas a colisão usa círculos estáveis. Projéteis usam substeps para que tiros acelerados não atravessem colliders pequenos. Um projétil é removido imediatamente após o primeiro hit válido.
 
 Inimigos mortos são ignorados pelos loops de movimento, IA, colisão e projéteis.
+
+
+### Atrito de casco com Shooter
+
+Shooters roxos continuam sendo navios sólidos, mas contato próximo de casco agora possui regra contínua de atrito. `updateShooterFriction(dt)` detecta o jogador dentro da soma dos raios dos cascos mais uma pequena tolerância e aplica dano baseado em tempo aos dois participantes. O jogador recebe **4,5 HP/s** antes da mitigação da armadura; cada Shooter em contato recebe **26 HP/s**. Isso deixa a raspada disponível como recurso tático de emergência sem transformar ramming na principal fonte de dano.
+
+O dano de atrito suprime spam de portrait/impacto do sistema normal de hits. Em vez disso, um único painel `friction` usa os dois portraits chartreuse dedicados. O painel fica preso enquanto existir qualquer Shooter em contato e só inicia o linger de **2,2 s** depois que o contato termina; um novo contato reinicia esse linger.
 
 ## Spawn e IA inimiga
 

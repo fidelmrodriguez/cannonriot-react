@@ -39,7 +39,7 @@ interface EngineCallbacks {
   onLoadError?(message: string): void;
 }
 
-type ComicPanelKind = 'damage' | 'victory' | 'idle' | 'mechanic';
+type ComicPanelKind = 'damage' | 'victory' | 'idle' | 'mechanic' | 'friction';
 type MechanicReactKind = 'dash' | 'medicine' | 'powder' | 'wind' | 'armor' | 'barrel';
 
 interface ActiveComicPanel {
@@ -64,6 +64,8 @@ interface ComicPanelOptions {
   headerText?: string;
   badgeText?: string;
   frameStroke?: number;
+  holdWhile?: () => boolean;
+  lingerSeconds?: number;
 }
 
 const WORLD_W = 1280;
@@ -88,6 +90,7 @@ export class GameEngine {
   private lastDamagePortraitIndex = -1;
   private lastVictoryPortraitIndex = -1;
   private lastIdlePortraitIndex = -1;
+  private lastFrictionPortraitIndex = -1;
   private lastIdleLine = '';
   private input = new InputManager();
   private player!: ShipEntity;
@@ -150,6 +153,7 @@ export class GameEngine {
   private timeSincePlayerVictory = 999;
   private timeSincePlayerOffense = 999;
   private idlePopupCooldown = 2.7;
+  private frictionActive = false;
 
   constructor(
     private host: HTMLElement,
@@ -225,6 +229,7 @@ export class GameEngine {
       GAME_ASSETS.fire,
       ...GAME_ASSETS.damagePortraits,
       ...GAME_ASSETS.victoryPortraits,
+      ...GAME_ASSETS.frictionPortraits,
       ...GAME_ASSETS.idlePortraits,
       ...Object.values(GAME_ASSETS.mechanicPortraits),
     ];
@@ -570,6 +575,7 @@ export class GameEngine {
     this.barrelCooldown = Math.max(0, this.barrelCooldown - dt);
     this.powderTime = Math.max(0, this.powderTime - dt);
     this.windTime = Math.max(0, this.windTime - dt);
+    if (this.windTime > 0) this.dashCooldown = 0;
     this.armorTime = Math.max(0, this.armorTime - dt);
     this.streakClock = Math.max(0, this.streakClock - dt);
     this.shipContactSoundCooldown = Math.max(0, this.shipContactSoundCooldown - dt);
@@ -590,6 +596,7 @@ export class GameEngine {
     // continue into the later AI/collision phase of the same simulation tick.
     this.updateProjectiles(dt);
     this.updateEnemies(dt);
+    this.updateShooterFriction(dt);
     this.animateShipDamageFx(this.player);
     for (const enemy of this.enemies) if (enemy.alive) this.animateShipDamageFx(enemy);
     this.updatePowderBarrels(dt);
@@ -672,9 +679,10 @@ export class GameEngine {
     if (this.isDashing()) return;
     const cooldownBase = EXTRA_BALANCE.dash.baseCooldown;
     const pressureAssist = clamp(1 - Math.max(0, this.pressure - 1) * 0.09, 0.78, 1);
-    const windAssist = this.windTime > 0 ? 0.72 : 1;
-    this.dashCooldownMax = cooldownBase * pressureAssist * windAssist;
-    this.dashCooldown = this.dashCooldownMax;
+    this.dashCooldownMax = cooldownBase * pressureAssist;
+    // Wind turns dash into a movement power-up instead of a shorter reload:
+    // every completed dash is immediately ready again until the buff expires.
+    this.dashCooldown = this.windTime > 0 ? 0 : this.dashCooldownMax;
     this.dashTimeRemaining = EXTRA_BALANCE.dash.duration;
     this.dashDirection = this.player.rotation;
     this.dashDistanceRemaining = this.windTime > 0 ? EXTRA_BALANCE.dash.windDistance : EXTRA_BALANCE.dash.distance;
@@ -1123,13 +1131,47 @@ export class GameEngine {
       if (enemy.kind === 'chaser' && distSq(enemy.x, enemy.y, this.player.x, this.player.y) < (enemy.radius + this.player.radius) ** 2) {
         this.playShipContactSound();
         if (this.isDashing()) {
-          this.destroyEnemy(enemy, false);
+          this.destroyEnemy(enemy, true, true, 'dash');
           continue;
         }
         const chaserDamageMultiplier = clamp(1 - Math.max(0, this.pressure - 1) * 0.1, 0.84, 1);
         this.damageShip(this.player, this.config.chaserCollisionDamage * chaserDamageMultiplier);
         this.destroyEnemy(enemy, false, this.player.alive);
       }
+    }
+  }
+
+  private updateShooterFriction(dt: number): void {
+    if (!this.player.alive) {
+      this.frictionActive = false;
+      return;
+    }
+
+    const padding = EXTRA_BALANCE.shipFriction.contactPadding;
+    const touchingShooters = this.enemies.filter((enemy) =>
+      enemy.alive
+      && enemy.kind === 'shooter'
+      && distSq(enemy.x, enemy.y, this.player.x, this.player.y) <= (enemy.radius + this.player.radius + padding) ** 2
+    );
+
+    this.frictionActive = touchingShooters.length > 0;
+    if (!this.frictionActive) return;
+
+    this.timeSincePlayerOffense = 0;
+    this.resetIdlePopupCooldown();
+    this.playShipContactSound();
+    if (this.shipContactFxCooldown <= 0) {
+      this.shipContactFxCooldown = 0.16;
+      const enemy = touchingShooters[0]!;
+      this.impactBurst((this.player.x + enemy.x) * 0.5, (this.player.y + enemy.y) * 0.5);
+    }
+    this.showFrictionComicPanel();
+
+    const playerDamage = EXTRA_BALANCE.shipFriction.playerDamagePerSecond * dt;
+    const shooterDamage = EXTRA_BALANCE.shipFriction.shooterDamagePerSecond * dt;
+    this.damageShip(this.player, playerDamage, { showReact: false, showImpact: false, showLabel: false });
+    for (const enemy of touchingShooters) {
+      if (enemy.alive) this.damageShip(enemy, shooterDamage, { showReact: false, showImpact: false, showLabel: false });
     }
   }
 
@@ -1232,8 +1274,8 @@ export class GameEngine {
         if (this.isDashing()) {
           // A correctly timed dash counters a rammer: the Chaser self-destructs, the
           // player takes no collision damage, and the dash may continue through it.
-          // It remains a non-scoring Chaser collision, preserving the scoring rule.
-          this.destroyEnemy(chaser, false);
+          // The active dash is an explicit player attack, so the destruction scores normally.
+          this.destroyEnemy(chaser, true, true, 'dash');
           if (ship.id === PLAYER_ID) {
             ship.x = x; ship.y = y; ship.view.position.set(x, y);
             return true;
@@ -1256,7 +1298,7 @@ export class GameEngine {
         return true;
       }
 
-      // Shooter/player and enemy/enemy contacts are solid but non-damaging.
+      // Ship hulls remain solid here. Shooter/player friction damage is resolved once per tick in updateShooterFriction().
       return false;
     }
 
@@ -1599,6 +1641,7 @@ export class GameEngine {
       this.showMechanicComicPanel('powder', gameLines('powder'));
     } else if (pickup.kind === 'wind') {
       this.windTime = this.extendBuff(this.windTime, buffDuration);
+      this.dashCooldown = 0;
       this.popLabel(engineText('wind'), this.player.x, this.player.y - 58, 0x78edff, 0.75);
       this.showMechanicComicPanel('wind', gameLines('wind'));
     } else {
@@ -1611,8 +1654,15 @@ export class GameEngine {
     pickup.view.destroy({ children: true });
   }
 
-  private damageShip(ship: ShipEntity, amount: number): void {
+  private damageShip(
+    ship: ShipEntity,
+    amount: number,
+    options: { showReact?: boolean; showImpact?: boolean; showLabel?: boolean } = {},
+  ): void {
     if (!ship.alive) return;
+    const showReact = options.showReact ?? true;
+    const showImpact = options.showImpact ?? true;
+    const showLabel = options.showLabel ?? true;
     // Dash i-frame exists only while the timed dash state is active. There is
     // deliberately no post-dash grace period.
     if (ship.id === PLAYER_ID && this.isDashing()) return;
@@ -1622,22 +1672,24 @@ export class GameEngine {
     if (ship.id === PLAYER_ID) {
       this.timeSincePlayerDamage = 0;
       this.resetIdlePopupCooldown();
-      this.showDamageComicPanel(effectiveAmount);
-      if (armorActive) this.popLabel(engineText('armorHeld'), ship.x, ship.y - 70, 0xffd75a, 0.42);
+      if (showReact) this.showDamageComicPanel(effectiveAmount);
+      if (armorActive && showLabel) this.popLabel(engineText('armorHeld'), ship.x, ship.y - 70, 0xffd75a, 0.42);
     }
     this.updateHealth(ship);
-    ship.sprite.alpha = 0.22;
-    ship.sprite.scale.set(ship.baseScale * 1.16, ship.baseScale * 0.84);
-    ship.outline.scale.set(ship.baseScale * 1.28, ship.baseScale * 0.98);
-    this.impactBurst(ship.x, ship.y);
-    this.afterGameTime(0.09, () => {
-      if (ship.alive) {
-        ship.sprite.alpha = 1;
-        ship.sprite.scale.set(ship.baseScale);
-        ship.outline.scale.set(ship.baseScale * 1.17);
-      }
-    });
-    this.popLabel(`-${Math.round(effectiveAmount)}`, ship.x, ship.y - 46, 0xffffff, 0.45);
+    if (showImpact) {
+      ship.sprite.alpha = 0.22;
+      ship.sprite.scale.set(ship.baseScale * 1.16, ship.baseScale * 0.84);
+      ship.outline.scale.set(ship.baseScale * 1.28, ship.baseScale * 0.98);
+      this.impactBurst(ship.x, ship.y);
+      this.afterGameTime(0.09, () => {
+        if (ship.alive) {
+          ship.sprite.alpha = 1;
+          ship.sprite.scale.set(ship.baseScale);
+          ship.outline.scale.set(ship.baseScale * 1.17);
+        }
+      });
+    }
+    if (showLabel) this.popLabel(`-${Math.round(effectiveAmount)}`, ship.x, ship.y - 46, 0xffffff, 0.45);
     if (ship.health <= 0) {
       if (ship.id === PLAYER_ID) {
         ship.alive = false;
@@ -1891,7 +1943,7 @@ export class GameEngine {
 
     const wash = new Graphics()
       .rect(10, 8, portraitW, portraitH)
-      .fill({ color: accent, alpha: kind === 'damage' ? 0.05 : (kind === 'idle' || kind === 'mechanic') ? 0.03 : 0.04 });
+      .fill({ color: accent, alpha: kind === 'damage' ? 0.05 : (kind === 'idle' || kind === 'mechanic' || kind === 'friction') ? 0.03 : 0.04 });
 
     const phraseY = 8 + portraitH - 28;
     const phraseBack = new Graphics()
@@ -1935,10 +1987,10 @@ export class GameEngine {
       text: badgeText,
       style: {
         fontFamily: 'Impact, Arial Black, sans-serif',
-        fontSize: (kind === 'idle' || kind === 'mechanic') ? 26 : 30,
+        fontSize: (kind === 'idle' || kind === 'mechanic' || kind === 'friction') ? 26 : 30,
         fontWeight: '900',
         fill: burstFill,
-        stroke: { color: 0x071b36, width: (kind === 'idle' || kind === 'mechanic') ? 5 : 6 },
+        stroke: { color: 0x071b36, width: (kind === 'idle' || kind === 'mechanic' || kind === 'friction') ? 5 : 6 },
       },
     });
     badge.anchor.set(1, 0);
@@ -1951,12 +2003,26 @@ export class GameEngine {
     const baseX = placement.x;
     const baseY = placement.y;
     const baseRotation = placement.rotation;
+    const holdWhile = options?.holdWhile;
+    const lingerSeconds = Math.max(0, options?.lingerSeconds ?? 0);
     let life = kind === 'damage' ? 1.08 : kind === 'victory' ? 1.06 : 1.18;
     const total = life;
+    let age = 0;
+    let releasedFor = 0;
     const update = (ticker: { deltaMS: number }) => {
       const dt = ticker.deltaMS / 1000;
-      life -= dt;
-      const elapsed = total - life;
+      age += dt;
+
+      const holding = Boolean(holdWhile?.());
+      if (holdWhile) {
+        if (holding) releasedFor = 0;
+        else releasedFor += dt;
+      } else {
+        life -= dt;
+      }
+
+      const elapsed = holdWhile ? age : total - life;
+      const fadeRemaining = holdWhile ? Math.max(0, lingerSeconds - releasedFor) : life;
 
       if (elapsed < 0.12) {
         const p = elapsed / 0.12;
@@ -1968,8 +2034,8 @@ export class GameEngine {
         const amp = Math.max(0, 1 - (elapsed - 0.12) / 0.24) * 5;
         panel.x = baseX + Math.sin(elapsed * 92) * amp;
         panel.y = baseY + Math.cos(elapsed * 78) * amp * 0.55;
-      } else if (life < 0.22) {
-        const p = Math.max(0, life / 0.22);
+      } else if (!holding && fadeRemaining < 0.22) {
+        const p = Math.max(0, fadeRemaining / 0.22);
         panel.alpha = p;
         panel.x = baseX;
         panel.y = baseY + (1 - p) * 9;
@@ -1979,7 +2045,8 @@ export class GameEngine {
       }
       panel.rotation = baseRotation;
 
-      if (life <= 0) {
+      const expired = holdWhile ? (!holding && releasedFor >= lingerSeconds) : life <= 0;
+      if (expired) {
         this.app.ticker.remove(update);
         this.activeComicPanels = this.activeComicPanels.filter((entry) => entry.panel !== panel);
         if (!panel.destroyed) panel.destroy({ children: true });
@@ -1995,8 +2062,29 @@ export class GameEngine {
     this.showComicPanel('damage', { value: amount, line: this.pickDamageLine() });
   }
 
-  private showVictoryComicPanel(enemyKind: 'chaser' | 'shooter', streak: number): void {
-    this.showComicPanel('victory', { value: 1, enemyKind, streak, line: this.pickVictoryLine(enemyKind, streak) });
+  private showVictoryComicPanel(enemyKind: 'chaser' | 'shooter', streak: number, source: 'standard' | 'dash' = 'standard'): void {
+    const line = source === 'dash' ? this.uiRng.pick(gameLines('victoryDash')) : this.pickVictoryLine(enemyKind, streak);
+    this.showComicPanel('victory', { value: 1, enemyKind, streak, line });
+  }
+
+  private showFrictionComicPanel(): void {
+    if (this.hasActivePanelKind('friction')) return;
+    const choices = GAME_ASSETS.frictionPortraits
+      .map((path, index) => ({ path, index }))
+      .filter(({ index }) => index !== this.lastFrictionPortraitIndex);
+    const next = choices.length > 0 ? this.uiRng.pick(choices) : { path: GAME_ASSETS.frictionPortraits[0]!, index: 0 };
+    this.lastFrictionPortraitIndex = next.index;
+    this.showComicPanel('friction', {
+      portraitPath: next.path,
+      line: this.uiRng.pick(gameLines('friction')),
+      accent: 0x91b91e,
+      burstFill: 0xfff36b,
+      headerText: engineText('frictionHeader'),
+      badgeText: engineText('frictionBadge'),
+      frameStroke: 0x58740d,
+      holdWhile: () => this.frictionActive,
+      lingerSeconds: EXTRA_BALANCE.shipFriction.reactLingerSeconds,
+    });
   }
 
   private showIdleComicPanel(): void {
@@ -2076,7 +2164,7 @@ export class GameEngine {
     // Mechanic reacts (dash, pickups, etc.) rely on their own action SFX.
   }
 
-  private destroyEnemy(enemy: EnemyEntity, awardPoint: boolean, playExplosionAudio = true): void {
+  private destroyEnemy(enemy: EnemyEntity, awardPoint: boolean, playExplosionAudio = true, victorySource: 'standard' | 'dash' = 'standard'): void {
     if (!enemy.alive) return;
     enemy.alive = false;
     if (awardPoint) {
@@ -2086,7 +2174,7 @@ export class GameEngine {
       this.timeSincePlayerVictory = 0;
       this.resetIdlePopupCooldown();
       this.popLabel(this.streak >= 3 ? engineText('chaosScore', { n: this.streak }) : '+1', enemy.x, enemy.y - 48, 0xfff16b, 0.8);
-      this.showVictoryComicPanel(enemy.kind, this.streak);
+      this.showVictoryComicPanel(enemy.kind, this.streak, victorySource);
       this.maybeDropPickup(enemy.x, enemy.y);
     }
     this.spawnActionLines(enemy.x, enemy.y, this.uiRng.range(0, Math.PI * 2), enemy.kind === 'chaser' ? 0xff6b66 : 0xd978ff, 7);

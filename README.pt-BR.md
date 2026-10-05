@@ -71,8 +71,8 @@ O mundo autoritativo é uma arena fixa de **1280×720**. Redimensionar a viewpor
 - O canhão frontal dispara um projétil.
 - Cada lateral dispara três projéteis paralelos.
 - No modo normal, frontal e lateral são separados por um **lock global de troca de arma de 0,25 s**; taps touch rápidos podem ficar em buffer por **0,32 s**.
-- Chasers perseguem o jogador e se autodestroem ao colidir com ele. Essa colisão não pontua.
-- Shooters buscam posição de ataque, linha de visão e disparam à distância.
+- Chasers perseguem o jogador e se autodestroem ao colidir com ele. A colisão normal não pontua; destruir um Chaser com o dash ativo conta como ataque pontuável do jogador.
+- Shooters buscam posição de ataque, linha de visão e disparam à distância. Atrito contínuo casco a casco causa dano nos dois navios, com dano bem maior no Shooter do que no jogador.
 - Ilhas e limites da arena bloqueiam navios; ilhas também bloqueiam projéteis.
 - Projéteis aplicam dano uma única vez e são removidos ao acertar, encontrar obstáculo, expirar ou sair da arena.
 - Cada inimigo destruído por um ataque pontuável do jogador vale exatamente um ponto.
@@ -86,14 +86,15 @@ Configuração padrão: partida de **120 s** e spawn de inimigo a cada **3 s**. 
 
 As regras exigidas pelo desafio continuam autoritativas; estas mecânicas são adicionais:
 
-- **Dash**: estado de movimento ativo por 0,28 s. O jogador fica imune a projéteis e dano de contato somente durante esse estado. Se atingir um Chaser durante o dash, o Chaser se autodestrói sem ferir o jogador e continua sem pontuar. Não existe invulnerabilidade depois do dash.
+- **Dash**: estado de movimento ativo por 0,28 s. O jogador fica imune a projéteis e dano de contato somente durante esse estado. Um Chaser destruído pelo dash vale um ponto e usa falas próprias de vitória por dash. Não existe invulnerabilidade depois do dash.
 - **Pólvora Viva**: artilharia automática temporária. Frontal + as duas laterais disparam assim que suas recargas aceleradas ficam prontas, até o buff acabar.
-- **Vento a Favor**: aumenta velocidade de movimento e melhora distância/cooldown do dash.
+- **Vento a Favor**: aumenta velocidade de movimento, amplia a distância do dash e deixa o dash instantaneamente pronto, sem recarga, durante todo o buff.
 - **Casco Reforçado**: reduz temporariamente o dano recebido.
 - **Medicina**: recupera casco.
 - **Barril de Pólvora**: até três armadilhas ativas; o navio que aciona é destruído e navios próximos dentro do raio de **170 px** recebem dano forte, porém não letal. O jogador é imune à própria explosão.
 - **Suporte de emergência**: com ≤35% de casco, se não houver Medicina/Armadura próxima, o jogo tenta colocar um pickup defensivo perto do jogador. Há cooldown de 12 s e o sistema pode substituir um pickup ativo menos útil se os slots normais estiverem cheios.
 - **Alerta de spawn**: o `!` curto é apenas visual; inimigos recém-spawnados continuam ativos imediatamente.
+- **Atrito com Shooter**: enquanto o casco do jogador raspa num Shooter roxo, os dois perdem vida continuamente. O DPS de atrito do Shooter é propositalmente muito maior que o do jogador, então a raspada pode ser usada de forma tática sem virar a melhor forma de ataque. Dois reacts chartreuse dedicados ficam fixos durante o contato e permanecem por alguns segundos depois da separação.
 
 A assistência de dificuldade é derivada de forma determinística pela duração e intervalo de spawn escolhidos. Ela altera cadência de suporte, teto de inimigos e pequenos coeficientes, mas nunca muda a chave do ranking nem o valor do ponto.
 
@@ -137,7 +138,7 @@ Os cenários de rede ficam escondidos no uso normal. Abra com `?dev=1` (ou `?e2e
 
 ## Carregamento de assets e diagnóstico
 
-O preloader global inicia o MSW e depois carrega texturas Pixi, wallpapers de tela, SFX e músicas antes do uso normal do menu. Texturas Pixi têm no máximo **3 tentativas** e concorrência limitada. Uma falha definitiva de textura/áudio/imagem é registrada com o prefixo `[Cannon Riot preload]` e um diagnóstico HTTP `HEAD` antes da tela de erro/retry do boot.
+O preloader global inicia o MSW e depois carrega texturas Pixi, wallpapers de tela, SFX e músicas antes do uso normal do menu. Texturas Pixi têm no máximo **3 tentativas** e concorrência limitada. Ao chegar a 100%, aparece um gate de interação **Subir a bordo**; esse clique explícito libera o áudio exigido pelo navegador antes de abrir o menu, permitindo que a música comece imediatamente quando a preferência salva não estiver mutada. Uma falha definitiva de textura/áudio/imagem é registrada com o prefixo `[Cannon Riot preload]` e um diagnóstico HTTP `HEAD` antes da tela de erro/retry do boot.
 
 Áudios são baixados para object URLs e reutilizados. As URLs de imagens de runtime não recebem query string de cache-busting.
 
@@ -159,7 +160,7 @@ Veja [ARCHITECTURE.pt-BR.md](ARCHITECTURE.pt-BR.md).
 
 Playwright está configurado para Chromium desktop e um perfil touch landscape de Pixel 7. `?e2e=1` fixa a seed do gameplay em `1337` e expõe hooks exclusivos de estado/tempo, mantendo o caminho real da simulação.
 
-Os testes atuais cobrem lock entre armas, auto-fire da Pólvora Viva, i-frame do dash, suporte de emergência e splash ampliado do barril. Veja [docs/pt-BR/TESTING.md](docs/pt-BR/TESTING.md) para o status atual da suíte e as evidências ainda necessárias para avaliação.
+Os testes atuais cobrem lock entre armas, auto-fire da Pólvora Viva, atrito com Shooter, dash infinito com Vento, i-frame/counter pontuável do dash, suporte de emergência e splash ampliado do barril. Veja [docs/pt-BR/TESTING.md](docs/pt-BR/TESTING.md) para o status atual da suíte e as evidências ainda necessárias para avaliação.
 
 ## Performance
 

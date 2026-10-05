@@ -36,6 +36,12 @@ export const EXTRA_BALANCE = {
     distance: 132,
     windDistance: 158,
   },
+  shipFriction: {
+    contactPadding: 6,
+    playerDamagePerSecond: 4.5,
+    shooterDamagePerSecond: 26,
+    reactLingerSeconds: 2.2,
+  },
   powderBarrel: {
     baseCooldown: 6.4,
     lifetime: 10.5,

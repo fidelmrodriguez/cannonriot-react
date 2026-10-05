@@ -1442,6 +1442,16 @@ kbd { background:var(--ink); color:white; padding:.18rem .38rem; border-radius:3
 .boot-meta span { letter-spacing: .06em; }
 .boot-note { margin: .75rem 0 0; color: #b9d8ea; font-size: .84rem; font-weight: 800; }
 .boot-error { border: 3px dashed var(--coral); padding: 1rem; background: rgba(255,89,100,.12); font-weight: 800; }
+.boot-ready-note {
+  margin-bottom: 1rem;
+}
+.boot-card > .arcade-button {
+  min-width: min(320px, 100%);
+  justify-content: center;
+  background: var(--yellow);
+  color: var(--ink);
+  box-shadow: 6px 6px 0 var(--coral);
+}
 
 .technical-options-card {
   margin-top: 1rem;

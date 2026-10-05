@@ -302,6 +302,7 @@ function useAudioController(screen: Screen, resultEndReason: EndReason | null, m
 
 export default function App() {
   const [bootReady, setBootReady] = useState(false);
+  const [bootEntered, setBootEntered] = useState(false);
   const [bootProgress, setBootProgress] = useState(0);
   const [bootStage, setBootStage] = useState('boot.hold');
   const [bootError, setBootError] = useState<string | null>(null);
@@ -318,6 +319,7 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     setBootReady(false);
+    setBootEntered(false);
     setBootError(null);
     setBootProgress(0);
     setBootStage('boot.hold');
@@ -398,9 +400,17 @@ export default function App() {
     setScreen('game');
   };
 
-  if (!bootReady) {
+  if (!bootReady || !bootEntered) {
     return <div className="app-shell">
-      <BootScreen progress={bootProgress} stage={bootStage} error={bootError} language={language} onRetry={() => setBootAttempt((value) => value + 1)} />
+      <BootScreen
+        progress={bootProgress}
+        stage={bootStage}
+        error={bootError}
+        ready={bootReady && !bootError}
+        language={language}
+        onRetry={() => setBootAttempt((value) => value + 1)}
+        onEnter={() => setBootEntered(true)}
+      />
       <AudioDock
         musicMuted={audioPreferences.musicMuted}
         sfxMuted={audioPreferences.sfxMuted}

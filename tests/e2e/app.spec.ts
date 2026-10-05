@@ -2,7 +2,10 @@ import { test, expect, type Page } from '@playwright/test';
 
 async function openApp(page: Page) {
   await page.goto('/?e2e=1');
-  await expect(page.getByRole('heading', { name: /CANNON/i })).toBeVisible({ timeout: 45_000 });
+  const enter = page.getByRole('button', { name: /BOARD THE SHIP/i });
+  await expect(enter).toBeVisible({ timeout: 45_000 });
+  await enter.click();
+  await expect(page.getByRole('heading', { name: /CANNON/i })).toBeVisible({ timeout: 10_000 });
 }
 
 async function startGame(page: Page) {
@@ -72,7 +75,10 @@ test.describe('boot and loading', () => {
     await page.goto('/?e2e=1');
     await expect(page.getByText('SOMETHING FELL OVERBOARD.')).toBeVisible({ timeout: 20_000 });
     await page.getByRole('button', { name: 'TRY AGAIN' }).click();
-    await expect(page.getByRole('heading', { name: /CANNON/i })).toBeVisible({ timeout: 45_000 });
+    const enter = page.getByRole('button', { name: /BOARD THE SHIP/i });
+    await expect(enter).toBeVisible({ timeout: 45_000 });
+    await enter.click();
+    await expect(page.getByRole('heading', { name: /CANNON/i })).toBeVisible({ timeout: 10_000 });
   });
 });
 
@@ -302,7 +308,7 @@ test.describe('application and gameplay', () => {
     expect(kinds.has('shooter')).toBeTruthy();
   });
 
-  test('Shooter hull is solid but non-damaging on contact', async ({ page, isMobile }) => {
+  test('Shooter hull remains solid during friction contact', async ({ page, isMobile }) => {
     test.skip(isMobile, 'Keyboard collision assertion.');
     await startGame(page);
     await page.evaluate(() => {
@@ -310,13 +316,12 @@ test.describe('application and gameplay', () => {
       api.setPlayerPose(640, 360, 0);
       api.spawnEnemy('shooter', 708, 360, 500);
     });
-    const before = await debugState(page);
     await page.keyboard.down('KeyW');
     await page.waitForTimeout(360);
     await page.keyboard.up('KeyW');
     const after = await debugState(page);
-    expect(after.player.health).toBeCloseTo(before.player.health, 3);
     const shooter = after.enemies.find((enemy: any) => enemy.kind === 'shooter');
+    expect(shooter).toBeTruthy();
     expect(after.player.x).toBeLessThan(shooter.x + 4);
   });
 
@@ -331,6 +336,40 @@ test.describe('application and gameplay', () => {
     const state = await debugState(page);
     expect(state.player.health).toBeLessThan(100);
     expect(state.score).toBe(0);
+  });
+
+  test('Shooter hull friction damages both ships with heavier damage on the Shooter', async ({ page }) => {
+    await startGame(page);
+    const shooterId = await page.evaluate(() => {
+      const api = (window as any).__CANNON_RIOT_TEST__;
+      api.setPlayerPose(640, 360, 0);
+      return api.spawnEnemy('shooter', 688, 360, 82);
+    });
+    const before = await debugState(page);
+    await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.advanceTime(1));
+    const after = await debugState(page);
+    const shooterBefore = before.enemies.find((enemy: any) => enemy.id === shooterId);
+    const shooterAfter = after.enemies.find((enemy: any) => enemy.id === shooterId);
+    expect(after.player.health).toBeLessThan(before.player.health);
+    expect(before.player.health - after.player.health).toBeLessThan(7);
+    expect(shooterBefore).toBeTruthy();
+    expect(shooterAfter).toBeTruthy();
+    expect(shooterBefore.health - shooterAfter.health).toBeGreaterThan(before.player.health - after.player.health);
+  });
+
+  test('Wind keeps dash immediately ready until the buff expires', async ({ page }) => {
+    await startGame(page);
+    await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.spawnPickup('wind'));
+    await page.waitForTimeout(100);
+    const active = await debugState(page);
+    expect(active.buffs.wind).toBeGreaterThan(0);
+    expect(active.cooldowns.dash).toBe(0);
+
+    await page.keyboard.press('ControlLeft');
+    await page.waitForTimeout(80);
+    const afterDash = await debugState(page);
+    expect(afterDash.buffs.wind).toBeGreaterThan(0);
+    expect(afterDash.cooldowns.dash).toBe(0);
   });
 
   test('Living Powder auto-fires front + both broadsides and stops when the buff expires', async ({ page }) => {
@@ -372,7 +411,7 @@ test.describe('application and gameplay', () => {
     expect(during.player.health).toBeCloseTo(before.player.health, 3);
     expect(during.player.x).toBeGreaterThan(before.player.x + 40);
     expect(during.enemies.some((enemy: any) => enemy.id === dashTargetId)).toBeFalsy();
-    expect(during.score).toBe(0);
+    expect(during.score).toBe(1);
     expect(during.cooldowns.dash).toBeGreaterThan(1);
 
     await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.advanceTime(0.35));

@@ -37,7 +37,7 @@ Available helpers:
 
 `tests/e2e/app.spec.ts` currently covers:
 
-1. boot asset failure and visible retry recovery;
+1. boot asset failure, visible retry recovery and the post-load **Board the Ship** interaction gate;
 2. default English + live EN/PT/ES switching during a running match;
 3. persistent local player identity;
 4. options validation/persistence;
@@ -48,23 +48,24 @@ Available helpers:
 9. front/broadside projectile counts, parallel directions, cooldowns and the 0.25 s weapon-switch lock;
 10. projectile kill scoring exactly once;
 11. normal spawn sequence containing both Chaser and Shooter;
-12. solid/non-damaging Shooter hull contact;
+12. Shooter hull friction damaging both participants asymmetrically;
 13. Chaser collision damage + non-scoring self-destruction;
-14. Living Powder automatic front + both-broadside fire and automatic stop on expiry;
-15. dash active i-frame, Chaser counter and immediate return to vulnerability after dash;
-16. ≤35% hull emergency Medicine/Armor drop and cooldown;
-17. Medicine healing and paused buff timers;
-18. blur pause requiring explicit resume without time advance;
-19. powder-barrel trigger kill, expanded non-lethal splash and player self-immunity;
-20. timeout result persistence and clean restart;
-21. player-death result reason;
-22. abandoned match not creating DB/outbox records;
-23. repeated navigation/remounting keeping a single gameplay canvas;
-24. successful registration becoming visible in ranking and local history;
-25. ranking/history empty, timeout/error and pagination states;
-26. timeout-after-save idempotent retry;
-27. unavailable-at-game-over outbox persistence/recovery;
-28. out-of-order ranking requests preserving the selected page.
+14. Wind keeping dash immediately ready while the buff is active;
+15. Living Powder automatic front + both-broadside fire and automatic stop on expiry;
+16. dash active i-frame, **scoring** Chaser counter and immediate return to vulnerability after dash;
+17. ≤35% hull emergency Medicine/Armor drop and cooldown;
+18. Medicine healing and paused buff timers;
+19. blur pause requiring explicit resume without time advance;
+20. powder-barrel trigger kill, expanded non-lethal splash and player self-immunity;
+21. timeout result persistence and clean restart;
+22. player-death result reason;
+23. abandoned match not creating DB/outbox records;
+24. repeated navigation/remounting keeping a single gameplay canvas;
+25. successful registration becoming visible in ranking and local history;
+26. ranking/history empty, timeout/error and pagination states;
+27. timeout-after-save idempotent retry;
+28. unavailable-at-game-over outbox persistence/recovery;
+29. out-of-order ranking requests preserving the selected page.
 
 The mobile selectors target the current D-pad UI; the suite no longer expects the removed virtual joystick and includes regression coverage for one-thumb diagonal steering.
 

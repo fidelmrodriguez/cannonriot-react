@@ -41,7 +41,7 @@ Leaving combat before a completion event simply destroys the engine; no match re
 3. SFX through `fetch` + object URLs;
 4. soundtrack tracks through the same audio path.
 
-Pixi texture loading uses concurrency 3 and up to three attempts per texture. Permanent failures log `[Cannon Riot preload]` diagnostics, including the resolved URL and an HTTP `HEAD` check, then propagate to the visible boot error/retry state.
+Pixi texture loading uses concurrency 3 and up to three attempts per texture. Permanent failures log `[Cannon Riot preload]` diagnostics, including the resolved URL and an HTTP `HEAD` check, then propagate to the visible boot error/retry state. After the preload reaches 100%, the boot screen stays mounted until the player presses **Board the Ship**. That deliberate browser gesture unlocks HTML audio before React reveals the menu, allowing the menu track to start immediately instead of waiting for an unrelated later click.
 
 The loader keeps original asset URLs; it does not append cache-busting query strings.
 
@@ -87,7 +87,9 @@ Dash is a timed state, not an instant teleport. Its default active duration is 0
 
 `damageShip()` ignores damage to the player only while `isDashing()` is true. There is no grace period after `finishDash()`.
 
-If a dash intersects a live Chaser, the Chaser self-destructs, the player takes no collision damage and the dash may continue. The event remains non-scoring to preserve the challenge rule that Chaser self-destruction against the player does not award a point.
+If a dash intersects a live Chaser, the Chaser is destroyed, the player takes no collision damage and the dash may continue. Because the dash is now an explicit player attack, that destruction awards one point and routes through the normal victory portrait pool with a dedicated `victoryDash` line group. A non-dash Chaser collision is still a non-scoring self-destruction.
+
+While **Wind at Your Back** is active, `dashCooldown` is kept at zero. Dash distance remains wind-boosted, and every completed dash is immediately available again until the buff timer expires.
 
 ## Collision model
 

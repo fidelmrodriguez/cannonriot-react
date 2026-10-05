@@ -58,6 +58,7 @@ const GAME_TEXTURE_URLS = [
   GAME_ASSETS.fire,
   ...GAME_ASSETS.damagePortraits,
   ...GAME_ASSETS.victoryPortraits,
+  ...GAME_ASSETS.frictionPortraits,
   ...GAME_ASSETS.idlePortraits,
   ...Object.values(GAME_ASSETS.mechanicPortraits),
 ] as const;

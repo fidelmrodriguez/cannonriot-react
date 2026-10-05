@@ -18,6 +18,7 @@
 
 - wallpapers de menu e resultado (`1672×941`);
 - cinco portraits de dano e cinco de vitória (`640×640`, `react-damage-*` / `react-victory-*`);
+- dois portraits de atrito de casco (`640×640`, `react-friction-01.png` / `react-friction-02.png`) na cor chartreuse dedicada à mecânica;
 - dez portraits idle otimizados (`724×543`, `react-idle-*`);
 - seis portraits de mecânica otimizados (`640×640`, `react-mechanic-*`);
 - SVGs das bandeiras EUA/Brasil/Espanha para idioma;
@@ -39,7 +40,7 @@ O preloader global carrega todas as texturas declaradas, wallpapers de tela, SFX
 - Texturas Pixi: concorrência 3, até 3 tentativas por arquivo.
 - Imagens de tela: `Image` do DOM.
 - Áudio/música: `fetch` para object URLs reutilizáveis.
-- Progresso é enviado à tela de boot.
+- Progresso é enviado à tela de boot. Em 100%, o preload permanece num gate **Subir a bordo** para fornecer ao navegador um gesto explícito antes de iniciar a música do menu.
 - Falhas permanentes emitem logs `[Cannon Riot preload]` e fazem um `HEAD` para expor status/headers HTTP antes da tela de retry.
 - Caminhos de imagem permanecem originais; não é adicionada query string de cache-busting.
 

@@ -18,6 +18,7 @@
 
 - menu and result wallpapers (`1672×941`);
 - five damage portraits and five victory portraits (`640×640`, `react-damage-*` / `react-victory-*`);
+- two hull-friction portraits (`640×640`, `react-friction-01.png` / `react-friction-02.png`) on the dedicated chartreuse reaction color;
 - ten optimized idle portraits (`724×543`, `react-idle-*`);
 - six optimized mechanic portraits (`640×640`, `react-mechanic-*`);
 - US/Brazil/Spain flag SVGs for language controls;
@@ -39,7 +40,7 @@ The global preloader loads all declared gameplay textures, screen wallpapers, SF
 - Pixi textures: concurrency 3, up to 3 attempts each.
 - Screen images: DOM `Image` decode/load.
 - Audio/music: `fetch` into reusable object URLs.
-- Progress is reported to the boot screen.
+- Progress is reported to the boot screen. At 100%, the preload stays on a **Board the Ship** interaction gate so the browser receives an explicit user gesture before menu music begins.
 - Permanent failures emit `[Cannon Riot preload]` console diagnostics and perform a `HEAD` request to expose HTTP status/headers before the visible retry screen.
 - Runtime image paths remain unchanged; no cache-busting query string is appended.
 

@@ -39,6 +39,7 @@ Four panel families are used:
 - **damage** — player hull damage;
 - **victory** — scoring enemy destruction/combo feedback;
 - **idle** — calm-period captain reactions;
-- **mechanic** — dash, medicine, Living Powder, wind, armor and powder-barrel reactions.
+- **mechanic** — dash, medicine, Living Powder, wind, armor and powder-barrel reactions;
+- **friction** — dedicated chartreuse (`#B8E62E`) hull-scrape reactions that stay pinned through Shooter contact and linger briefly after separation.
 
 The captain idle chirp is exclusive to idle panels. Mechanic panels rely on their own action SFX so dash/pickup sounds are not doubled by the idle voice.

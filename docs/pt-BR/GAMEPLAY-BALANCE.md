@@ -52,14 +52,28 @@ Taps touch podem ficar em buffer por 0,32 s para um toque rápido durante o lock
 
 Valores base:
 
-- cooldown: 2,65 s antes da assistência de pressão/vento;
+- cooldown: 2,65 s antes da assistência de pressão;
 - duração ativa: 0,28 s;
 - distância: 132 px;
 - distância com vento: 158 px.
 
 A imunidade existe somente enquanto o estado temporizado do dash está ativo. Quando o dash termina ou é bloqueado por terreno, a proteção acaba imediatamente.
 
-Um Chaser atingido durante o dash se autodestrói sem ferir o jogador. Isso **não** pontua, preservando a regra de colisão do Chaser. Ilhas e limites da arena continuam sólidos durante o dash.
+Um Chaser destruído durante o dash não fere o jogador e vale **1 ponto**, porque o dash é um ataque explícito do jogador. A kill usa os portraits normais de vitória com falas próprias de dash. Uma colisão normal de Chaser fora do dash continua sendo autodestruição sem ponto. Ilhas e limites da arena continuam sólidos durante o dash.
+
+
+## Atrito de casco com Shooter
+
+Shooters roxos continuam sólidos, mas contato casco a casco sustentado agora aplica dano contínuo de atrito:
+
+| Alvo | DPS de atrito |
+| --- | ---: |
+| Jogador | 4,5 HP/s antes da mitigação de armadura |
+| Shooter em contato | 26 HP/s |
+
+O Shooter recebe propositalmente muito mais dano que o jogador. Assim, raspar pode finalizar ou enfraquecer um navio em emergência, mas continua mais lento e arriscado que usar os canhões. O dano do jogador não multiplica pela quantidade de Shooters encostados; cada Shooter ainda recebe o próprio dano de atrito.
+
+O atrito possui dois reacts chartreuse dedicados e cinco falas localizadas. Um react permanece visível durante todo o contato e fica por mais **2,2 s** depois que os cascos se separam.
 
 ## Pickups e suporte de emergência
 
@@ -67,7 +81,7 @@ Existem quatro pickups:
 
 - **Medicina** — recupera casco;
 - **Pólvora Viva** — artilharia automática reforçada;
-- **Vento a Favor** — velocidade de movimento + assistência no dash;
+- **Vento a Favor** — velocidade de movimento, dash de 158 px e **zero recarga de dash enquanto o buff estiver ativo**;
 - **Casco Reforçado** — multiplicador de dano recebido de 0,64 enquanto ativo.
 
 Drops normais consideram pressão, casco atual e timers de buffs. Buffs temporários repetidos estendem a duração com teto de 1,65× da duração base.
@@ -100,7 +114,7 @@ Isso permite enfraquecer 7–10 navios muito agrupados sem transformar um gatilh
 - sem ponto seguro, a tentativa é adiada em vez de forçar posição inválida;
 - inimigos recém-spawnados recebem somente um `!` visual curto — não existe atraso escondido de ataque;
 - i-frame do dash está preso exatamente ao estado de dash, sem graça posterior;
-- contato sólido com Shooter não causa dano;
+- contato sólido com Shooter aplica dano contínuo assimétrico de atrito (4,5 HP/s no jogador e 26 HP/s no Shooter);
 - colisão de Chaser fora do dash causa dano e autodestruição sem ponto;
 - substeps de projétil reduzem tunnelling em velocidades reforçadas;
 - hits de projétil aplicam dano uma única vez;

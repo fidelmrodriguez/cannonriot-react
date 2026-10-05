@@ -5,7 +5,7 @@
     "format": "loose-assets",
     "generatedBy": "repository documentation/assets audit",
     "publicPathBase": "/assets/",
-    "note": "Runtime uses direct asset files. Metadata was refreshed after the reaction portrait replacement; react-* files are optimized for their in-game display size."
+    "note": "Runtime uses direct asset files. Metadata includes the current optimized react set, including the two chartreuse hull-friction portraits."
   },
   "assets": [
     {
@@ -369,6 +369,32 @@
       "origin": "project",
       "bytes": 571850,
       "sha256": "97aba389901c7ed297cf362aa582853103bc724cf65d0b38a0472e1948690512",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-friction-01",
+      "path": "/assets/ui/react-friction-01.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 592521,
+      "sha256": "94a52f43758464e14b02b431ad3c70706a47a6ad2fc358a1296073220f9cc327",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-friction-02",
+      "path": "/assets/ui/react-friction-02.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 606096,
+      "sha256": "6c4110e85e0e26b1c1b554b682b33163f44ae2c985b70b13cb63e3162be8a9ab",
       "dimensions": {
         "width": 640,
         "height": 640

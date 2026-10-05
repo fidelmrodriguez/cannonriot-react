@@ -39,6 +39,7 @@ Quatro famílias são usadas:
 - **damage** — dano no casco do jogador;
 - **victory** — destruição pontuável/combo;
 - **idle** — reações da capitã em períodos calmos;
-- **mechanic** — dash, medicina, Pólvora Viva, vento, armadura e barril.
+- **mechanic** — dash, medicina, Pólvora Viva, vento, armadura e barril;
+- **friction** — reacts de raspagem de casco em chartreuse dedicado (`#B8E62E`), mantidos durante o contato com Shooter e por alguns instantes após a separação.
 
 O chirp idle da capitã é exclusivo dos painéis idle. Painéis de mecânica usam o SFX da própria ação para dash/pickup não reproduzirem a voz idle junto.

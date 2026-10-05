@@ -36,7 +36,7 @@ O comportamento central exigido está implementado:
 - inimigos destruídos deixam de participar de IA, ataque e colisão;
 - duração ativa de 60–180 s;
 - exatamente um ponto por destruição pontuável;
-- autodestruição de Chaser contra jogador continua sem ponto;
+- autodestruição normal de Chaser contra o jogador continua sem ponto; um dash ativo é tratado como ataque deliberado do jogador e por isso pontua a destruição;
 - finais limpos por timeout/casco destruído e restart novo;
 - barras de vida nos navios + HUD React de score/tempo;
 - pausa manual e por blur/aba oculta com retomada explícita;
@@ -50,11 +50,12 @@ O repositório atual também implementa:
 
 - lock normal de troca frontal/lateral de 0,25 s + buffer de input rápido de 0,32 s;
 - dash de 0,28 s com imunidade somente durante o estado ativo;
-- counter de Chaser com dash sem pontuação;
+- counter de Chaser com dash como ataque deliberado e pontuável, com falas próprias de vitória;
 - Pólvora Viva automática em frontal + as duas laterais até expirar;
-- pickups Medicina, Vento e Casco Reforçado;
+- pickups Medicina, Vento e Casco Reforçado; Vento mantém o dash imediatamente pronto durante todo o buff;
 - suporte de emergência de Medicina/Armadura com casco ≤35% e cooldown de 12 s;
 - barril com splash de 170 px não letal nos vizinhos e imunidade própria;
+- atrito assimétrico de casco com Shooter (dano leve no jogador e maior no Shooter), com reacts persistentes de atrito;
 - telegraph visual `!` no spawn sem atraso de ataque.
 
 ## Telas e configuração
@@ -84,7 +85,7 @@ Constantes base ficam em `DEFAULT_CONFIG`; ajustes arcade ficam em `EXTRA_BALANC
 - Estado contínuo de combate permanece em `GameEngine`; React recebe snapshots limitados.
 - Simulação usa delta time com limite de 0,05 s.
 - Canvas mantém mundo fixo 1280×720 e escala uniforme.
-- Preload executa antes do uso normal do menu e mostra progresso/erro/retry.
+- Preload executa antes do uso normal do menu e mostra progresso/erro/retry; após sucesso, o gate explícito **Subir a bordo** fornece o gesto exigido pelo navegador para liberar áudio antes de entrar no menu.
 - Texturas Pixi tentam até 3 vezes e falhas permanentes geram diagnóstico detalhado no console/HTTP.
 - Input/listeners/ticker/`ResizeObserver`/recursos Pixi são limpos no unmount.
 - React Strict Mode é suportado pela ownership de create/destroy.
@@ -148,7 +149,7 @@ Os controles ficam disponíveis somente com `?dev=1`/`?e2e=1`. **Restore calm se
 
 ## Status dos testes automatizados
 
-A suíte Playwright atual cobre as categorias funcionais principais e as mecânicas recentes (lock de armas, auto-fire da Pólvora Viva, i-frame do dash, emergency support e splash do barril). As assertions mobile estão alinhadas à UI atual de setas.
+A suíte Playwright atual cobre as categorias funcionais principais e as mecânicas recentes (lock de armas, auto-fire da Pólvora Viva, atrito com Shooter, dash infinito com Vento, counter pontuável de dash, emergency support e splash do barril). As assertions mobile estão alinhadas à UI atual de setas.
 
 Ainda faltam evidências dependentes do ambiente, que não devem ser inventadas na documentação:
 

@@ -19,6 +19,10 @@ export const GAME_ASSETS = {
     '/assets/ui/react-victory-04.png',
     '/assets/ui/react-victory-05.png',
   ],
+  frictionPortraits: [
+    '/assets/ui/react-friction-01.png',
+    '/assets/ui/react-friction-02.png',
+  ],
   idlePortraits: [
     '/assets/ui/react-idle-01.png',
     '/assets/ui/react-idle-02.png',

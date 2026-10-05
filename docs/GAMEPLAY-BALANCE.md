@@ -52,14 +52,28 @@ Touch taps may be buffered for 0.32 s so a quick tap during the switch lock is n
 
 Base dash values:
 
-- cooldown: 2.65 s before pressure/wind assistance;
+- cooldown: 2.65 s before pressure assistance;
 - active duration: 0.28 s;
 - distance: 132 px;
 - wind-boosted distance: 158 px.
 
 Damage immunity exists only while the timed dash state is active. When the dash ends or is blocked by terrain, protection ends immediately.
 
-A Chaser struck during the dash self-destructs without damaging the player. It does **not** award a point, preserving the Chaser collision scoring rule. Islands and arena limits remain solid during dash.
+A Chaser destroyed during the dash does not damage the player and awards **1 point** because the dash is an explicit player attack. It uses the regular victory portraits with dedicated dash-kill dialogue. A normal Chaser collision outside dash remains a non-scoring self-destruction. Islands and arena limits remain solid during dash.
+
+
+## Shooter hull friction
+
+Purple Shooters are still solid, but sustained hull-to-hull contact now deals continuous friction damage:
+
+| Target | Friction DPS |
+| --- | ---: |
+| Player | 4.5 HP/s before armor mitigation |
+| Touching Shooter | 26 HP/s |
+
+The Shooter intentionally takes much more damage than the player. Scraping can therefore finish or soften a ship in an emergency, but it is slower and riskier than using the cannons. The player damage does not stack per touching Shooter; each Shooter still receives its own friction damage.
+
+Friction has two dedicated chartreuse reaction portraits and five localized lines. One reaction stays visible for the full contact and lingers for **2.2 s** after the hulls separate.
 
 ## Pickups and emergency support
 
@@ -67,7 +81,7 @@ The four pickup kinds are:
 
 - **Medicine** — repairs hull;
 - **Living Powder** — automatic boosted artillery;
-- **Wind at Your Back** — movement speed + dash assistance;
+- **Wind at Your Back** — movement speed, 158 px dash distance and **no dash reload while the buff is active**;
 - **Reinforced Hull** — incoming damage multiplier of 0.64 while active.
 
 Normal drops consider pressure, current hull and active buff timers. Repeated temporary buffs extend duration, capped at 1.65× their base duration.
@@ -100,7 +114,7 @@ This lets a barrel soften 7–10 tightly grouped ships without turning one trigg
 - if no safe spawn exists, the attempt is deferred instead of forcing an invalid position;
 - spawned enemies get a short visual `!` only — no hidden attack delay is added;
 - dash i-frame is tied exactly to the dash state with no post-dash grace;
-- Shooter hull contact is solid but non-damaging;
+- Shooter hull contact is solid and applies asymmetric continuous friction damage (4.5 HP/s player, 26 HP/s Shooter);
 - Chaser collision outside dash damages the player and self-destructs without scoring;
 - projectile substeps reduce tunnelling at boosted speeds;
 - projectile hits are single-application;

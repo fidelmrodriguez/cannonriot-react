@@ -71,8 +71,8 @@ The authoritative world is a fixed **1280×720** arena. Viewport resizing only c
 - The front cannon fires one projectile.
 - Each broadside fires three parallel projectiles.
 - Normal front/broadside fire is separated by a **0.25 s global weapon-switch lock**; quick touch taps can be buffered for **0.32 s**.
-- Chasers pursue the player and self-destruct on player collision. Their collision death does not score.
-- Shooters seek ranged positions, line of sight and fire at the player.
+- Chasers pursue the player and self-destruct on player collision. A normal collision death does not score; destroying one with an active dash is a scoring player attack.
+- Shooters seek ranged positions, line of sight and fire at the player. Sustained hull-to-hull friction damages both ships, with substantially more damage applied to the Shooter than to the player.
 - Islands and arena bounds block ships; islands also block projectiles.
 - Projectiles are single-hit and are removed on hit, obstacle, expiry or arena exit.
 - Every enemy destroyed by a scoring player attack awards exactly one point.
@@ -86,14 +86,15 @@ Default configuration: **120 s** match, **3 s** enemy spawn interval. Options ex
 
 The required challenge rules stay authoritative; these mechanics are additive:
 
-- **Dash**: 0.28 s active movement state. The player is immune to projectile and ship-contact damage only while that state is active. A Chaser hit during the dash self-destructs without damaging the player and still gives no point. There is no post-dash invulnerability.
+- **Dash**: 0.28 s active movement state. The player is immune to projectile and ship-contact damage only while that state is active. A Chaser destroyed by the dash awards one point and uses dedicated dash-victory lines. There is no post-dash invulnerability.
 - **Living Powder**: temporary fully automatic artillery. Front + both broadsides fire whenever their boosted reloads are ready until the buff expires.
-- **Wind at Your Back**: increases movement speed and improves dash distance/cooldown.
+- **Wind at Your Back**: increases movement speed, extends dash distance and keeps dash instantly ready with no reload for the entire buff duration.
 - **Reinforced Hull**: temporarily reduces incoming damage.
 - **Medicine**: repairs hull.
 - **Powder Barrel**: up to three active traps; the trigger ship is destroyed and nearby ships inside the **170 px** blast radius take heavy but non-lethal splash damage. The player is immune to their own barrel blast.
 - **Emergency support**: at ≤35% hull, if no nearby Medicine/Armor support exists, the game attempts to place a defensive pickup near the player. Emergency drops have a 12 s cooldown and can replace a less useful active pickup when all normal slots are occupied.
 - **Spawn alert**: a short `!` telegraph is visual only; newly spawned enemies remain fully active immediately.
+- **Shooter hull friction**: while the player hull is rubbing against a purple Shooter, both ships lose health continuously. Shooter friction DPS is intentionally much higher than player friction DPS, so scraping can be used tactically without becoming the optimal attack. Two dedicated chartreuse reaction portraits stay visible during contact and linger briefly after separation.
 
 Difficulty assistance is derived deterministically from the selected session duration and spawn interval. It changes support cadence, enemy cap and small balance coefficients, but never changes the ranking key or scoring value.
 
@@ -137,7 +138,7 @@ Developer network scenarios are hidden in normal play. Open `?dev=1` (or `?e2e=1
 
 ## Asset loading and diagnostics
 
-The global preloader starts MSW, then loads Pixi textures, screen wallpapers, SFX and music before normal menu use. Pixi textures use a maximum of **3 attempts** with limited concurrency. A permanent texture/audio/image failure is logged with the prefix `[Cannon Riot preload]` and an HTTP `HEAD` diagnostic before the boot error/retry UI is shown.
+The global preloader starts MSW, then loads Pixi textures, screen wallpapers, SFX and music before normal menu use. Pixi textures use a maximum of **3 attempts** with limited concurrency. Once loading reaches 100%, a **Board the Ship** interaction gate is shown; that explicit gesture unlocks browser audio before the main menu appears, so menu music can start immediately when allowed by the saved audio preference. A permanent texture/audio/image failure is logged with the prefix `[Cannon Riot preload]` and an HTTP `HEAD` diagnostic before the boot error/retry UI is shown.
 
 Audio files are fetched into object URLs and reused. Runtime image URLs are not modified with cache-busting query strings.
 
@@ -159,7 +160,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md).
 
 Playwright is configured for desktop Chromium and a landscape Pixel 7 touch profile. `?e2e=1` fixes the gameplay seed at `1337` and exposes test-only state/time hooks while still exercising the real simulation path.
 
-The current gameplay tests cover the weapon switch lock, Living Powder auto-fire, dash i-frame, emergency support and expanded powder-barrel splash. See [docs/TESTING.md](docs/TESTING.md) for the current suite status and the remaining evaluator-facing evidence.
+The current gameplay tests cover the weapon switch lock, Living Powder auto-fire, Shooter friction, infinite Wind dash, dash i-frame/scoring counter, emergency support and expanded powder-barrel splash. See [docs/TESTING.md](docs/TESTING.md) for the current suite status and the remaining evaluator-facing evidence.
 
 ## Performance
 

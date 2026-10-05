@@ -36,7 +36,7 @@ Required core behavior is implemented:
 - destroyed enemies stop participating in AI, attacks and collisions;
 - 60–180 s active match duration;
 - exactly one point per scoring enemy destruction;
-- Chaser self-destruction against player remains non-scoring;
+- normal Chaser self-destruction against the player remains non-scoring; an active dash is treated as a deliberate player attack and therefore scores the destruction;
 - clean timeout/hull-destroyed endings and fresh restart;
 - health bars over player/enemies plus React score/time HUD;
 - manual + blur/hidden-tab pause with explicit resume;
@@ -50,11 +50,12 @@ The current repository additionally implements:
 
 - 0.25 s normal front/broadside weapon-switch lock + 0.32 s quick-input buffer;
 - 0.28 s dash with damage immunity only during the active dash state;
-- Chaser dash counter without score;
+- Chaser dash counter as a deliberate scoring player attack, with dedicated victory lines;
 - Living Powder full automatic front + both broadsides until expiry;
-- Medicine, Wind and Reinforced Hull pickups;
+- Medicine, Wind and Reinforced Hull pickups; Wind keeps dash immediately ready for the full buff;
 - ≤35% hull emergency Medicine/Armor support with 12 s cooldown;
 - powder barrel with 170 px non-lethal neighbour splash and player self-immunity;
+- asymmetric Shooter hull friction (light player damage, heavier Shooter damage) with persistent friction reactions;
 - visual-only `!` spawn telegraph with no attack delay.
 
 ## Screens and configuration
@@ -84,7 +85,7 @@ Base gameplay constants live in `DEFAULT_CONFIG`; additive arcade tuning lives i
 - Continuous combat state remains in `GameEngine`; React receives throttled snapshots.
 - Simulation uses delta time with a 0.05 s clamp.
 - Pixi canvas preserves a fixed 1280×720 world and uniform viewport scaling.
-- Preload runs before normal menu use and exposes visible progress/error/retry.
+- Preload runs before normal menu use and exposes visible progress/error/retry; after success, a deliberate **Board the Ship** interaction gate unlocks browser audio before entering the menu.
 - Pixi textures are retried up to 3 times and permanent failures produce detailed console/HTTP diagnostics.
 - Input/listeners/ticker/`ResizeObserver`/Pixi resources are cleaned on unmount.
 - React Strict Mode is supported by create/destroy lifecycle ownership.
@@ -148,7 +149,7 @@ Scenario controls are available only with `?dev=1`/`?e2e=1`. **Restore calm seas
 
 ## Automated test status
 
-The current Playwright suite covers the main functional categories plus recent mechanics (weapon lock, Living Powder auto-fire, dash i-frame, emergency support and powder-barrel splash). Mobile assertions are aligned to the current steering-arrow UI.
+The current Playwright suite covers the main functional categories plus recent mechanics (weapon lock, Living Powder auto-fire, Shooter friction, infinite Wind dash, scoring dash counter, emergency support and powder-barrel splash). Mobile assertions are aligned to the current steering-arrow UI.
 
 The repository still needs evaluator-generated evidence that cannot honestly be fabricated in documentation:
 
