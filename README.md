@@ -53,7 +53,7 @@ npx playwright install chromium
 | Turn left/right | `A` / `D` or arrow keys |
 | Front cannon | `Space` |
 | Left/right broadside | `Q` / `E` |
-| Dash | `Ctrl` |
+| Dash | `F` |
 | Powder barrel | `R` |
 | Pause/resume | `P` / `Esc` |
 

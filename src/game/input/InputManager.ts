@@ -7,7 +7,7 @@ const KEY_MAP: Record<string, GameAction> = {
   Space: 'fire',
   KeyQ: 'broadsideLeft',
   KeyE: 'broadsideRight',
-  ControlLeft: 'dash', ControlRight: 'dash',
+  KeyF: 'dash',
   KeyR: 'barrel',
 };
 

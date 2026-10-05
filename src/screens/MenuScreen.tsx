@@ -40,7 +40,7 @@ export function MenuScreen({ config, language, player, onPlayerNameChange, onPla
           <div className="play-zone"><ArcadeButton className="mega" disabled={!player.displayName.trim()} onClick={onPlay}>{t('menu.play', {}, language)}</ArcadeButton></div>
           <button className="options-link" onClick={onOptions}><span aria-hidden="true">⚙</span><strong>{t('menu.options', {}, language)}</strong></button>
           <div className="control-grid">
-            <span><kbd>W / ↑</kbd> {t('menu.ctrlForward', {}, language)}</span><span><kbd>A / D</kbd> {t('menu.ctrlTurn', {}, language)}</span><span><kbd>SPACE</kbd> {t('menu.ctrlFront', {}, language)}</span><span><kbd>Q / E</kbd> {t('menu.ctrlSide', {}, language)}</span><span><kbd>CTRL</kbd> {t('menu.ctrlDash', {}, language)}</span><span><kbd>R</kbd> {t('menu.ctrlBarrel', {}, language)}</span><span><kbd>P / ESC</kbd> {t('menu.ctrlPause', {}, language)}</span>
+            <span><kbd>W / ↑</kbd> {t('menu.ctrlForward', {}, language)}</span><span><kbd>A / D</kbd> {t('menu.ctrlTurn', {}, language)}</span><span><kbd>SPACE</kbd> {t('menu.ctrlFront', {}, language)}</span><span><kbd>Q / E</kbd> {t('menu.ctrlSide', {}, language)}</span><span><kbd>F</kbd> {t('menu.ctrlDash', {}, language)}</span><span><kbd>R</kbd> {t('menu.ctrlBarrel', {}, language)}</span><span><kbd>P / ESC</kbd> {t('menu.ctrlPause', {}, language)}</span>
           </div>
           <div className="touch-menu-hint" aria-label={t('touch.controls', {}, language)}><b>{t('menu.touch', {}, language)}</b><span>{t('menu.touchHint', {}, language)}</span></div>
         </section>

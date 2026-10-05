@@ -53,7 +53,7 @@ npx playwright install chromium
 | Girar esquerda/direita | `A` / `D` ou setas |
 | Canhão frontal | `Space` |
 | Salva lateral esquerda/direita | `Q` / `E` |
-| Dash | `Ctrl` |
+| Dash | `F` |
 | Barril de pólvora | `R` |
 | Pausar/retomar | `P` / `Esc` |
 

@@ -110,7 +110,7 @@ export function GameScreen({ config, language, player, onEnd, onQuit }: Props) {
       <div className={`reload-card lateral ${snapshot.broadsideReload >= 0.999 ? 'ready' : ''}`}>
         <span>{t('game.sides', {}, language)}</span><div className="reload-track"><i style={{ width: `${Math.round(snapshot.broadsideReload * 100)}%` }} /></div><b>{snapshot.broadsideReload >= 0.999 ? t('game.ready', {}, language) : t('game.reloading', {}, language)}</b>
       </div>
-      <div className={`dash-chip ${snapshot.dashReload >= 0.999 ? 'ready' : ''}`}><span>CTRL</span><b>DASH {snapshot.dashReload >= 0.999 ? t('game.ready', {}, language) : `${Math.round(snapshot.dashReload * 100)}%`}</b></div>
+      <div className={`dash-chip ${snapshot.dashReload >= 0.999 ? 'ready' : ''}`}><span>F</span><b>DASH {snapshot.dashReload >= 0.999 ? t('game.ready', {}, language) : `${Math.round(snapshot.dashReload * 100)}%`}</b></div>
       <div className={`barrel-chip ${snapshot.barrelReload >= 0.999 ? 'ready' : ''}`}><span>R</span><b>{t('game.barrel', {}, language)} {snapshot.barrelReload >= 0.999 ? t('game.ready', {}, language) : `${Math.round(snapshot.barrelReload * 100)}%`}</b><small>{snapshot.barrelCount}/3</small></div>
       <div className="buff-dock" aria-live="polite">
         {snapshot.powderTime > 0 && <span className="buff powder">{t('game.powder', {}, language)} {Math.ceil(snapshot.powderTime)}s</span>}
@@ -132,7 +132,7 @@ export function GameScreen({ config, language, player, onEnd, onQuit }: Props) {
         <div className="comic-card"><span className="burst">{t('game.paused', {}, language)}</span><h2>{t('game.holdChaos', {}, language)}</h2><p>{t('game.pauseDesc', {}, language)}</p><ArcadeButton autoFocus onClick={() => engineRef.current?.togglePause(false)}>{t('game.resume', {}, language)}</ArcadeButton><button className="text-button" onClick={onQuit}>{t('game.quit', {}, language)}</button></div>
       </div>}
     </div>
-    <div className="desktop-controls" aria-label={t('game.keyboard', {}, language)}><span><kbd>W / ↑</kbd> {t('game.advance', {}, language)}</span><span><kbd>A / ←</kbd> {t('game.turnLeft', {}, language)}</span><span><kbd>D / →</kbd> {t('game.turnRight', {}, language)}</span><span><kbd>SPACE</kbd> {t('game.frontShot', {}, language)}</span><span><kbd>Q</kbd> {t('game.leftSide', {}, language)}</span><span><kbd>E</kbd> {t('game.rightSide', {}, language)}</span><span><kbd>CTRL</kbd> dash</span><span><kbd>R</kbd> {t('game.powderBarrel', {}, language)}</span><span><kbd>P / ESC</kbd> {t('game.pause', {}, language)}</span></div>
+    <div className="desktop-controls" aria-label={t('game.keyboard', {}, language)}><span><kbd>W / ↑</kbd> {t('game.advance', {}, language)}</span><span><kbd>A / ←</kbd> {t('game.turnLeft', {}, language)}</span><span><kbd>D / →</kbd> {t('game.turnRight', {}, language)}</span><span><kbd>SPACE</kbd> {t('game.frontShot', {}, language)}</span><span><kbd>Q</kbd> {t('game.leftSide', {}, language)}</span><span><kbd>E</kbd> {t('game.rightSide', {}, language)}</span><span><kbd>F</kbd> dash</span><span><kbd>R</kbd> {t('game.powderBarrel', {}, language)}</span><span><kbd>P / ESC</kbd> {t('game.pause', {}, language)}</span></div>
     <TouchControls language={language} onAction={action} dashReload={snapshot.dashReload} barrelReload={snapshot.barrelReload} barrelCount={snapshot.barrelCount} />
     <div className="sr-only" aria-live="polite">{t('game.sr', { score: snapshot.score, time: Math.ceil(snapshot.timeLeft), health: Math.ceil(snapshot.health) }, language)}</div>
   </main>;

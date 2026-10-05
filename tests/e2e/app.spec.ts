@@ -365,7 +365,7 @@ test.describe('application and gameplay', () => {
     expect(active.buffs.wind).toBeGreaterThan(0);
     expect(active.cooldowns.dash).toBe(0);
 
-    await page.keyboard.press('ControlLeft');
+    await page.keyboard.press('f');
     await page.waitForTimeout(80);
     const afterDash = await debugState(page);
     expect(afterDash.buffs.wind).toBeGreaterThan(0);
@@ -403,9 +403,9 @@ test.describe('application and gameplay', () => {
       return api.spawnEnemy('chaser', 710, 360, 30);
     });
     const before = await debugState(page);
-    await page.keyboard.down('ControlLeft');
+    await page.keyboard.down('f');
     await page.waitForTimeout(60);
-    await page.keyboard.up('ControlLeft');
+    await page.keyboard.up('f');
     await page.waitForTimeout(110);
     const during = await debugState(page);
     expect(during.player.health).toBeCloseTo(before.player.health, 3);
