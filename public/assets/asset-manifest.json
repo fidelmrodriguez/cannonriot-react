@@ -5,7 +5,7 @@
     "format": "loose-assets",
     "generatedBy": "repository documentation/assets audit",
     "publicPathBase": "/assets/",
-    "note": "Runtime uses direct asset files. Metadata was refreshed against the current optimized files; pixelRatio is retained only when encoded by the asset naming convention."
+    "note": "Runtime uses direct asset files. Metadata was refreshed after the reaction portrait replacement; react-* files are optimized for their in-game display size."
   },
   "assets": [
     {
@@ -258,76 +258,6 @@
       "sha256": "fc5ee73cc8f9677db71d41f34d64e2f667fc2c9c285fe52d73b39488dfa6d261"
     },
     {
-      "id": "ui.damage-panel-1-2x",
-      "path": "/assets/ui/damage-panel-1-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 232322,
-      "sha256": "95e4061c832c4de0dc9ad6f098f86f350d446130370ec31c531181ab36481165",
-      "dimensions": {
-        "width": 432,
-        "height": 356
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.damage-panel-2-2x",
-      "path": "/assets/ui/damage-panel-2-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 249723,
-      "sha256": "5caefe3bd816d50c5cff3ed9e51cb15c6b9edf36b8c023197d51e5824061b136",
-      "dimensions": {
-        "width": 432,
-        "height": 356
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.damage-panel-3-2x",
-      "path": "/assets/ui/damage-panel-3-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 239676,
-      "sha256": "b0aa3d2ba8242afc777d0cf67b3529b4b30792ab43d9387f6c00a329ce6335cb",
-      "dimensions": {
-        "width": 432,
-        "height": 356
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.damage-panel-4-2x",
-      "path": "/assets/ui/damage-panel-4-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 244895,
-      "sha256": "929325a10847a45ef2b5a60bebc5d8ab375dec7079379a22ff094baa8399b7bc",
-      "dimensions": {
-        "width": 432,
-        "height": 356
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.damage-panel-5-2x",
-      "path": "/assets/ui/damage-panel-5-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 246507,
-      "sha256": "22c3a06c923b2082f24fc09a21ba98c5dd70e3488c2cf037858728c0032886ab",
-      "dimensions": {
-        "width": 432,
-        "height": 356
-      },
-      "pixelRatio": 2
-    },
-    {
       "id": "ui.flags.br",
       "path": "/assets/ui/flags/br.svg",
       "kind": "vector",
@@ -367,224 +297,6 @@
       }
     },
     {
-      "id": "ui.idle-panel-1-2x",
-      "path": "/assets/ui/idle-panel-1-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 513498,
-      "sha256": "12cb17511a93450855bed92f3c616cb05ac2ea1bd037684293163f22b4ebfb56",
-      "dimensions": {
-        "width": 724,
-        "height": 543
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.idle-panel-10-2x",
-      "path": "/assets/ui/idle-panel-10-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 529596,
-      "sha256": "a8aa42428d359bb8b8a09b434440ee4aa04a46b60b8170872402226433087823",
-      "dimensions": {
-        "width": 724,
-        "height": 543
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.idle-panel-2-2x",
-      "path": "/assets/ui/idle-panel-2-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 512226,
-      "sha256": "161517a61af5ceae12a2dd8ce84d557b82b86d7c50d83205bc8d606827e5f6b4",
-      "dimensions": {
-        "width": 724,
-        "height": 543
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.idle-panel-3-2x",
-      "path": "/assets/ui/idle-panel-3-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 546686,
-      "sha256": "18c7f83de720131008889032d5a8dec40f2f082c274c8a2927df63b5514404eb",
-      "dimensions": {
-        "width": 724,
-        "height": 543
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.idle-panel-4-2x",
-      "path": "/assets/ui/idle-panel-4-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 510191,
-      "sha256": "299d72269c9f4aec4fcedc1e0f9586f81478221a73f6207019bc9998c73a3223",
-      "dimensions": {
-        "width": 724,
-        "height": 543
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.idle-panel-5-2x",
-      "path": "/assets/ui/idle-panel-5-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 500512,
-      "sha256": "8f7157fe962c5fbe3c1936748925cb92b3b7aa266e261bf353bd9e66a02bae99",
-      "dimensions": {
-        "width": 724,
-        "height": 543
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.idle-panel-6-2x",
-      "path": "/assets/ui/idle-panel-6-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 520065,
-      "sha256": "243d2c280c67a3d5f45ef438988014874bd6916b0916c2e3fb4684db02d77f84",
-      "dimensions": {
-        "width": 724,
-        "height": 543
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.idle-panel-7-2x",
-      "path": "/assets/ui/idle-panel-7-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 552436,
-      "sha256": "ea7605a7a8107a44e0bf1b26c618757b1a4469e9a0631b6f002f9cba605d2778",
-      "dimensions": {
-        "width": 724,
-        "height": 543
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.idle-panel-8-2x",
-      "path": "/assets/ui/idle-panel-8-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 534681,
-      "sha256": "1dc4dcbc4ae8b3eeba56890a564e2f73296314db363878896cc348f91eaa56bb",
-      "dimensions": {
-        "width": 724,
-        "height": 543
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.idle-panel-9-2x",
-      "path": "/assets/ui/idle-panel-9-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 511526,
-      "sha256": "32021b700ad756a575c08c366d0b6aa56cbb7e59ebc7d5a5e96534c9b7477084",
-      "dimensions": {
-        "width": 724,
-        "height": 543
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.mechanic-armor-panel",
-      "path": "/assets/ui/mechanic-armor-panel.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 740416,
-      "sha256": "e54be804c1938b4a31e9edc9435ca83efa8931b6aa8bddbeed18dec9ec1b245c",
-      "dimensions": {
-        "width": 640,
-        "height": 640
-      }
-    },
-    {
-      "id": "ui.mechanic-barrel-panel",
-      "path": "/assets/ui/mechanic-barrel-panel.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 711970,
-      "sha256": "da0ce7c69c0ce943f58eaf4b3576ec72e3503755624f86c2d4a45863d435ca5f",
-      "dimensions": {
-        "width": 640,
-        "height": 640
-      }
-    },
-    {
-      "id": "ui.mechanic-dash-panel",
-      "path": "/assets/ui/mechanic-dash-panel.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 759627,
-      "sha256": "b208383b4d31db558114adc2428205753fdcc05ce9d92bdfff6f49dc0747ed1b",
-      "dimensions": {
-        "width": 640,
-        "height": 640
-      }
-    },
-    {
-      "id": "ui.mechanic-medicine-panel",
-      "path": "/assets/ui/mechanic-medicine-panel.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 770183,
-      "sha256": "65df15d4a6016622e873cfca2e74518f68a8af529a53a8216516bf9f815223a7",
-      "dimensions": {
-        "width": 640,
-        "height": 640
-      }
-    },
-    {
-      "id": "ui.mechanic-powder-panel",
-      "path": "/assets/ui/mechanic-powder-panel.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 799386,
-      "sha256": "4590c3515656e57a1407da1d41ec03323a45edabbbf1f50d91685760e33cffcf",
-      "dimensions": {
-        "width": 640,
-        "height": 640
-      }
-    },
-    {
-      "id": "ui.mechanic-wind-panel",
-      "path": "/assets/ui/mechanic-wind-panel.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 715563,
-      "sha256": "defe3b35f44dadf11f3876699fc58a385dd90448cb8f6c164db9da49b84b9d54",
-      "dimensions": {
-        "width": 640,
-        "height": 640
-      }
-    },
-    {
       "id": "ui.menu-wallpaper-hero",
       "path": "/assets/ui/menu-wallpaper-hero.png",
       "kind": "image",
@@ -595,6 +307,344 @@
       "dimensions": {
         "width": 1672,
         "height": 941
+      }
+    },
+    {
+      "id": "ui.react-damage-01",
+      "path": "/assets/ui/react-damage-01.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 518318,
+      "sha256": "a3e592f5b820f48f61dee802487b92bf574a0bd04032f85ba29edacb40a3cc60",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-damage-02",
+      "path": "/assets/ui/react-damage-02.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 583925,
+      "sha256": "42df3a47b354ae0aa8df4a9a2d17e105bbad066c13180b836c707f431dae36d6",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-damage-03",
+      "path": "/assets/ui/react-damage-03.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 575155,
+      "sha256": "8f0f13410f2ad467faaa6811023dc95c4778c090076db5a72985b4c4f1942e2c",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-damage-04",
+      "path": "/assets/ui/react-damage-04.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 561769,
+      "sha256": "7e2ac8af7d583f668ea893c825295d5022101673b9c7f127f138cac30787185a",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-damage-05",
+      "path": "/assets/ui/react-damage-05.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 571850,
+      "sha256": "97aba389901c7ed297cf362aa582853103bc724cf65d0b38a0472e1948690512",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-idle-01",
+      "path": "/assets/ui/react-idle-01.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 539995,
+      "sha256": "3d6ef2e41c1e5d27e668798a8587235d97268ca641cbe2afbe9042e24e41fe0b",
+      "dimensions": {
+        "width": 724,
+        "height": 543
+      }
+    },
+    {
+      "id": "ui.react-idle-02",
+      "path": "/assets/ui/react-idle-02.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 536692,
+      "sha256": "7562dd795b6776c73667c9688452a0a01ac2cb19e791f1ba2a969ce012afe195",
+      "dimensions": {
+        "width": 724,
+        "height": 543
+      }
+    },
+    {
+      "id": "ui.react-idle-03",
+      "path": "/assets/ui/react-idle-03.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 532180,
+      "sha256": "e4ba9ddb64f4ce823cb521e7d65a7cfa9895bd0d806a320a8ea878f47567bc9a",
+      "dimensions": {
+        "width": 724,
+        "height": 543
+      }
+    },
+    {
+      "id": "ui.react-idle-04",
+      "path": "/assets/ui/react-idle-04.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 550015,
+      "sha256": "5c6acfa8e4dc816a60589f5419c595677e37e58b84d96b05d469e596508d6b36",
+      "dimensions": {
+        "width": 724,
+        "height": 543
+      }
+    },
+    {
+      "id": "ui.react-idle-05",
+      "path": "/assets/ui/react-idle-05.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 538992,
+      "sha256": "3bc17225b332343e054f9251754e2758f2b2b4308c910cca78e643e5b26f3c67",
+      "dimensions": {
+        "width": 724,
+        "height": 543
+      }
+    },
+    {
+      "id": "ui.react-idle-06",
+      "path": "/assets/ui/react-idle-06.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 527679,
+      "sha256": "e5f76a20874755279d2fd3bca9dc32e21ec1c20e03362db6d6420400569c6a49",
+      "dimensions": {
+        "width": 724,
+        "height": 543
+      }
+    },
+    {
+      "id": "ui.react-idle-07",
+      "path": "/assets/ui/react-idle-07.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 533866,
+      "sha256": "b60beaebbcaa4e28b20a37955d28292d964ec3d3e41181947844d984893aeedb",
+      "dimensions": {
+        "width": 724,
+        "height": 543
+      }
+    },
+    {
+      "id": "ui.react-idle-08",
+      "path": "/assets/ui/react-idle-08.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 568685,
+      "sha256": "120847cbf23b1fd6845b326e168473f6adafbd15f82a984c6dd7cc9417dbe2a9",
+      "dimensions": {
+        "width": 724,
+        "height": 543
+      }
+    },
+    {
+      "id": "ui.react-idle-09",
+      "path": "/assets/ui/react-idle-09.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 541161,
+      "sha256": "d54af5121644f6b8a150004c6f548f6332e570d03bcb60a7fc8b34ca36e14a5f",
+      "dimensions": {
+        "width": 724,
+        "height": 543
+      }
+    },
+    {
+      "id": "ui.react-idle-10",
+      "path": "/assets/ui/react-idle-10.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 533145,
+      "sha256": "f06039674e4b36334cc7e75477db34db1a251b28e0ca482605fa9241d508b4b8",
+      "dimensions": {
+        "width": 724,
+        "height": 543
+      }
+    },
+    {
+      "id": "ui.react-mechanic-armor",
+      "path": "/assets/ui/react-mechanic-armor.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 687167,
+      "sha256": "bd772929a4bf3e48a6566390d04128aa6a365e2fb274039931b48b2cbb420da0",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-mechanic-barrel",
+      "path": "/assets/ui/react-mechanic-barrel.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 663191,
+      "sha256": "b3f96ac16fddba96f4718e61d31feb0833def45fbfbea3a1653fb3d3cc03e7ca",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-mechanic-dash",
+      "path": "/assets/ui/react-mechanic-dash.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 695917,
+      "sha256": "de941611c54cd9c613f43c23dfbe2981dbff0de308113af2a9cf04563fe5a063",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-mechanic-medicine",
+      "path": "/assets/ui/react-mechanic-medicine.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 630378,
+      "sha256": "141b8d9aec11843800d64e87f0bf3bf525773872545c6cd28acb975d4983c26f",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-mechanic-powder",
+      "path": "/assets/ui/react-mechanic-powder.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 689555,
+      "sha256": "672c9ec87e908575b47c1500312a68692ce39ddfb9c2bc31124b849e4d17f390",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-mechanic-wind",
+      "path": "/assets/ui/react-mechanic-wind.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 648592,
+      "sha256": "918d8fa427cf2be091528d01448c700696ef8f00efc3e911ecf38390af1dac70",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-victory-01",
+      "path": "/assets/ui/react-victory-01.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 566836,
+      "sha256": "d1493cc4aed94f5f596367df50fe9b989908417fa3a3461cf3b6936af8c7be87",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-victory-02",
+      "path": "/assets/ui/react-victory-02.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 565155,
+      "sha256": "3c02f7b308b6ca4b9f650364cfc6dd33d292d187910c7f30ed2231cb2066795a",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-victory-03",
+      "path": "/assets/ui/react-victory-03.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 560310,
+      "sha256": "f54e4480a9c4616aa150be66c2ac60789d9fc21c476f0bd819a4f56008aa1877",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-victory-04",
+      "path": "/assets/ui/react-victory-04.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 565466,
+      "sha256": "8e86968aca10321da422f7f6562c2aa1b2def21cdb74d4575cb41b2bc5efed01",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-victory-05",
+      "path": "/assets/ui/react-victory-05.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 557876,
+      "sha256": "e01e5f5deffc53e3a5ca3eae8e96fd18cc3d80df69a4447e8cc67cc9fca9e87d",
+      "dimensions": {
+        "width": 640,
+        "height": 640
       }
     },
     {
@@ -622,76 +672,6 @@
         "width": 1672,
         "height": 941
       }
-    },
-    {
-      "id": "ui.victory-panel-1-2x",
-      "path": "/assets/ui/victory-panel-1-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 243731,
-      "sha256": "c744b53f5d32711d135a2a2ffb34c55e656ab519aa8779cc5fedbb9a35a819df",
-      "dimensions": {
-        "width": 432,
-        "height": 356
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.victory-panel-2-2x",
-      "path": "/assets/ui/victory-panel-2-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 234355,
-      "sha256": "b946f2340a35e22da99b871f988c47f8771116c5e71197bdbe693bd94ed3070c",
-      "dimensions": {
-        "width": 432,
-        "height": 356
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.victory-panel-3-2x",
-      "path": "/assets/ui/victory-panel-3-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 245880,
-      "sha256": "e26e44808ece0fc10e04add1d7097e2cbf4d470333a7abf2aad2511dc584ca92",
-      "dimensions": {
-        "width": 432,
-        "height": 356
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.victory-panel-4-2x",
-      "path": "/assets/ui/victory-panel-4-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 231608,
-      "sha256": "87be229af77f1117ac03c63300f5777a4a0b4276eb77f21cc55bc6cbe873064b",
-      "dimensions": {
-        "width": 432,
-        "height": 356
-      },
-      "pixelRatio": 2
-    },
-    {
-      "id": "ui.victory-panel-5-2x",
-      "path": "/assets/ui/victory-panel-5-2x.png",
-      "kind": "image",
-      "category": "ui/artwork",
-      "origin": "project",
-      "bytes": 230015,
-      "sha256": "e420220ccc231b0dfd22aa016c5d1657b2cb4e289829aace3c3bb40f617e9718",
-      "dimensions": {
-        "width": 432,
-        "height": 356
-      },
-      "pixelRatio": 2
     }
   ]
 }

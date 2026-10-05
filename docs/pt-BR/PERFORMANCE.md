@@ -42,7 +42,7 @@ Esse perfil altera apenas custo de apresentação. A mesma `GameEngine` continua
 
 ## Pressão do carregamento de assets
 
-Os portraits idle atuais têm 724×543 e os de mecânica 640×640. Ainda são maiores que a apresentação típica de ~216 px, mas muito menores que as versões source-sized anteriores. O boot também limita a concorrência de texturas Pixi a 3.
+Os portraits idle atuais têm 724×543; os portraits de dano, vitória e mecânica têm 640×640. Ainda são maiores que a apresentação típica de ~216 px, mas muito menores que as versões source-sized anteriores. O boot também limita a concorrência de texturas Pixi a 3.
 
 Falhas de asset continuam visíveis/fatais para o boot após três tentativas; logs de diagnóstico ajudam a separar problema HTTP/deploy de falha de decode/runtime no navegador.
 

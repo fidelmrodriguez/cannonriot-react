@@ -17,14 +17,14 @@
 ### Project-specific assets
 
 - menu and result wallpapers (`1672×941`);
-- five damage portraits and five victory portraits (`432×356`);
-- ten optimized idle portraits (`724×543`);
-- six optimized mechanic portraits (`640×640`);
+- five damage portraits and five victory portraits (`640×640`, `react-damage-*` / `react-victory-*`);
+- ten optimized idle portraits (`724×543`, `react-idle-*`);
+- six optimized mechanic portraits (`640×640`, `react-mechanic-*`);
 - US/Brazil/Spain flag SVGs for language controls;
 - hit, collision, pickup, dash and idle-reaction SFX;
 - menu/result tracks and seven battle tracks.
 
-The larger idle/mechanic illustrations were downscaled because they are displayed as small reaction portraits in the 1280×720 arena. This reduces download/decode/GPU memory pressure while retaining more source pixels than their on-screen presentation needs.
+The source reaction illustrations were downscaled because they are displayed as small reaction portraits in the 1280×720 arena. This reduces download/decode/GPU memory pressure while retaining more source pixels than their on-screen presentation needs.
 
 ## Runtime-generated visuals
 

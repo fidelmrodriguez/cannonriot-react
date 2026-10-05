@@ -17,14 +17,14 @@
 ### Assets específicos do projeto
 
 - wallpapers de menu e resultado (`1672×941`);
-- cinco portraits de dano e cinco de vitória (`432×356`);
-- dez portraits idle otimizados (`724×543`);
-- seis portraits de mecânica otimizados (`640×640`);
+- cinco portraits de dano e cinco de vitória (`640×640`, `react-damage-*` / `react-victory-*`);
+- dez portraits idle otimizados (`724×543`, `react-idle-*`);
+- seis portraits de mecânica otimizados (`640×640`, `react-mechanic-*`);
 - SVGs das bandeiras EUA/Brasil/Espanha para idioma;
 - SFX de hit, colisão, pickup, dash e reação idle;
 - músicas de menu/resultado e sete faixas de batalha.
 
-As ilustrações maiores de idle/mecânica foram reduzidas porque aparecem como portraits pequenos dentro da arena 1280×720. Isso reduz download/decode/memória de GPU mantendo mais pixels do que a apresentação em tela exige.
+As ilustrações source dos reacts foram reduzidas porque aparecem como portraits pequenos dentro da arena 1280×720. Isso reduz download/decode/memória de GPU mantendo mais pixels do que a apresentação em tela exige.
 
 ## Visuais gerados em runtime
 

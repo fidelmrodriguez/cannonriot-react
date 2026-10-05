@@ -42,7 +42,7 @@ This profile changes presentation cost only. The same `GameEngine` simulation st
 
 ## Asset-load pressure
 
-The current idle portraits are 724×543 and mechanic portraits are 640×640. They are still larger than their typical ~216 px reaction presentation, but substantially smaller than their previous source-sized versions. The boot loader also limits Pixi texture concurrency to 3.
+The current idle portraits are 724×543; damage, victory and mechanic portraits are 640×640. They are still larger than their typical ~216 px reaction presentation, but substantially smaller than their previous source-sized versions. The boot loader also limits Pixi texture concurrency to 3.
 
 Asset failures remain visible/fatal to boot after three texture attempts; console diagnostics help distinguish HTTP/deploy failures from browser decode/runtime failures.
 
