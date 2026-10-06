@@ -132,7 +132,7 @@ kbd { background:var(--ink); color:white; padding:.18rem .38rem; border-radius:3
   isolation:isolate;
   background: linear-gradient(145deg, #0d2745 0%, #153455 48%, #11315a 100%);
 }
-.menu-wallpaper { position:absolute; inset:0; z-index:0; background-image:url('/assets/ui/menu-wallpaper-hero.png'); background-size:cover; background-position:center center; transform:scale(1.04); filter:saturate(1.08) contrast(1.02); }
+.menu-wallpaper { position:absolute; inset:0; z-index:0; background-image:url('/assets/ui/menu-wallpaper-hero.webp'); background-size:cover; background-position:center center; transform:scale(1.04); filter:saturate(1.08) contrast(1.02); }
 .menu-wallpaper-shade { position:absolute; inset:0; z-index:0; background:
   radial-gradient(circle at 50% 18%, rgba(255,244,187,.22) 0 12%, transparent 29%),
   linear-gradient(180deg, rgba(7,27,54,.32) 0%, rgba(7,27,54,.18) 20%, rgba(7,27,54,.26) 58%, rgba(7,27,54,.55) 100%),

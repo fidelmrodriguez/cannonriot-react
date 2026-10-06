@@ -34,14 +34,13 @@ Leaving combat before a completion event simply destroys the engine; no match re
 
 ## Boot and asset preload
 
-`preloadAllAssets()` runs before normal menu use. It starts the MSW worker and preloads:
+`preloadAllAssets()` runs before normal menu use. It starts the MSW worker and blocks only on:
 
-1. gameplay/reaction textures through Pixi `Assets`;
-2. menu/result wallpapers through DOM `Image`;
-3. SFX through `fetch` + object URLs;
-4. soundtrack tracks through the same audio path.
+1. core gameplay textures through Pixi `Assets`;
+2. the menu wallpaper through DOM `Image`;
+3. SFX through `fetch` + reusable object URLs.
 
-Pixi texture loading uses concurrency 3 and up to three attempts per texture. Permanent failures log `[Cannon Riot preload]` diagnostics, including the resolved URL and an HTTP `HEAD` check, then propagate to the visible boot error/retry state. After the preload reaches 100%, the boot screen stays mounted until the player presses **Board the Ship**. That deliberate browser gesture unlocks HTML audio before React reveals the menu, allowing the menu track to start immediately instead of waiting for an unrelated later click.
+Reaction portraits and result scenes are optional/lazy. On capable devices their files are warmed into the browser HTTP cache one at a time after boot, without Pixi decoding; Save-Data/2G skips that warmup; low-memory/low-core devices warm only the two Kraken event portraits and keep the remaining cosmetics on demand. Battle/result/jukebox music streams when selected instead of being fetched as boot-time blobs. Pixi texture concurrency adapts to hardware hints and required textures keep up to three attempts. Permanent required-asset failures still log `[Cannon Riot preload]` diagnostics with a `HEAD` check. After preload reaches 100%, **Board the Ship** provides the browser gesture that unlocks HTML audio before React reveals the menu.
 
 The loader keeps original asset URLs; it does not append cache-busting query strings.
 

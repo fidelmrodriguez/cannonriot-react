@@ -15,15 +15,12 @@
 
 ### Desktop renderer profile
 
-- Pixi antialiasing enabled.
-- Renderer resolution uses `min(devicePixelRatio, 2)`.
-- Full procedural decoration/effect density.
-- Blur filters used for ocean depth/glow and selected effects.
-- Visual-particle cap: 120.
+- Standard desktops keep Pixi antialiasing, `min(devicePixelRatio, 2)`, full procedural decoration/effect density and a 120-particle budget.
+- Older/limited desktops are detected from hardware hints (`hardwareConcurrency <= 4` or `deviceMemory <= 4 GB`) and automatically use the same reduced rendering profile as touch devices.
 
 ### Touch/mobile/tablet renderer profile
 
-Enabled when `(any-pointer: coarse)` matches:
+Enabled when `(any-pointer: coarse)` matches **or** constrained hardware is detected:
 
 - renderer resolution fixed at 1;
 - antialiasing disabled;
@@ -42,9 +39,13 @@ This profile changes presentation cost only. The same `GameEngine` simulation st
 
 ## Asset-load pressure
 
-The current idle portraits are 724×543; damage, victory and mechanic portraits are 640×640. They are still larger than their typical ~216 px reaction presentation, but substantially smaller than their previous source-sized versions. The boot loader also limits Pixi texture concurrency to 3.
+The blocking boot now loads only the small core gameplay textures, the menu scene and SFX. Reaction portraits and result scenes no longer gate entry to the menu/game. On capable devices, portrait files are warmed only into the browser HTTP cache one at a time (without Pixi/GPU decoding) and decoded on demand; constrained hardware/network connections skip that cosmetic warmup entirely. Battle/result/jukebox music is streamed when needed instead of being fetched into memory as boot-time blobs.
 
-Asset failures remain visible/fatal to boot after three texture attempts; console diagnostics help distinguish HTTP/deploy failures from browser decode/runtime failures.
+The three large menu/result wallpapers were converted from PNG to WebP, reducing their combined repository payload from roughly 8.7 MB to about 1.0 MB. The two Kraken react portraits were also resized from 1254×1254 to 640×640 for substantially lower decode/GPU memory pressure.
+
+Blocking-load concurrency adapts to hardware hints (2 workers on constrained devices, up to 3/4 for textures/audio otherwise). Deferred work uses a single worker and yields through `requestIdleCallback`/timeouts; portrait warmup does not decode Pixi textures, so it avoids unnecessary GPU/main-thread memory pressure. Save-Data/2G skips cosmetic warmup entirely; <=4 GB / <=4-core devices warm only the two small Kraken event portraits in HTTP cache and leave the rest fully on demand.
+
+Asset failures remain visible/fatal for required boot assets after three texture attempts; optional/deferred asset failures do not block gameplay and can retry when the asset is actually needed. Console diagnostics still distinguish HTTP/deploy failures from browser decode/runtime failures.
 
 ## Required empirical run
 

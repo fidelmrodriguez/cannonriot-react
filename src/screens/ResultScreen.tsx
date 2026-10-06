@@ -16,8 +16,8 @@ export function ResultScreen({ language, result, saveState, onRetry, onAgain, on
   const title = t(timeout ? 'result.timeoutTitle' : 'result.destroyedTitle', {}, language);
   const subtitle = t(timeout ? 'result.timeoutSubtitle' : 'result.destroyedSubtitle', {}, language);
   const wallpaper = timeout
-    ? '/assets/ui/result-timeout-wallpaper.png'
-    : '/assets/ui/result-defeat-wallpaper.png';
+    ? '/assets/ui/result-timeout-wallpaper.webp'
+    : '/assets/ui/result-defeat-wallpaper.webp';
 
   return (
     <main className="result-scene-screen">

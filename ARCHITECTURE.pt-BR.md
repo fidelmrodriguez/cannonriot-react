@@ -34,14 +34,13 @@ Sair do combate antes de um evento de conclusão apenas destrói a engine; nenhu
 
 ## Boot e preload de assets
 
-`preloadAllAssets()` executa antes do uso normal do menu. Ele inicia o worker do MSW e pré-carrega:
+`preloadAllAssets()` executa antes do uso normal do menu. Ele inicia o worker do MSW e bloqueia apenas em:
 
-1. texturas de gameplay/reação via Pixi `Assets`;
-2. wallpapers de menu/resultado via `Image` do DOM;
-3. SFX via `fetch` + object URLs;
-4. músicas pelo mesmo caminho de áudio.
+1. texturas essenciais do gameplay via Pixi `Assets`;
+2. wallpaper do menu via `Image` do DOM;
+3. SFX via `fetch` + object URLs reutilizáveis.
 
-Texturas Pixi usam concorrência 3 e até três tentativas por textura. Falhas permanentes registram diagnósticos `[Cannon Riot preload]`, incluindo URL resolvida e checagem HTTP `HEAD`, e então propagam para a tela visível de erro/retry do boot. Depois que o preload chega a 100%, a tela de boot continua montada até o jogador pressionar **Subir a bordo**. Esse gesto explícito libera o áudio HTML antes de o React revelar o menu, permitindo iniciar a música do menu imediatamente em vez de depender de outro clique posterior.
+Portraits de reação e cenas de resultado passam a ser opcionais/lazy. Em dispositivos capazes, seus arquivos são aquecidos no cache HTTP do navegador um por vez depois do boot, sem decode Pixi; Save-Data/2G pula esse warmup; dispositivos com pouca memória/poucos cores aquecem apenas os dois portraits de evento do Kraken e deixam o restante sob demanda. Músicas de batalha/resultado/jukebox são transmitidas quando escolhidas, em vez de virarem blobs durante o boot. A concorrência de texturas Pixi se adapta aos hints de hardware e texturas obrigatórias mantêm até três tentativas. Falhas permanentes de assets obrigatórios ainda registram `[Cannon Riot preload]` com checagem `HEAD`. Depois que o preload chega a 100%, **Subir a bordo** fornece o gesto que libera o áudio HTML antes de o React revelar o menu.
 
 O loader mantém as URLs originais e não adiciona query strings de cache-busting.
 

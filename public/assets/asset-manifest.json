@@ -5,7 +5,7 @@
     "format": "loose-assets",
     "generatedBy": "repository documentation/assets audit",
     "publicPathBase": "/assets/",
-    "note": "Runtime uses direct asset files. Metadata includes the current optimized react set and the neutral-hostile Kraken gameplay sprite."
+    "note": "Runtime uses direct asset files. Blocking boot now contains only core gameplay assets; cosmetic reacts/results are deferred or lazy-loaded. Kraken reacts are optimized for runtime display."
   },
   "assets": [
     {
@@ -226,6 +226,15 @@
       "sha256": "00642bbdbd6dac8e1821132208edfefaaa96c6b9a71f968d2eefc3cfd21715d7"
     },
     {
+      "id": "sounds.kraken_react_chirp",
+      "path": "/assets/sounds/kraken_react_chirp.wav",
+      "kind": "audio",
+      "category": "audio/sfx",
+      "origin": "project",
+      "bytes": 34298,
+      "sha256": "8f932313e0036b7d28f7c4dfaa4e0ccf3694442da05c87692c28c43bda6bb936"
+    },
+    {
       "id": "sounds.pickup_chime",
       "path": "/assets/sounds/pickup_chime.wav",
       "kind": "audio",
@@ -311,15 +320,15 @@
     },
     {
       "id": "ui.menu-wallpaper-hero",
-      "path": "/assets/ui/menu-wallpaper-hero.png",
+      "path": "/assets/ui/menu-wallpaper-hero.webp",
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 2683882,
-      "sha256": "587c8fe8a40fc6496a5967e65e318f69e9e333ba02d6e41a92dc75acac85311c",
+      "bytes": 350282,
+      "sha256": "c8a0fe4eccf1bfabd92f2165a33180b15e565ea5fb6f07f048f0f52b7f0d80a4",
       "dimensions": {
-        "width": 1672,
-        "height": 941
+        "width": 1664,
+        "height": 896
       }
     },
     {
@@ -544,13 +553,39 @@
       }
     },
     {
+      "id": "ui.react-kraken-alert",
+      "path": "/assets/ui/react-kraken-alert.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 611686,
+      "sha256": "02c758234d020f8489d13653ca5b7ab26241053a2b6a264c82e311924550c12e",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
+      "id": "ui.react-kraken-relief",
+      "path": "/assets/ui/react-kraken-relief.png",
+      "kind": "image",
+      "category": "ui/artwork",
+      "origin": "project",
+      "bytes": 604335,
+      "sha256": "da9e8fadc4ad01a4e5fa943f745852088555d8fa811e110dd086c3e570ec525a",
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      }
+    },
+    {
       "id": "ui.react-mechanic-armor",
       "path": "/assets/ui/react-mechanic-armor.png",
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 687167,
-      "sha256": "bd772929a4bf3e48a6566390d04128aa6a365e2fb274039931b48b2cbb420da0",
+      "bytes": 630378,
+      "sha256": "141b8d9aec11843800d64e87f0bf3bf525773872545c6cd28acb975d4983c26f",
       "dimensions": {
         "width": 640,
         "height": 640
@@ -588,8 +623,8 @@
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 630378,
-      "sha256": "141b8d9aec11843800d64e87f0bf3bf525773872545c6cd28acb975d4983c26f",
+      "bytes": 687167,
+      "sha256": "bd772929a4bf3e48a6566390d04128aa6a365e2fb274039931b48b2cbb420da0",
       "dimensions": {
         "width": 640,
         "height": 640
@@ -688,28 +723,28 @@
     },
     {
       "id": "ui.result-defeat-wallpaper",
-      "path": "/assets/ui/result-defeat-wallpaper.png",
+      "path": "/assets/ui/result-defeat-wallpaper.webp",
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 2688500,
-      "sha256": "0b086ad608b2af609be87aa8e7f813b303780c34d7a5ecbc3470dc370e27d186",
+      "bytes": 317876,
+      "sha256": "6b0961947223fc9657681da9269788ea551276865fffd60b404a379cb6b04120",
       "dimensions": {
-        "width": 1672,
-        "height": 941
+        "width": 1664,
+        "height": 896
       }
     },
     {
       "id": "ui.result-timeout-wallpaper",
-      "path": "/assets/ui/result-timeout-wallpaper.png",
+      "path": "/assets/ui/result-timeout-wallpaper.webp",
       "kind": "image",
       "category": "ui/artwork",
       "origin": "project",
-      "bytes": 4090636,
-      "sha256": "8d41a22ceb1b272456bdd30c36cb74f88601575a31f5f484b09cd7fa483f16e2",
+      "bytes": 403274,
+      "sha256": "d130ebddfce7fe22ecf420d76d5007d924d74fd55e164c9a7b47f6968c40a67c",
       "dimensions": {
-        "width": 1672,
-        "height": 941
+        "width": 1664,
+        "height": 896
       }
     }
   ]

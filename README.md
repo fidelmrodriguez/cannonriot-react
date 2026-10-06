@@ -139,9 +139,9 @@ Developer network scenarios are hidden in normal play. Open `?dev=1` (or `?e2e=1
 
 ## Asset loading and diagnostics
 
-The global preloader starts MSW, then loads Pixi textures, screen wallpapers, SFX and music before normal menu use. Pixi textures use a maximum of **3 attempts** with limited concurrency. Once loading reaches 100%, a **Board the Ship** interaction gate is shown; that explicit gesture unlocks browser audio before the main menu appears, so menu music can start immediately when allowed by the saved audio preference. A permanent texture/audio/image failure is logged with the prefix `[Cannon Riot preload]` and an HTTP `HEAD` diagnostic before the boot error/retry UI is shown.
+The blocking preloader now starts MSW and loads only **core gameplay textures, the menu scene and SFX**. Reaction portraits, result scenes and non-menu music no longer block entry: portraits are loaded on demand (with low-priority HTTP-cache warming only on capable devices), while battle/result/jukebox music streams when needed. Pixi textures still use a maximum of **3 attempts**, and concurrency is reduced automatically on constrained hardware. Once loading reaches 100%, a **Board the Ship** interaction gate is shown; that explicit gesture unlocks browser audio before the main menu appears. Required-asset failures still emit `[Cannon Riot preload]` diagnostics and an HTTP `HEAD` check.
 
-Audio files are fetched into object URLs and reused. Runtime image URLs are not modified with cache-busting query strings.
+SFX reuse object URLs; non-menu music is not retained as boot-time blobs. Runtime image URLs are not modified with cache-busting query strings.
 
 See [docs/ASSETS.md](docs/ASSETS.md).
 

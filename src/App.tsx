@@ -13,7 +13,7 @@ import type { EndReason, GameConfig, MatchResult } from './types/game';
 import { useRegisterMatch } from './queries/useMatches';
 import { BATTLE_TRACKS, MENU_TRACK, RESULT_DEFEAT_TRACK, RESULT_VICTORY_TRACK, type MusicTrack } from './audio/music';
 import { loadAudioPreferences, saveAudioPreferences, type AudioPreferences } from './audio/preferences';
-import { getPreloadedAudioUrl, preloadAllAssets } from './preload';
+import { getPreloadedAudioUrl, preloadAllAssets, preloadDeferredAssets } from './preload';
 import { getLanguage, setLanguage as setGlobalLanguage, t, type Language } from './i18n';
 import { loadPlayerIdentity, savePlayerIdentity, type PlayerIdentity } from './storage/player.storage';
 
@@ -135,9 +135,9 @@ function useAudioController(screen: Screen, resultEndReason: EndReason | null, m
     battle.loop = false;
     jukebox.loop = true;
     menu.preload = 'auto';
-    result.preload = 'auto';
-    battle.preload = 'auto';
-    jukebox.preload = 'auto';
+    result.preload = 'metadata';
+    battle.preload = 'metadata';
+    jukebox.preload = 'metadata';
     menu.volume = MENU_TRACK.volume;
 
     menu.load();
@@ -334,6 +334,13 @@ export default function App() {
     });
     return () => { cancelled = true; };
   }, [bootAttempt]);
+
+  useEffect(() => {
+    if (!bootReady) return;
+    // Optional assets warm up after the blocking boot has finished. This is
+    // deliberately fire-and-forget so the menu stays interactive immediately.
+    void preloadDeferredAssets();
+  }, [bootReady]);
 
   useEffect(() => {
     saveAudioPreferences(audioPreferences);

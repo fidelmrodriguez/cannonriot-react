@@ -139,9 +139,9 @@ Os cenários de rede ficam escondidos no uso normal. Abra com `?dev=1` (ou `?e2e
 
 ## Carregamento de assets e diagnóstico
 
-O preloader global inicia o MSW e depois carrega texturas Pixi, wallpapers de tela, SFX e músicas antes do uso normal do menu. Texturas Pixi têm no máximo **3 tentativas** e concorrência limitada. Ao chegar a 100%, aparece um gate de interação **Subir a bordo**; esse clique explícito libera o áudio exigido pelo navegador antes de abrir o menu, permitindo que a música comece imediatamente quando a preferência salva não estiver mutada. Uma falha definitiva de textura/áudio/imagem é registrada com o prefixo `[Cannon Riot preload]` e um diagnóstico HTTP `HEAD` antes da tela de erro/retry do boot.
+O preloader bloqueante agora inicia o MSW e carrega apenas **texturas essenciais do gameplay, a cena do menu e SFX**. Portraits de reação, cenas de resultado e músicas que não são do menu deixam de bloquear a entrada: portraits são carregados sob demanda (com aquecimento de baixo impacto apenas no cache HTTP em dispositivos capazes), enquanto músicas de batalha/resultado/jukebox são transmitidas quando necessárias. Texturas Pixi continuam com no máximo **3 tentativas**, e a concorrência cai automaticamente em hardware limitado. Ao chegar a 100%, aparece o gate **Subir a bordo**, cujo clique libera o áudio do navegador antes do menu. Falhas de assets obrigatórios continuam gerando logs `[Cannon Riot preload]` e diagnóstico HTTP `HEAD`.
 
-Áudios são baixados para object URLs e reutilizados. As URLs de imagens de runtime não recebem query string de cache-busting.
+SFX reutilizam object URLs; músicas que não são do menu não ficam retidas como blobs do boot. As URLs de imagens de runtime não recebem query string de cache-busting.
 
 Veja [docs/pt-BR/ASSETS.md](docs/pt-BR/ASSETS.md).
 

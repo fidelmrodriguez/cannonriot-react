@@ -15,15 +15,12 @@
 
 ### Perfil do renderer desktop
 
-- Antialias Pixi ligado.
-- Resolução do renderer em `min(devicePixelRatio, 2)`.
-- Densidade completa de decoração/efeitos procedurais.
-- Blur filters usados em profundidade/glow e efeitos selecionados.
-- Limite de partículas visuais: 120.
+- Desktops normais mantêm antialias Pixi, `min(devicePixelRatio, 2)`, densidade completa de decoração/efeitos e orçamento de 120 partículas.
+- Desktops/notebooks antigos ou limitados são detectados por hints de hardware (`hardwareConcurrency <= 4` ou `deviceMemory <= 4 GB`) e passam automaticamente a usar o mesmo perfil reduzido dos dispositivos touch.
 
 ### Perfil do renderer touch/mobile/tablet
 
-Ativado quando `(any-pointer: coarse)` corresponde:
+Ativado quando `(any-pointer: coarse)` corresponde **ou** quando hardware limitado é detectado:
 
 - resolução do renderer fixa em 1;
 - antialias desligado;
@@ -42,9 +39,13 @@ Esse perfil altera apenas custo de apresentação. A mesma `GameEngine` continua
 
 ## Pressão do carregamento de assets
 
-Os portraits idle atuais têm 724×543; os portraits de dano, vitória e mecânica têm 640×640. Ainda são maiores que a apresentação típica de ~216 px, mas muito menores que as versões source-sized anteriores. O boot também limita a concorrência de texturas Pixi a 3.
+O boot bloqueante agora carrega apenas as texturas pequenas essenciais do gameplay, a cena do menu e os SFX. Portraits de reação e cenas de resultado não bloqueiam mais a entrada no menu/jogo. Em dispositivos capazes, os arquivos dos portraits são aquecidos apenas no cache HTTP do navegador, um por vez (sem decode Pixi/GPU), e o decode acontece sob demanda; hardware/rede limitados pulam esse warmup cosmético. Músicas de batalha/resultado/jukebox passam a ser transmitidas quando necessárias, em vez de virarem blobs em memória durante o boot.
 
-Falhas de asset continuam visíveis/fatais para o boot após três tentativas; logs de diagnóstico ajudam a separar problema HTTP/deploy de falha de decode/runtime no navegador.
+Os três wallpapers grandes de menu/resultado foram convertidos de PNG para WebP, reduzindo o payload combinado de aproximadamente 8,7 MB para cerca de 1,0 MB. Os dois reacts do Kraken também foram reduzidos de 1254×1254 para 640×640, diminuindo bastante custo de download, decode e memória de GPU.
+
+A concorrência do carregamento bloqueante se adapta aos hints de hardware (2 workers em dispositivos limitados e até 3/4 para texturas/áudio nos demais). O trabalho adiado usa um único worker e cede tempo via `requestIdleCallback`/timeouts; o warmup dos portraits não faz decode Pixi, evitando pressão desnecessária de GPU/main thread. Save-Data/2G pula completamente o warmup cosmético; dispositivos com <=4 GB / <=4 cores aquecem apenas os dois portraits de evento do Kraken no cache HTTP e deixam o restante totalmente sob demanda.
+
+Falhas de assets obrigatórios continuam visíveis/fatais após três tentativas; falhas de assets opcionais/adiados não bloqueiam o jogo e podem tentar novamente no primeiro uso real. Os logs continuam ajudando a separar problema HTTP/deploy de falha de decode/runtime no navegador.
 
 ## Execução empírica obrigatória
 

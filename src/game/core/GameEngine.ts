@@ -7,7 +7,7 @@ import { SeededRandom } from './SeededRandom';
 import { InputManager, type GameAction } from '../input/InputManager';
 import { EXTRA_BALANCE } from './config';
 import { GAME_ASSETS } from '../rendering/assets';
-import { getPreloadedAudioUrl } from '../../preload';
+import { CORE_GAME_TEXTURE_URLS, getPreloadedAudioUrl, preloadPixiTexture } from '../../preload';
 import { isSfxMuted } from '../../audio/preferences';
 import type { CircleCollider, EnemyEntity, Island, KrakenAttackSlot, KrakenEntity, PickupEntity, PickupKind, PowderBarrelEntity, ProjectileEntity, ShipEntity } from '../types/runtime';
 import { engineText, gameLines, idleLineGroup } from '../../i18n';
@@ -91,6 +91,7 @@ export class GameEngine {
   private fx = new Container();
   private uiFx = new Container();
   private activeComicPanels: ActiveComicPanel[] = [];
+  private pendingComicPanelKinds = new Set<ComicPanelKind>();
   private lastDamagePortraitIndex = -1;
   private lastVictoryPortraitIndex = -1;
   private lastIdlePortraitIndex = -1;
@@ -170,7 +171,12 @@ export class GameEngine {
   ) {
     this.rng = new SeededRandom(seed);
     this.uiRng = new SeededRandom(seed ^ 0x9e3779b9);
-    this.mobilePerformanceMode = typeof window !== 'undefined' && window.matchMedia('(any-pointer: coarse)').matches;
+    const nav = navigator as Navigator & { deviceMemory?: number };
+    const coarsePointer = typeof window !== 'undefined' && window.matchMedia('(any-pointer: coarse)').matches;
+    const constrainedHardware = (nav.hardwareConcurrency || 4) <= 4 || (nav.deviceMemory ?? 8) <= 4;
+    // The reduced profile is also used on older desktops/notebooks, not only touch devices.
+    // This avoids blur/filter and particle spikes on 4-core / <=4 GB hardware.
+    this.mobilePerformanceMode = coarsePointer || constrainedHardware;
     this.maxVisualParticles = this.mobilePerformanceMode ? 48 : 120;
     this.pressure = clamp((EXTRA_BALANCE.adaptive.referenceSpawnTime / Math.max(0.5, config.enemySpawnTime)) * Math.pow(config.sessionTime / EXTRA_BALANCE.adaptive.referenceSessionTime, 0.32), EXTRA_BALANCE.adaptive.minPressure, EXTRA_BALANCE.adaptive.maxPressure);
     const sessionDensity = clamp((config.sessionTime - 60) / 120, 0, 1);
@@ -227,22 +233,9 @@ export class GameEngine {
   }
 
   private async loadAssets(): Promise<void> {
-    const urls = [
-      GAME_ASSETS.player,
-      GAME_ASSETS.chaser,
-      GAME_ASSETS.shooter,
-      GAME_ASSETS.kraken,
-      GAME_ASSETS.cannonBall,
-      GAME_ASSETS.explosion,
-      GAME_ASSETS.fire,
-      ...GAME_ASSETS.damagePortraits,
-      ...GAME_ASSETS.victoryPortraits,
-      ...GAME_ASSETS.frictionPortraits,
-      ...GAME_ASSETS.idlePortraits,
-      ...Object.values(GAME_ASSETS.mechanicPortraits),
-      ...Object.values(GAME_ASSETS.krakenPortraits),
-    ];
-    await Assets.load(urls);
+    // Boot already warms these core textures. Keeping this defensive load makes
+    // direct/retry game initialization safe without decoding every portrait first.
+    await Assets.load([...CORE_GAME_TEXTURE_URLS]);
     this.audio.set('front', new Audio(getPreloadedAudioUrl(GAME_ASSETS.shotSound)));
     this.audio.set('broadside', new Audio(getPreloadedAudioUrl(GAME_ASSETS.broadsideSound)));
     this.audio.set('explosion', new Audio(getPreloadedAudioUrl(GAME_ASSETS.explosionSound)));
@@ -2789,6 +2782,36 @@ export class GameEngine {
   ): void {
     if (!this.initialized || this.destroyed) return;
 
+    let portraitPath = options?.portraitPath;
+    let preparedOptions = options;
+    if (!portraitPath && kind === 'idle') {
+      const idleScript = this.pickIdleComicScript();
+      portraitPath = idleScript.portraitPath;
+      preparedOptions = { ...options, portraitPath, line: options?.line ?? idleScript.lines[0] };
+    } else if (!portraitPath && (kind === 'damage' || kind === 'victory')) {
+      portraitPath = this.pickPortraitPath(kind);
+      preparedOptions = { ...options, portraitPath };
+    }
+    if (!portraitPath || this.pendingComicPanelKinds.has(kind)) return;
+
+    // Portraits are cosmetic and no longer block the boot/game loading screen.
+    // Assets.load is cache-aware; on first use we wait only for that one portrait.
+    // The pending-kind guard is especially important for friction, which is checked
+    // every simulation frame while hulls remain in contact.
+    this.pendingComicPanelKinds.add(kind);
+    void preloadPixiTexture(portraitPath).then(() => {
+      if (!this.destroyed && this.initialized) this.renderComicPanel(kind, preparedOptions);
+    }).catch(() => undefined).finally(() => {
+      this.pendingComicPanelKinds.delete(kind);
+    });
+  }
+
+  private renderComicPanel(
+    kind: ComicPanelKind,
+    options?: ComicPanelOptions,
+  ): void {
+    if (!this.initialized || this.destroyed) return;
+
     const idleScript = kind === 'idle' && !options?.portraitPath ? this.pickIdleComicScript() : null;
     let portraitPath = options?.portraitPath;
     if (!portraitPath && kind === 'idle') portraitPath = idleScript!.portraitPath;
@@ -3012,7 +3035,8 @@ export class GameEngine {
       badgeText: engineText(relief ? 'krakenReliefBadge' : 'krakenSpawnBadge'),
       frameStroke: relief ? 0x218650 : 0x243bb3,
     });
-    this.playKrakenReactChirp();
+    if (relief) this.playIdleChirp();
+    else this.playKrakenReactChirp();
   }
 
   private showMechanicComicPanel(kind: MechanicReactKind, lines: string[]): void {
