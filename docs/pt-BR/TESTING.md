@@ -30,6 +30,7 @@ Helpers disponíveis:
 - `damageKraken(amount, awardPointOnDefeat?)`;
 - `krakenAttackAt(x, y)`;
 - `krakenVolley()`;
+- `setKrakenRoamTarget(x, y)`;
 - `setEnemyShootCooldown(id, seconds)`;
 - `setPlayerPose(x, y, rotation?)`;
 - `advanceTime(seconds)`;

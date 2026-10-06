@@ -675,6 +675,12 @@ export class GameEngine {
       navPathIndex: 0,
       navRepathCooldown: 0,
       navTargetId: '',
+      roamX: position.x,
+      roamY: position.y,
+      roamQuadrant: this.krakenQuadrant(position.x, position.y),
+      pursuitTargetId: '',
+      pursuitTimeRemaining: 0,
+      pursuitCooldown: this.rng.range(2.2, 3.4),
       attackSlots: Array.from({ length: EXTRA_BALANCE.kraken.maxAttackTargets }, (_, index) => ({
         cooldown: 0.12 + index * EXTRA_BALANCE.kraken.tentacleInitialStagger + this.rng.range(0, 0.10),
         prepRemaining: 0,
@@ -688,6 +694,7 @@ export class GameEngine {
       attackY: position.y,
       attackPoints: [],
     };
+    this.chooseKrakenRoamDestination(true);
     this.updateKrakenHealth();
     this.showKrakenSpawnVfx(position.x, position.y);
     this.popLabel(engineText('kraken'), position.x, position.y - 86, 0xffd64a, 1.0);
@@ -719,19 +726,84 @@ export class GameEngine {
     this.app.ticker.add(update);
   }
 
-  private nearestKrakenTarget(): KrakenTarget | undefined {
-    if (!this.kraken?.alive) return undefined;
-    let best: KrakenTarget | undefined = this.player.alive ? { kind: 'player', entity: this.player } : undefined;
-    let bestDistance = best ? distSq(this.kraken.x, this.kraken.y, this.player.x, this.player.y) : Number.POSITIVE_INFINITY;
+  private nearestKrakenTarget(maxRange = Number.POSITIVE_INFINITY, requireLineOfSight = false): KrakenTarget | undefined {
+    const kraken = this.kraken;
+    if (!kraken?.alive) return undefined;
+    const maxDistanceSq = maxRange * maxRange;
+    let best: KrakenTarget | undefined;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    const consider = (target: KrakenTarget) => {
+      const distance = distSq(kraken.x, kraken.y, target.entity.x, target.entity.y);
+      if (distance > maxDistanceSq || distance >= bestDistance) return;
+      if (requireLineOfSight && !this.hasLineOfSight(kraken.x, kraken.y, target.entity.x, target.entity.y)) return;
+      bestDistance = distance;
+      best = target;
+    };
+    if (this.player.alive) consider({ kind: 'player', entity: this.player });
     for (const enemy of this.enemies) {
-      if (!enemy.alive) continue;
-      const distance = distSq(this.kraken.x, this.kraken.y, enemy.x, enemy.y);
-      if (distance < bestDistance) {
-        bestDistance = distance;
-        best = { kind: 'enemy', entity: enemy };
-      }
+      if (enemy.alive) consider({ kind: 'enemy', entity: enemy });
     }
     return best;
+  }
+
+  private krakenTargetById(id: string): KrakenTarget | undefined {
+    if (!id) return undefined;
+    if (id === PLAYER_ID) return this.player.alive ? { kind: 'player', entity: this.player } : undefined;
+    const enemy = this.enemies.find((candidate) => candidate.alive && candidate.id === id);
+    return enemy ? { kind: 'enemy', entity: enemy } : undefined;
+  }
+
+  private krakenQuadrant(x: number, y: number): number {
+    return (x >= WORLD_W / 2 ? 1 : 0) + (y >= WORLD_H / 2 ? 2 : 0);
+  }
+
+  private chooseKrakenRoamDestination(forceDifferentQuadrant = false): void {
+    const kraken = this.kraken;
+    if (!kraken?.alive) return;
+    const pad = kraken.radius + 46;
+    const currentQuadrant = this.krakenQuadrant(kraken.x, kraken.y);
+    const minDistanceSq = EXTRA_BALANCE.kraken.roamMinDistance ** 2;
+    let best: { x: number; y: number; quadrant: number; score: number } | undefined;
+
+    for (let i = 0; i < 48; i++) {
+      const x = this.rng.range(pad, WORLD_W - pad);
+      const y = this.rng.range(pad, WORLD_H - pad);
+      if (this.collidesIsland(x, y, kraken.radius + 10)) continue;
+      const distanceSq = distSq(kraken.x, kraken.y, x, y);
+      if (distanceSq < minDistanceSq) continue;
+      const quadrant = this.krakenQuadrant(x, y);
+      if (forceDifferentQuadrant && quadrant === currentQuadrant) continue;
+      const distance = Math.sqrt(distanceSq);
+      // Crossing the arena matters more than reacting to the current enemy density. This is
+      // what keeps 1 s spawn matches from pinning the Kraken to whichever side is busiest.
+      const score = distance
+        + (quadrant !== currentQuadrant ? 420 : -120)
+        + (quadrant !== kraken.roamQuadrant ? 110 : 0)
+        + this.rng.range(0, 70);
+      if (!best || score > best.score) best = { x, y, quadrant, score };
+    }
+
+    // Extremely crowded/island-heavy layouts can reject every distant candidate. Fall back to
+    // any safe water point rather than leaving the creature without a navigation goal.
+    if (!best) {
+      for (let i = 0; i < 32; i++) {
+        const x = this.rng.range(pad, WORLD_W - pad);
+        const y = this.rng.range(pad, WORLD_H - pad);
+        if (this.collidesIsland(x, y, kraken.radius + 10)) continue;
+        const quadrant = this.krakenQuadrant(x, y);
+        const score = Math.sqrt(distSq(kraken.x, kraken.y, x, y)) + (quadrant !== currentQuadrant ? 180 : 0);
+        if (!best || score > best.score) best = { x, y, quadrant, score };
+      }
+    }
+    if (!best) return;
+
+    kraken.roamX = best.x;
+    kraken.roamY = best.y;
+    kraken.roamQuadrant = best.quadrant;
+    kraken.navPath = [];
+    kraken.navPathIndex = 0;
+    kraken.navRepathCooldown = 0;
+    kraken.navTargetId = '';
   }
 
   private animateKrakenVisual(kraken: KrakenEntity, dt: number, moving: boolean): void {
@@ -904,39 +976,73 @@ export class GameEngine {
     if (!kraken?.alive) return;
     kraken.orbitFlipCooldown = Math.max(0, kraken.orbitFlipCooldown - dt);
     kraken.navRepathCooldown = Math.max(0, kraken.navRepathCooldown - dt);
+    kraken.pursuitCooldown = Math.max(0, kraken.pursuitCooldown - dt);
+    kraken.pursuitTimeRemaining = Math.max(0, kraken.pursuitTimeRemaining - dt);
     this.updateKrakenTentacles(dt);
 
-    const target = this.nearestKrakenTarget();
-    if (!target) {
-      this.animateKrakenVisual(kraken, dt, false);
-      return;
+    // Roaming is the Kraken's default intent. It may briefly investigate a nearby ship,
+    // but the chase expires and a mandatory roaming window prevents endless spawn-side camping.
+    let pursuitTarget = this.krakenTargetById(kraken.pursuitTargetId);
+    if (pursuitTarget) {
+      const tooFar = distSq(kraken.x, kraken.y, pursuitTarget.entity.x, pursuitTarget.entity.y)
+        > EXTRA_BALANCE.kraken.pursuitLeashRange ** 2;
+      if (kraken.pursuitTimeRemaining <= 0 || tooFar) pursuitTarget = undefined;
+    }
+    if (!pursuitTarget && kraken.pursuitTargetId) {
+      kraken.pursuitTargetId = '';
+      kraken.pursuitTimeRemaining = 0;
+      kraken.pursuitCooldown = this.rng.range(
+        EXTRA_BALANCE.kraken.pursuitCooldownMin,
+        EXTRA_BALANCE.kraken.pursuitCooldownMax,
+      );
+      kraken.navPath = [];
+      kraken.navPathIndex = 0;
+      kraken.navRepathCooldown = 0;
+      kraken.navTargetId = '';
     }
 
-    const targetX = target.entity.x;
-    const targetY = target.entity.y;
-    const attackTargets = this.krakenAttackTargetsInRange();
-    if (attackTargets.length > 0) {
-      // Tentacles reload independently. The body holds its ground while at least one
-      // target is in reach, but each arm can telegraph and strike on its own rhythm.
-      this.animateKrakenVisual(kraken, dt, false);
-      return;
+    if (!pursuitTarget && kraken.pursuitCooldown <= 0) {
+      const candidate = this.nearestKrakenTarget(EXTRA_BALANCE.kraken.pursuitAcquireRange, true);
+      if (candidate) {
+        pursuitTarget = candidate;
+        kraken.pursuitTargetId = candidate.entity.id;
+        kraken.pursuitTimeRemaining = this.rng.range(
+          EXTRA_BALANCE.kraken.pursuitSecondsMin,
+          EXTRA_BALANCE.kraken.pursuitSecondsMax,
+        );
+        kraken.navPath = [];
+        kraken.navPathIndex = 0;
+        kraken.navRepathCooldown = 0;
+        kraken.navTargetId = '';
+      }
     }
+
+    if (!pursuitTarget) {
+      const reachedRoamPoint = distSq(kraken.x, kraken.y, kraken.roamX, kraken.roamY)
+        <= EXTRA_BALANCE.kraken.roamArrivalRadius ** 2;
+      const invalidRoamPoint = this.collidesIsland(kraken.roamX, kraken.roamY, kraken.radius + 8);
+      if (reachedRoamPoint || invalidRoamPoint) this.chooseKrakenRoamDestination(true);
+    }
+
+    const targetX = pursuitTarget?.entity.x ?? kraken.roamX;
+    const targetY = pursuitTarget?.entity.y ?? kraken.roamY;
+    const targetId = pursuitTarget?.entity.id ?? `roam-${kraken.roamQuadrant}-${Math.round(kraken.roamX)}-${Math.round(kraken.roamY)}`;
 
     const directWaterLane = this.hasKrakenClearPath(kraken.x, kraken.y, targetX, targetY);
     if (directWaterLane) {
       kraken.navPath = [];
       kraken.navPathIndex = 0;
-      kraken.navTargetId = target.entity.id;
+      kraken.navTargetId = targetId;
     } else if (
-      kraken.navTargetId !== target.entity.id
+      kraken.navTargetId !== targetId
       || kraken.navRepathCooldown <= 0
       || kraken.navPathIndex >= kraken.navPath.length
       || kraken.stuckTime > EXTRA_BALANCE.kraken.stuckRecoverySeconds
     ) {
       kraken.navPath = this.buildKrakenPath(targetX, targetY);
       kraken.navPathIndex = 0;
-      kraken.navTargetId = target.entity.id;
-      kraken.navRepathCooldown = kraken.stuckTime > EXTRA_BALANCE.kraken.stuckRecoverySeconds ? 0.18 : 0.45;
+      kraken.navTargetId = targetId;
+      kraken.navRepathCooldown = kraken.stuckTime > EXTRA_BALANCE.kraken.stuckRecoverySeconds ? 0.18 : 0.55;
     }
 
     if (!directWaterLane && kraken.navPath.length > 0) {
@@ -967,8 +1073,6 @@ export class GameEngine {
     );
 
     if (!moved) {
-      // Local fan only handles dynamic ship collisions or the final few pixels around a coast;
-      // the persistent route itself comes from A*, so this no longer becomes the main navigator.
       const fan = [0.34, 0.58, 0.82, -0.46, 1.08].map((turn) => turn * kraken.preferredOrbitSign);
       for (const offset of fan) {
         const angle = heading + offset;
@@ -993,6 +1097,14 @@ export class GameEngine {
     const movedDistance = Math.hypot(kraken.x - previousX, kraken.y - previousY);
     if (movedDistance < Math.max(0.3, move * 0.14)) kraken.stuckTime += dt;
     else kraken.stuckTime = Math.max(0, kraken.stuckTime - dt * 2.8);
+
+    // If a roaming destination still cannot be reached after repeated replans, abandon that
+    // water point and pick a fresh one in another region instead of hugging the same coast.
+    if (!pursuitTarget && kraken.stuckTime > 1.05) {
+      this.chooseKrakenRoamDestination(true);
+      kraken.stuckTime = 0.35;
+    }
+
     kraken.lastAiX = kraken.x;
     kraken.lastAiY = kraken.y;
     this.animateKrakenVisual(kraken, dt, moved);
@@ -3340,7 +3452,7 @@ export class GameEngine {
     paused: boolean;
     player: { x: number; y: number; health: number; rotation: number };
     enemies: { id: string; kind: 'chaser' | 'shooter'; x: number; y: number; health: number; stuckTime: number; targetingKraken: boolean; krakenRetaliationTime: number }[];
-    kraken?: { x: number; y: number; health: number; maxHealth: number; attackCooldown: number; attackPrepRemaining: number; attackPointCount: number; activeTentacles: number; tentacleCooldowns: number[]; stuckTime: number; swimIntensity: number };
+    kraken?: { x: number; y: number; health: number; maxHealth: number; attackCooldown: number; attackPrepRemaining: number; attackPointCount: number; activeTentacles: number; tentacleCooldowns: number[]; stuckTime: number; swimIntensity: number; roamX: number; roamY: number; roamQuadrant: number; pursuitTargetId: string; pursuitTimeRemaining: number; pursuitCooldown: number };
     projectiles: { owner: 'player' | 'enemy'; x: number; y: number; vx: number; vy: number; damage: number }[];
     pickups: { kind: PickupKind; x: number; y: number; lifetime: number }[];
     barrels: { x: number; y: number; armTime: number; lifetime: number }[];
@@ -3379,6 +3491,12 @@ export class GameEngine {
         tentacleCooldowns: this.kraken.attackSlots.map((slot) => slot.cooldown),
         stuckTime: this.kraken.stuckTime,
         swimIntensity: this.kraken.swimIntensity,
+        roamX: this.kraken.roamX,
+        roamY: this.kraken.roamY,
+        roamQuadrant: this.kraken.roamQuadrant,
+        pursuitTargetId: this.kraken.pursuitTargetId,
+        pursuitTimeRemaining: this.kraken.pursuitTimeRemaining,
+        pursuitCooldown: this.kraken.pursuitCooldown,
       } : undefined,
       projectiles: this.projectiles.filter((projectile) => projectile.alive).map((projectile) => ({ owner: projectile.owner, x: projectile.x, y: projectile.y, vx: projectile.vx, vy: projectile.vy, damage: projectile.damage })),
       pickups: this.pickups.filter((pickup) => pickup.alive).map((pickup) => ({ kind: pickup.kind, x: pickup.x, y: pickup.y, lifetime: pickup.lifetime })),
@@ -3410,9 +3528,28 @@ export class GameEngine {
       const ny = clamp(y!, this.kraken.radius + 30, WORLD_H - this.kraken.radius - 30);
       if (!this.collidesIsland(nx, ny, this.kraken.radius)) {
         this.kraken.x = nx; this.kraken.y = ny; this.kraken.view.position.set(nx, ny);
+        this.chooseKrakenRoamDestination(true);
       }
     }
     return true;
+  }
+
+  debugSetKrakenRoamTarget(x: number, y: number): void {
+    const kraken = this.kraken;
+    if (!kraken?.alive || !Number.isFinite(x) || !Number.isFinite(y)) return;
+    const nx = clamp(x, kraken.radius + 30, WORLD_W - kraken.radius - 30);
+    const ny = clamp(y, kraken.radius + 30, WORLD_H - kraken.radius - 30);
+    if (this.collidesIsland(nx, ny, kraken.radius + 8)) return;
+    kraken.roamX = nx;
+    kraken.roamY = ny;
+    kraken.roamQuadrant = this.krakenQuadrant(nx, ny);
+    kraken.pursuitTargetId = '';
+    kraken.pursuitTimeRemaining = 0;
+    kraken.pursuitCooldown = Math.max(kraken.pursuitCooldown, 8);
+    kraken.navPath = [];
+    kraken.navPathIndex = 0;
+    kraken.navRepathCooldown = 0;
+    kraken.navTargetId = '';
   }
 
   debugDamageKraken(amount: number, awardPointOnDefeat = false): void {

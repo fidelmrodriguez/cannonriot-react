@@ -390,6 +390,7 @@ test.describe('application and gameplay', () => {
       const api = (window as any).__CANNON_RIOT_TEST__;
       api.setPlayerPose(430, 214, 0);
       const ok = api.spawnKraken(120, 214);
+      api.setKrakenRoamTarget(430, 214);
       api.advanceTime(2.5);
       return ok;
     });
@@ -399,6 +400,28 @@ test.describe('application and gameplay', () => {
     expect(Math.hypot(state.kraken.x - 120, state.kraken.y - 214)).toBeGreaterThan(90);
     expect(Math.abs(state.kraken.y - 214)).toBeGreaterThan(25);
     expect(state.kraken.stuckTime).toBeLessThan(0.8);
+  });
+
+  test('Kraken roaming stays primary after a short opportunistic pursuit', async ({ page }) => {
+    await startGame(page);
+    await page.evaluate(() => {
+      const api = (window as any).__CANNON_RIOT_TEST__;
+      api.setPlayerPose(1120, 620, 0);
+      api.spawnKraken(180, 520);
+      api.setKrakenRoamTarget(1080, 150);
+      api.spawnEnemy('shooter', 235, 520, 500);
+      api.advanceTime(0.2);
+    });
+    let state = await debugState(page);
+    // Debug-set roaming carries a commitment window, so nearby spawn churn cannot immediately
+    // replace the cross-map destination with an endless nearest-enemy chase.
+    expect(state.kraken.pursuitTargetId).toBe('');
+    expect(state.kraken.pursuitCooldown).toBeGreaterThan(7);
+
+    await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.advanceTime(4));
+    state = await debugState(page);
+    expect(state.kraken.x).toBeGreaterThan(300);
+    expect(state.kraken.roamX).toBeGreaterThan(900);
   });
 
   test('Shooter hull remains solid during friction contact', async ({ page, isMobile }) => {

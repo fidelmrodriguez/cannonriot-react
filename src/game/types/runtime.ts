@@ -82,6 +82,12 @@ export interface KrakenEntity {
   navPathIndex: number;
   navRepathCooldown: number;
   navTargetId: string;
+  roamX: number;
+  roamY: number;
+  roamQuadrant: number;
+  pursuitTargetId: string;
+  pursuitTimeRemaining: number;
+  pursuitCooldown: number;
   attackSlots: KrakenAttackSlot[];
   targetAttackCooldowns: Record<string, number>;
   // Compatibility/debug summary fields derived from attackSlots.
