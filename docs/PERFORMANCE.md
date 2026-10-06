@@ -12,6 +12,7 @@
 - React HUD snapshots throttled to roughly every 80 ms instead of state updates every frame.
 - Pixi application, input listeners, visibility/blur listeners and `ResizeObserver` cleaned on engine destruction.
 - Reaction portraits optimized to sizes closer to actual in-game presentation to reduce download/decode/GPU pressure.
+- Kraken capped at one active entity, using one optimized sprite and a two-slot enemy-cap weight so the event does not increase arena density without bound.
 
 ### Desktop renderer profile
 

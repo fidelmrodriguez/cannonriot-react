@@ -73,6 +73,7 @@ O mundo autoritativo é uma arena fixa de **1280×720**. Redimensionar a viewpor
 - No modo normal, frontal e lateral são separados por um **lock global de troca de arma de 0,25 s**; taps touch rápidos podem ficar em buffer por **0,32 s**.
 - Chasers perseguem o jogador e se autodestroem ao colidir com ele. A colisão normal não pontua; destruir um Chaser com o dash ativo conta como ataque pontuável do jogador.
 - Shooters buscam posição de ataque, linha de visão e disparam à distância. Atrito contínuo casco a casco causa dano nos dois navios, com dano bem maior no Shooter do que no jogador.
+- O **Kraken** é uma terceira facção hostil: persegue sempre a entidade viva mais próxima (jogador, Chaser ou Shooter), pode trocar de alvo a qualquer momento e ataca em área com tentáculo telegráfico. Inimigos próximos também redirecionam aggro para ele.
 - Ilhas e limites da arena bloqueiam navios; ilhas também bloqueiam projéteis.
 - Projéteis aplicam dano uma única vez e são removidos ao acertar, encontrar obstáculo, expirar ou sair da arena.
 - Cada inimigo destruído por um ataque pontuável do jogador vale exatamente um ponto.
@@ -95,6 +96,7 @@ As regras exigidas pelo desafio continuam autoritativas; estas mecânicas são a
 - **Suporte de emergência**: com ≤35% de casco, se não houver Medicina/Armadura próxima, o jogo tenta colocar um pickup defensivo perto do jogador. Há cooldown de 12 s e o sistema pode substituir um pickup ativo menos útil se os slots normais estiverem cheios.
 - **Alerta de spawn**: o `!` curto é apenas visual; inimigos recém-spawnados continuam ativos imediatamente.
 - **Atrito com Shooter**: enquanto o casco do jogador raspa num Shooter roxo, os dois perdem vida continuamente. O DPS de atrito do Shooter é propositalmente muito maior que o do jogador, então a raspada pode ser usada de forma tática sem virar a melhor forma de ataque. Dois reacts chartreuse dedicados ficam fixos durante o contato e permanecem por alguns segundos depois da separação.
+- **Evento Kraken**: fica elegível após 30% da duração da partida, exige pelo menos 15 s restantes e nunca há mais de um ativo. Tem 180 HP, barra local maior, consome dois slots do teto de inimigos e permanece no mapa até ser derrotado. O golpe de tentáculo telegráfico causa 11 no jogador e 18 nos navios inimigos; Shooters e Chasers próximos podem passar a atacá-lo. Chasers explodem ao colidir com o Kraken e causam 32 de dano sem gerar ponto. Se o jogador derrotar o Kraken, ganha 1 ponto.
 
 A assistência de dificuldade é derivada de forma determinística pela duração e intervalo de spawn escolhidos. Ela altera cadência de suporte, teto de inimigos e pequenos coeficientes, mas nunca muda a chave do ranking nem o valor do ponto.
 
@@ -160,7 +162,7 @@ Veja [ARCHITECTURE.pt-BR.md](ARCHITECTURE.pt-BR.md).
 
 Playwright está configurado para Chromium desktop e um perfil touch landscape de Pixel 7. `?e2e=1` fixa a seed do gameplay em `1337` e expõe hooks exclusivos de estado/tempo, mantendo o caminho real da simulação.
 
-Os testes atuais cobrem lock entre armas, auto-fire da Pólvora Viva, atrito com Shooter, dash infinito com Vento, i-frame/counter pontuável do dash, suporte de emergência e splash ampliado do barril. Veja [docs/pt-BR/TESTING.md](docs/pt-BR/TESTING.md) para o status atual da suíte e as evidências ainda necessárias para avaliação.
+Os testes atuais cobrem lock entre armas, auto-fire da Pólvora Viva, atrito com Shooter, dash infinito com Vento, i-frame/counter pontuável do dash, suporte de emergência, splash ampliado do barril e comportamento de terceira facção do Kraken. Veja [docs/pt-BR/TESTING.md](docs/pt-BR/TESTING.md) para o status atual da suíte e as evidências ainda necessárias para avaliação.
 
 ## Performance
 

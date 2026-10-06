@@ -9,7 +9,7 @@ import { EXTRA_BALANCE } from './config';
 import { GAME_ASSETS } from '../rendering/assets';
 import { getPreloadedAudioUrl } from '../../preload';
 import { isSfxMuted } from '../../audio/preferences';
-import type { CircleCollider, EnemyEntity, Island, PickupEntity, PickupKind, PowderBarrelEntity, ProjectileEntity, ShipEntity } from '../types/runtime';
+import type { CircleCollider, EnemyEntity, Island, KrakenEntity, PickupEntity, PickupKind, PowderBarrelEntity, ProjectileEntity, ShipEntity } from '../types/runtime';
 import { engineText, gameLines, idleLineGroup } from '../../i18n';
 
 export interface GameSnapshot {
@@ -71,6 +71,7 @@ interface ComicPanelOptions {
 const WORLD_W = 1280;
 const WORLD_H = 720;
 const PLAYER_ID = 'local-player';
+const KRAKEN_ID = 'arena-kraken';
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 const distSq = (ax: number, ay: number, bx: number, by: number) => (ax - bx) ** 2 + (ay - by) ** 2;
 const angleWrap = (value: number) => {
@@ -95,6 +96,8 @@ export class GameEngine {
   private input = new InputManager();
   private player!: ShipEntity;
   private enemies: EnemyEntity[] = [];
+  private kraken: KrakenEntity | null = null;
+  private nextKrakenSpawnAt = 0;
   private projectiles: ProjectileEntity[] = [];
   private pickups: PickupEntity[] = [];
   private powderBarrels: PowderBarrelEntity[] = [];
@@ -172,6 +175,7 @@ export class GameEngine {
     this.frontCooldownMax = config.frontCooldown;
     this.broadsideCooldownMax = config.broadsideCooldown;
     this.supportInterval = clamp(16 / Math.pow(this.pressure, 0.7), 6.8, 19);
+    this.nextKrakenSpawnAt = this.config.sessionTime * EXTRA_BALANCE.kraken.firstSpawnRatio;
   }
 
   async init(): Promise<void> {
@@ -224,6 +228,7 @@ export class GameEngine {
       GAME_ASSETS.player,
       GAME_ASSETS.chaser,
       GAME_ASSETS.shooter,
+      GAME_ASSETS.kraken,
       GAME_ASSETS.cannonBall,
       GAME_ASSETS.explosion,
       GAME_ASSETS.fire,
@@ -494,9 +499,124 @@ export class GameEngine {
     this.player = this.makeShip(PLAYER_ID, GAME_ASSETS.player, 0xffdf59, WORLD_W / 2, WORLD_H / 2, this.config.playerMaxHealth, 0.62);
   }
 
+  private makeKraken(x: number, y: number): KrakenEntity {
+    const view = new Container();
+    const body = new Container();
+    const shadow = new Graphics().ellipse(0, 25, 58, 25).fill({ color: 0x031a2a, alpha: 0.42 });
+    const texture = Texture.from(GAME_ASSETS.kraken);
+    const outline = new Sprite(texture);
+    outline.anchor.set(0.5);
+    outline.scale.set(0.255);
+    outline.tint = 0x071b36;
+    outline.alpha = 0.96;
+    const sprite = new Sprite(texture);
+    sprite.anchor.set(0.5);
+    sprite.scale.set(0.235);
+    const marker = new Graphics().ellipse(0, 8, 55, 39).stroke({ color: 0x35d9df, width: 4, alpha: 0.6 });
+    const damageGlow = new Graphics().ellipse(0, -4, 34, 20).fill({ color: 0xff667e, alpha: 0.3 });
+    if (!this.mobilePerformanceMode) damageGlow.filters = [new BlurFilter({ strength: 7 })];
+    damageGlow.alpha = 0;
+    const damageFx = new Sprite(Texture.from(GAME_ASSETS.fire));
+    damageFx.anchor.set(0.5, 0.8);
+    damageFx.position.set(0, -18);
+    damageFx.scale.set(0.82);
+    damageFx.alpha = 0;
+    const healthBack = new Graphics();
+    const healthFill = new Graphics();
+
+    body.addChild(shadow, outline, marker, sprite, damageGlow, damageFx);
+    view.addChild(body, healthBack, healthFill);
+    view.position.set(x, y);
+    this.world.addChild(view);
+
+    const entity: KrakenEntity = {
+      id: KRAKEN_ID,
+      x,
+      y,
+      rotation: 0,
+      radius: EXTRA_BALANCE.kraken.radius,
+      health: EXTRA_BALANCE.kraken.maxHealth,
+      maxHealth: EXTRA_BALANCE.kraken.maxHealth,
+      alive: true,
+      view,
+      body,
+      sprite,
+      outline,
+      damageFx,
+      damageGlow,
+      baseScale: 0.235,
+      healthBack,
+      healthFill,
+      attackCooldown: this.rng.range(0.8, 1.4),
+      telegraphTime: 0,
+      attackX: x,
+      attackY: y,
+      targetId: null,
+      bornAt: this.elapsed,
+    };
+    this.updateHealth(entity);
+    return entity;
+  }
+
+  private maybeSpawnKraken(): void {
+    if (this.kraken?.alive) return;
+    if (this.elapsed < this.nextKrakenSpawnAt) return;
+    if (this.config.sessionTime - this.elapsed < EXTRA_BALANCE.kraken.minTimeRemaining) return;
+
+    const activeSlots = this.enemies.filter((enemy) => enemy.alive).length;
+    if (activeSlots + EXTRA_BALANCE.kraken.enemySlotWeight > this.maxActiveEnemies) return;
+
+    const candidates: { x: number; y: number }[] = [];
+    const margin = 118;
+    for (let i = 0; i < 36; i++) {
+      candidates.push({
+        x: this.rng.range(margin, WORLD_W - margin),
+        y: this.rng.range(margin, WORLD_H - margin),
+      });
+    }
+
+    const position = candidates.find((point) =>
+      distSq(point.x, point.y, this.player.x, this.player.y) > 250 ** 2
+      && !this.collidesIsland(point.x, point.y, EXTRA_BALANCE.kraken.radius + 10)
+      && this.enemies.every((enemy) => !enemy.alive || distSq(point.x, point.y, enemy.x, enemy.y) > 145 ** 2)
+    );
+    if (!position) return;
+
+    this.kraken = this.makeKraken(position.x, position.y);
+    this.showKrakenSpawnFx(position.x, position.y);
+    this.popLabel(engineText('kraken'), position.x, position.y - 92, 0x54f0e5, 1.0);
+  }
+
+  private showKrakenSpawnFx(x: number, y: number): void {
+    const swirl = new Container();
+    swirl.position.set(x, y);
+    const outer = new Graphics().ellipse(0, 18, 76, 34).stroke({ color: 0x8bfff3, width: 7, alpha: 0.8 });
+    const inner = new Graphics().ellipse(0, 18, 45, 20).stroke({ color: 0x1b6aa7, width: 6, alpha: 0.85 });
+    swirl.addChild(outer, inner);
+    this.fx.addChild(swirl);
+    let life = 0.9;
+    const update = (ticker: { deltaMS: number }) => {
+      life -= ticker.deltaMS / 1000;
+      const p = clamp(1 - life / 0.9, 0, 1);
+      swirl.rotation += ticker.deltaMS * 0.004;
+      outer.scale.set(0.7 + p * 0.7);
+      inner.scale.set(1.1 - p * 0.45);
+      swirl.alpha = Math.max(0, life / 0.9);
+      if (life <= 0) {
+        this.app.ticker.remove(update);
+        if (!swirl.destroyed) swirl.destroy({ children: true });
+      }
+    };
+    this.app.ticker.add(update);
+  }
+
   private spawnEnemy(): boolean {
-    const activeEnemyCount = this.enemies.filter((enemy) => enemy.alive).length;
-    if (activeEnemyCount >= this.maxActiveEnemies) return false;
+    const activeEnemyCount = this.enemies.filter((enemy) => enemy.alive).length + (this.kraken?.alive ? EXTRA_BALANCE.kraken.enemySlotWeight : 0);
+    const krakenPending = !this.kraken?.alive
+      && this.elapsed >= this.nextKrakenSpawnAt
+      && this.config.sessionTime - this.elapsed >= EXTRA_BALANCE.kraken.minTimeRemaining;
+    const reservedKrakenSlots = krakenPending ? EXTRA_BALANCE.kraken.enemySlotWeight : 0;
+    if (activeEnemyCount >= this.maxActiveEnemies - reservedKrakenSlots) return false;
     const spawnIndex = this.spawnSequence;
     const pattern = EXTRA_BALANCE.spawn.enemyTypePattern;
     const kind = pattern[spawnIndex % pattern.length]!;
@@ -527,6 +647,7 @@ export class GameEngine {
       distSq(point.x, point.y, this.player.x, this.player.y) > 285 ** 2
       && !this.collidesIsland(point.x, point.y, 34)
       && this.enemies.every((enemy) => !enemy.alive || distSq(point.x, point.y, enemy.x, enemy.y) > 118 ** 2)
+      && (!this.kraken?.alive || distSq(point.x, point.y, this.kraken.x, this.kraken.y) > 165 ** 2)
     );
 
     if (!position) {
@@ -595,14 +716,17 @@ export class GameEngine {
     // Resolve projectiles before enemy contact so a ship destroyed by a shot cannot
     // continue into the later AI/collision phase of the same simulation tick.
     this.updateProjectiles(dt);
+    this.updateKraken(dt);
     this.updateEnemies(dt);
     this.updateShooterFriction(dt);
     this.animateShipDamageFx(this.player);
     for (const enemy of this.enemies) if (enemy.alive) this.animateShipDamageFx(enemy);
+    if (this.kraken?.alive) this.animateShipDamageFx(this.kraken);
     this.updatePowderBarrels(dt);
     this.updatePickups(dt);
     this.maybeSpawnEmergencyDrop();
     this.maybeSpawnSupportDrop();
+    this.maybeSpawnKraken();
 
     if (this.spawnClock >= this.config.enemySpawnTime) {
       this.spawnClock -= this.config.enemySpawnTime;
@@ -800,6 +924,7 @@ export class GameEngine {
     if (this.collidesIsland(x, y, 28)) return false;
     if (distSq(x, y, this.player.x, this.player.y) < 48 ** 2) return false;
     if (this.enemies.some((enemy) => enemy.alive && distSq(x, y, enemy.x, enemy.y) < 58 ** 2)) return false;
+    if (this.kraken?.alive && distSq(x, y, this.kraken.x, this.kraken.y) < 90 ** 2) return false;
     if (this.powderBarrels.some((barrel) => barrel.alive && distSq(x, y, barrel.x, barrel.y) < 64 ** 2)) return false;
     return true;
   }
@@ -821,6 +946,11 @@ export class GameEngine {
           this.detonatePowderBarrel(barrel, target);
           continue;
         }
+        const kraken = this.kraken;
+        if (kraken?.alive && distSq(barrel.x, barrel.y, kraken.x, kraken.y) <= (EXTRA_BALANCE.powderBarrel.triggerRadius + kraken.radius) ** 2) {
+          this.detonatePowderBarrel(barrel, kraken);
+          continue;
+        }
       }
 
       if (barrel.lifetime <= 0) {
@@ -831,7 +961,7 @@ export class GameEngine {
     this.powderBarrels = this.powderBarrels.filter((barrel) => barrel.alive);
   }
 
-  private detonatePowderBarrel(barrel: PowderBarrelEntity, triggerEnemy: EnemyEntity): void {
+  private detonatePowderBarrel(barrel: PowderBarrelEntity, triggerEnemy: EnemyEntity | KrakenEntity): void {
     if (!barrel.alive) return;
     barrel.alive = false;
     const x = barrel.x;
@@ -863,7 +993,10 @@ export class GameEngine {
 
     // The ship that actually hits the trap is the guaranteed kill. Nearby ships
     // receive a heavy concussion, but the shockwave can never finish them off.
-    if (triggerEnemy.alive) this.destroyEnemy(triggerEnemy, true);
+    if (triggerEnemy.alive) {
+      if (triggerEnemy.id === KRAKEN_ID) this.damageKraken(barrel.damage, true);
+      else this.destroyEnemy(triggerEnemy as EnemyEntity, true);
+    }
 
     for (const enemy of [...this.enemies]) {
       if (!enemy.alive || enemy.id === triggerEnemy.id) continue;
@@ -873,6 +1006,15 @@ export class GameEngine {
       const shockDamage = barrel.damage * 1.08 * falloff;
       const nonLethalDamage = Math.min(shockDamage, Math.max(0, enemy.health - 1));
       if (nonLethalDamage > 0) this.damageShip(enemy, nonLethalDamage);
+    }
+
+    const kraken = this.kraken;
+    if (kraken?.alive && triggerEnemy.id !== KRAKEN_ID) {
+      const distance = Math.hypot(kraken.x - x, kraken.y - y);
+      if (distance <= barrel.blastRadius + kraken.radius) {
+        const falloff = clamp(1 - Math.max(0, distance - 26) / Math.max(1, barrel.blastRadius), 0.62, 1);
+        this.damageKraken(barrel.damage * 1.08 * falloff, true);
+      }
     }
 
     // Player is intentionally immune to their own powder barrel blast.
@@ -1016,6 +1158,219 @@ export class GameEngine {
     return { x: steerX / len, y: steerY / len, distance, lineOfSight };
   }
 
+  private getEnemyCombatTarget(enemy: EnemyEntity): ShipEntity {
+    const kraken = this.kraken;
+    if (!kraken?.alive) {
+      enemy.targetKraken = false;
+      return this.player;
+    }
+
+    const distanceToKraken = Math.hypot(kraken.x - enemy.x, kraken.y - enemy.y);
+    const distanceToPlayer = Math.hypot(this.player.x - enemy.x, this.player.y - enemy.y);
+    const enterRange = enemy.kind === 'shooter'
+      ? EXTRA_BALANCE.kraken.shooterAggroRange
+      : EXTRA_BALANCE.kraken.chaserAggroRange;
+    const releaseRange = enterRange + EXTRA_BALANCE.kraken.aggroReleasePadding;
+
+    if (enemy.targetKraken) {
+      // Keep a little hysteresis, but let a clearly closer player reclaim aggro.
+      if (distanceToKraken <= releaseRange && distanceToKraken <= distanceToPlayer + EXTRA_BALANCE.kraken.aggroReleasePadding) return kraken;
+      enemy.targetKraken = false;
+    }
+    if (distanceToKraken <= enterRange && distanceToKraken < distanceToPlayer) {
+      enemy.targetKraken = true;
+      return kraken;
+    }
+    return this.player;
+  }
+
+  private findNearestKrakenTarget(): ShipEntity | undefined {
+    const kraken = this.kraken;
+    if (!kraken?.alive) return undefined;
+    const candidates: ShipEntity[] = [];
+    if (this.player.alive) candidates.push(this.player);
+    for (const enemy of this.enemies) if (enemy.alive) candidates.push(enemy);
+    let best: ShipEntity | undefined;
+    let bestDistanceSq = Number.POSITIVE_INFINITY;
+    for (const candidate of candidates) {
+      const d = distSq(kraken.x, kraken.y, candidate.x, candidate.y);
+      if (d < bestDistanceSq) {
+        best = candidate;
+        bestDistanceSq = d;
+      }
+    }
+    return best;
+  }
+
+  private updateKraken(dt: number): void {
+    const kraken = this.kraken;
+    if (!kraken?.alive) return;
+
+    kraken.body.y = Math.sin(this.elapsed * 3.4) * 2.2;
+    kraken.body.rotation = Math.sin(this.elapsed * 1.7) * 0.025;
+    kraken.attackCooldown = Math.max(0, kraken.attackCooldown - dt);
+
+    if (kraken.telegraphTime > 0) {
+      kraken.telegraphTime = Math.max(0, kraken.telegraphTime - dt);
+      if (kraken.telegraphTime <= 0) this.resolveKrakenAttack(kraken.attackX, kraken.attackY);
+      return;
+    }
+
+    const target = this.findNearestKrakenTarget();
+    if (!target) {
+      kraken.targetId = null;
+      return;
+    }
+    kraken.targetId = target.id;
+    const dx = target.x - kraken.x;
+    const dy = target.y - kraken.y;
+    const distance = Math.hypot(dx, dy) || 1;
+
+    if (kraken.attackCooldown <= 0 && distance <= EXTRA_BALANCE.kraken.attackRange) {
+      kraken.attackX = target.x;
+      kraken.attackY = target.y;
+      kraken.telegraphTime = EXTRA_BALANCE.kraken.attackTelegraphSeconds;
+      this.showKrakenAttackTelegraph(kraken.attackX, kraken.attackY);
+      return;
+    }
+
+    const stopDistance = kraken.radius + target.radius + 46;
+    if (distance <= stopDistance) return;
+    const ux = dx / distance;
+    const uy = dy / distance;
+    const pursuitSpeed = distance > EXTRA_BALANCE.kraken.perceptionRange ? EXTRA_BALANCE.kraken.speed * 0.93 : EXTRA_BALANCE.kraken.speed;
+    const move = pursuitSpeed * dt;
+    const baseAngle = Math.atan2(uy, ux);
+    const attempts = [0, 0.48, -0.48, 0.82, -0.82];
+    for (const offset of attempts) {
+      const angle = baseAngle + offset;
+      if (this.tryMove(kraken, kraken.x + Math.cos(angle) * move, kraken.y + Math.sin(angle) * move)) break;
+      if (!kraken.alive) return;
+    }
+  }
+
+  private showKrakenAttackTelegraph(x: number, y: number): void {
+    const telegraph = new Container();
+    telegraph.position.set(x, y);
+    const fill = new Graphics().circle(0, 0, EXTRA_BALANCE.kraken.impactRadius).fill({ color: 0xff496c, alpha: 0.08 });
+    const ring = new Graphics().circle(0, 0, EXTRA_BALANCE.kraken.impactRadius).stroke({ color: 0xff627d, width: 6, alpha: 0.82 });
+    const inner = new Graphics().circle(0, 0, 22).stroke({ color: 0xffd165, width: 4, alpha: 0.9 });
+    telegraph.addChild(fill, ring, inner);
+    this.fx.addChild(telegraph);
+    let life = EXTRA_BALANCE.kraken.attackTelegraphSeconds;
+    const update = (ticker: { deltaMS: number }) => {
+      life -= ticker.deltaMS / 1000;
+      const progress = clamp(1 - life / EXTRA_BALANCE.kraken.attackTelegraphSeconds, 0, 1);
+      const pulse = 0.92 + Math.sin(progress * Math.PI * 7) * 0.08;
+      ring.scale.set(pulse);
+      inner.scale.set(0.75 + progress * 1.4);
+      inner.alpha = 0.95 - progress * 0.45;
+      fill.alpha = 0.06 + progress * 0.14;
+      if (life <= 0) {
+        this.app.ticker.remove(update);
+        if (!telegraph.destroyed) telegraph.destroy({ children: true });
+      }
+    };
+    this.app.ticker.add(update);
+  }
+
+  private resolveKrakenAttack(x: number, y: number): void {
+    const kraken = this.kraken;
+    if (!kraken?.alive) return;
+    kraken.attackCooldown = EXTRA_BALANCE.kraken.attackCooldown;
+    this.showKrakenTentacleImpact(x, y);
+    this.shake(8, 0.16);
+
+    const playerHitRange = EXTRA_BALANCE.kraken.impactRadius + this.player.radius * 0.5;
+    if (this.player.alive && distSq(x, y, this.player.x, this.player.y) <= playerHitRange ** 2) {
+      this.damageShip(this.player, EXTRA_BALANCE.kraken.playerDamage);
+    }
+
+    for (const enemy of [...this.enemies]) {
+      if (!enemy.alive) continue;
+      const hitRange = EXTRA_BALANCE.kraken.impactRadius + enemy.radius * 0.5;
+      if (distSq(x, y, enemy.x, enemy.y) > hitRange ** 2) continue;
+      this.damageShip(enemy, EXTRA_BALANCE.kraken.enemyDamage, { awardPointOnKill: false });
+    }
+  }
+
+  private showKrakenTentacleImpact(x: number, y: number): void {
+    const impact = new Container();
+    impact.position.set(x, y);
+    const splash = new Graphics()
+      .ellipse(0, 22, 72, 28).stroke({ color: 0xb8fff8, width: 7, alpha: 0.86 })
+      .ellipse(0, 22, 48, 17).stroke({ color: 0x3ccfe3, width: 5, alpha: 0.76 });
+    const tentacle = new Graphics()
+      .moveTo(0, 28)
+      .bezierCurveTo(-18, 5, 22, -38, 3, -82)
+      .stroke({ color: 0x081d53, width: 26, alpha: 1 })
+      .moveTo(0, 28)
+      .bezierCurveTo(-18, 5, 22, -38, 3, -82)
+      .stroke({ color: 0x293f94, width: 20, alpha: 1 });
+    for (let i = 0; i < 4; i++) {
+      tentacle.circle(-7 + i * 4, -4 - i * 16, 3.6).fill({ color: 0xff7088, alpha: 0.95 });
+    }
+    impact.addChild(splash, tentacle);
+    this.fx.addChild(impact);
+    let life = 0.5;
+    const update = (ticker: { deltaMS: number }) => {
+      life -= ticker.deltaMS / 1000;
+      const elapsed = 0.5 - life;
+      if (elapsed < 0.12) {
+        const p = elapsed / 0.12;
+        tentacle.scale.set(0.82 + p * 0.18, p);
+      } else if (life < 0.16) {
+        tentacle.alpha = Math.max(0, life / 0.16);
+      }
+      splash.scale.set(0.7 + elapsed * 1.3);
+      splash.alpha = Math.max(0, life / 0.5);
+      if (life <= 0) {
+        this.app.ticker.remove(update);
+        if (!impact.destroyed) impact.destroy({ children: true });
+      }
+    };
+    this.app.ticker.add(update);
+  }
+
+  private damageKraken(amount: number, awardPointOnKill: boolean): void {
+    const kraken = this.kraken;
+    if (!kraken?.alive) return;
+    kraken.health = Math.max(0, kraken.health - amount);
+    this.updateHealth(kraken);
+    kraken.sprite.alpha = 0.35;
+    kraken.damageGlow!.alpha = 0.6;
+    this.popLabel(`-${Math.round(amount)}`, kraken.x, kraken.y - 78, 0xffd36a, 0.45);
+    this.afterGameTime(0.08, () => {
+      if (kraken.alive) {
+        kraken.sprite.alpha = 1;
+        if (kraken.damageGlow) kraken.damageGlow.alpha = kraken.health / kraken.maxHealth <= 0.5 ? 0.36 : 0;
+      }
+    });
+    if (kraken.health <= 0) this.destroyKraken(awardPointOnKill);
+  }
+
+  private destroyKraken(awardPoint: boolean): void {
+    const kraken = this.kraken;
+    if (!kraken?.alive) return;
+    kraken.alive = false;
+    if (awardPoint) {
+      this.score += 1;
+      this.streak = this.streakClock > 0 ? this.streak + 1 : 1;
+      this.streakClock = 2.25;
+      this.timeSincePlayerVictory = 0;
+      this.resetIdlePopupCooldown();
+      this.popLabel('+1  KRAKEN!', kraken.x, kraken.y - 96, 0xfff16b, 1.0);
+    } else {
+      this.popLabel(engineText('krakenDown'), kraken.x, kraken.y - 90, 0x69e9ff, 0.78);
+    }
+    this.spawnActionLines(kraken.x, kraken.y, 0, 0x54f0e5, 14);
+    this.explosion(kraken.x, kraken.y);
+    this.playSound('explosion');
+    if (!kraken.view.destroyed) kraken.view.destroy({ children: true });
+    this.nextKrakenSpawnAt = this.elapsed + this.rng.range(EXTRA_BALANCE.kraken.respawnMinSeconds, EXTRA_BALANCE.kraken.respawnMaxSeconds);
+    for (const enemy of this.enemies) enemy.targetKraken = false;
+  }
+
   private rotateTowards(current: number, target: number, maxStep: number): number {
     const diff = angleWrap(target - current);
     return current + clamp(diff, -maxStep, maxStep);
@@ -1027,18 +1382,20 @@ export class GameEngine {
       enemy.orbitFlipCooldown = Math.max(0, enemy.orbitFlipCooldown - dt);
       const previousX = enemy.x;
       const previousY = enemy.y;
-      const steer = this.steerForEnemy(enemy, this.player.x, this.player.y);
-      const dx = this.player.x - enemy.x;
-      const dy = this.player.y - enemy.y;
+      const target = this.getEnemyCombatTarget(enemy);
+      const targetIsKraken = target.id === KRAKEN_ID;
+      const steer = this.steerForEnemy(enemy, target.x, target.y);
+      const dx = target.x - enemy.x;
+      const dy = target.y - enemy.y;
       const distance = steer.distance;
       const targetAngle = Math.atan2(steer.y, steer.x);
 
       if (enemy.kind === 'chaser') {
-        if (distance < 180 && !enemy.warned) {
+        if (!targetIsKraken && distance < 180 && !enemy.warned) {
           enemy.warned = true;
           this.popLabel(engineText('ramWarning'), enemy.x, enemy.y - 62, 0xfff36b, 0.65);
         }
-        if (distance > 235) enemy.warned = false;
+        if (targetIsKraken || distance > 235) enemy.warned = false;
       }
 
       const turnRate = enemy.kind === 'chaser' ? 4.05 : 3.35;
@@ -1076,8 +1433,10 @@ export class GameEngine {
             moved = true;
             break;
           }
+          if (!enemy.alive) break;
         }
 
+        if (!enemy.alive) continue;
         // Last-resort unjam: a very small reverse step is allowed only through the same
         // collision solver, so it can never phase through islands or another ship.
         if (!moved && enemy.stuckTime > 0.34) {
@@ -1088,6 +1447,7 @@ export class GameEngine {
             enemy.y + Math.sin(reverseAngle) * speed * 0.34 * dt,
           );
         }
+        if (!enemy.alive) continue;
         if (!moved && enemy.stuckTime > 0.52 && enemy.orbitFlipCooldown <= 0) {
           enemy.preferredOrbitSign = enemy.preferredOrbitSign === 1 ? -1 : 1;
           enemy.orbitFlipCooldown = 0.9;
@@ -1104,31 +1464,38 @@ export class GameEngine {
 
       if (enemy.kind === 'shooter') {
         enemy.shootCooldown -= dt;
-        const canShoot = distance <= this.config.shooterRange && steer.lineOfSight;
+        const canShoot = distance <= this.config.shooterRange && steer.lineOfSight && target.alive;
         if (canShoot && enemy.shootCooldown <= 0.34 && !enemy.telegraphing) {
           enemy.telegraphing = true;
           this.popLabel(engineText('aim'), enemy.x, enemy.y - 60, 0xff79d4, 0.36);
-          this.aimFlash(enemy.x, enemy.y, this.player.x, this.player.y);
+          this.aimFlash(enemy.x, enemy.y, target.x, target.y);
         }
         if (canShoot && enemy.shootCooldown <= 0) {
           const shotAngle = Math.atan2(dy, dx);
           const muzzleX = enemy.x + Math.cos(shotAngle) * 28;
           const muzzleY = enemy.y + Math.sin(shotAngle) * 28;
           const enemyDamageMultiplier = clamp(1 - Math.max(0, this.pressure - 1) * 0.1, 0.84, 1);
-          this.createProjectile('enemy', muzzleX, muzzleY, shotAngle, this.config.enemyProjectileDamage * enemyDamageMultiplier, 0xff7dc8);
+          this.createProjectile(
+            'enemy',
+            muzzleX,
+            muzzleY,
+            shotAngle,
+            this.config.enemyProjectileDamage * enemyDamageMultiplier,
+            targetIsKraken ? 0x8bfff3 : 0xff7dc8,
+            1,
+            targetIsKraken ? 'kraken' : 'player',
+          );
           enemy.shootCooldown = 1.45 * (1 + Math.max(0, this.pressure - 1) * 0.11);
           enemy.telegraphing = false;
         } else if (!canShoot) {
           enemy.telegraphing = false;
-          if (enemy.shootCooldown < 0.12) {
-            // Keep a tiny buffer so a shooter does not instantly fire on the exact frame
-            // a blocked line of sight reopens.
-            enemy.shootCooldown = 0.12;
-          }
+          if (enemy.shootCooldown < 0.12) enemy.shootCooldown = 0.12;
         }
       }
 
-      if (enemy.kind === 'chaser' && distSq(enemy.x, enemy.y, this.player.x, this.player.y) < (enemy.radius + this.player.radius) ** 2) {
+      // A Chaser can still physically hit the player even if it had temporarily chosen
+      // the Kraken. Kraken rams are resolved inside tryMove so the collision stays solid.
+      if (enemy.kind === 'chaser' && this.player.alive && distSq(enemy.x, enemy.y, this.player.x, this.player.y) < (enemy.radius + this.player.radius) ** 2) {
         this.playShipContactSound();
         if (this.isDashing()) {
           this.destroyEnemy(enemy, true, true, 'dash');
@@ -1207,6 +1574,22 @@ export class GameEngine {
               this.removeProjectile(projectile);
               break;
             }
+          }
+          const kraken = this.kraken;
+          if (projectile.alive && kraken?.alive && distSq(projectile.x, projectile.y, kraken.x, kraken.y) < (projectile.radius + kraken.radius) ** 2) {
+            this.playProjectileHitSound();
+            this.spawnSparkBurst(projectile.x, projectile.y, 0x8bfff3, 8);
+            this.markPlayerOffense();
+            this.damageKraken(projectile.damage, true);
+            this.removeProjectile(projectile);
+          }
+        } else if (projectile.target === 'kraken') {
+          const kraken = this.kraken;
+          if (kraken?.alive && distSq(projectile.x, projectile.y, kraken.x, kraken.y) < (projectile.radius + kraken.radius) ** 2) {
+            this.playProjectileHitSound();
+            this.spawnSparkBurst(projectile.x, projectile.y, 0x8bfff3, 5);
+            this.damageKraken(projectile.damage, false);
+            this.removeProjectile(projectile);
           }
         } else if (this.player.alive && distSq(projectile.x, projectile.y, this.player.x, this.player.y) < (projectile.radius + this.player.radius) ** 2) {
           this.playProjectileHitSound();
@@ -1288,6 +1671,26 @@ export class GameEngine {
         return false;
       }
 
+      const krakenInvolved = ship.id === KRAKEN_ID || other.id === KRAKEN_ID;
+      if (krakenInvolved) {
+        const rammer = ship.id !== KRAKEN_ID && ship.id !== PLAYER_ID && (ship as EnemyEntity).kind === 'chaser'
+          ? ship as EnemyEntity
+          : other.id !== KRAKEN_ID && other.id !== PLAYER_ID && (other as EnemyEntity).kind === 'chaser'
+            ? other as EnemyEntity
+            : undefined;
+        if (rammer?.alive && this.kraken?.alive) {
+          this.playShipContactSound();
+          this.damageKraken(EXTRA_BALANCE.kraken.chaserRamDamage, false);
+          this.destroyEnemy(rammer, false, true);
+          // If the Kraken was the moving body, the destroyed rammer no longer blocks its step.
+          if (ship.id === KRAKEN_ID && ship.alive) {
+            ship.x = x; ship.y = y; ship.view.position.set(x, y);
+            return true;
+          }
+          return false;
+        }
+      }
+
       // If two solid ships somehow start overlapped, allow only movement that increases separation.
       // This prevents permanent sticking while still forbidding traversal through another hull.
       const minDistance = ship.radius + other.radius;
@@ -1313,6 +1716,9 @@ export class GameEngine {
     for (const enemy of this.enemies) {
       if (!enemy.alive || enemy === ship) continue;
       if (distSq(x, y, enemy.x, enemy.y) < (ship.radius + enemy.radius) ** 2) return enemy;
+    }
+    if (this.kraken?.alive && ship.id !== KRAKEN_ID) {
+      if (distSq(x, y, this.kraken.x, this.kraken.y) < (ship.radius + this.kraken.radius) ** 2) return this.kraken;
     }
     return undefined;
   }
@@ -1403,7 +1809,7 @@ export class GameEngine {
     this.popLabel(engineText('broadside'), this.player.x, this.player.y - 56, 0xffe066, 0.55);
   }
 
-  private createProjectile(owner: 'player' | 'enemy', x: number, y: number, angle: number, damage: number, tint: number, speedMultiplier = 1): void {
+  private createProjectile(owner: 'player' | 'enemy', x: number, y: number, angle: number, damage: number, tint: number, speedMultiplier = 1, target: 'player' | 'kraken' = 'player'): void {
     const view = new Container();
     const shadow = new Graphics().ellipse(0, 7, 10, 4).fill({ color: 0x041827, alpha: 0.34 });
     const trail = new Graphics().roundRect(-28, -3, 28, 6, 3).fill({ color: tint, alpha: 0.33 });
@@ -1421,6 +1827,7 @@ export class GameEngine {
     this.projectiles.push({
       id: `shot-${this.elapsed.toFixed(3)}-${this.projectiles.length}`,
       owner,
+      target: owner === 'enemy' ? target : undefined,
       x,
       y,
       vx: Math.cos(angle) * speed,
@@ -1657,7 +2064,7 @@ export class GameEngine {
   private damageShip(
     ship: ShipEntity,
     amount: number,
-    options: { showReact?: boolean; showImpact?: boolean; showLabel?: boolean } = {},
+    options: { showReact?: boolean; showImpact?: boolean; showLabel?: boolean; awardPointOnKill?: boolean } = {},
   ): void {
     if (!ship.alive) return;
     const showReact = options.showReact ?? true;
@@ -1698,8 +2105,10 @@ export class GameEngine {
         // lethal cannonball has a proper final blast instead of ending on hit SFX only.
         this.playSound('explosion');
         this.finish('destroyed');
+      } else if (ship.id === KRAKEN_ID) {
+        this.destroyKraken(options.awardPointOnKill ?? true);
       } else {
-        this.destroyEnemy(ship as EnemyEntity, true);
+        this.destroyEnemy(ship as EnemyEntity, options.awardPointOnKill ?? true);
       }
     }
   }
@@ -1729,7 +2138,8 @@ export class GameEngine {
       return intersectsRect(x, y, panelW, panelH, safeLeft, safeTop, safeRight - safeLeft, safeBottom - safeTop);
     };
 
-    const overlapsEnemyZone = (x: number, y: number): boolean => this.enemies.some((enemy) => enemy.alive && intersectsRect(x, y, panelW, panelH, enemy.x - 68, enemy.y - 68, 136, 136));
+    const overlapsEnemyZone = (x: number, y: number): boolean => this.enemies.some((enemy) => enemy.alive && intersectsRect(x, y, panelW, panelH, enemy.x - 68, enemy.y - 68, 136, 136))
+      || Boolean(this.kraken?.alive && intersectsRect(x, y, panelW, panelH, this.kraken.x - 92, this.kraken.y - 92, 184, 184));
     const overlapsExistingPanel = (x: number, y: number): boolean => this.activeComicPanels.some((entry) => !entry.panel.destroyed && intersectsRect(x, y, panelW, panelH, entry.panel.x - 12, entry.panel.y - 12, panelW + 24, panelH + 24));
     const overlapsReserved = (x: number, y: number): boolean => reservedZones.some((zone) => intersectsRect(x, y, panelW, panelH, zone.x, zone.y, zone.w, zone.h));
 
@@ -1741,6 +2151,7 @@ export class GameEngine {
         if (!enemy.alive) continue;
         score += Math.min(180000, distSq(cx, cy, enemy.x, enemy.y) * 0.48);
       }
+      if (this.kraken?.alive) score += Math.min(220000, distSq(cx, cy, this.kraken.x, this.kraken.y) * 0.56);
       if (overlapsReserved(x, y)) score -= 180000;
       if (overlapsExistingPanel(x, y)) score -= 120000;
       return score;
@@ -2185,11 +2596,16 @@ export class GameEngine {
 
   private updateHealth(ship: ShipEntity): void {
     const pct = ship.health / ship.maxHealth;
-    ship.healthBack.clear().roundRect(-30, -46, 60, 8, 4).fill({ color: 0x071b36, alpha: 0.9 });
-    ship.healthFill.clear().roundRect(-29, -45, 58 * pct, 6, 3).fill(pct > 0.5 ? 0x7dff74 : pct > 0.25 ? 0xffd84d : 0xff4e68);
+    if (ship.id === KRAKEN_ID) {
+      ship.healthBack.clear().roundRect(-50, -78, 100, 11, 5).fill({ color: 0x071b36, alpha: 0.94 });
+      ship.healthFill.clear().roundRect(-48, -76, 96 * pct, 7, 4).fill(pct > 0.5 ? 0x54f0e5 : pct > 0.25 ? 0xffd84d : 0xff4e68);
+    } else {
+      ship.healthBack.clear().roundRect(-30, -46, 60, 8, 4).fill({ color: 0x071b36, alpha: 0.9 });
+      ship.healthFill.clear().roundRect(-29, -45, 58 * pct, 6, 3).fill(pct > 0.5 ? 0x7dff74 : pct > 0.25 ? 0xffd84d : 0xff4e68);
+    }
     const damageLevel = pct <= 0.25 ? 1 : pct <= 0.5 ? 0.62 : 0;
     ship.damageFx.alpha = damageLevel > 0 ? 0.68 + damageLevel * 0.2 : 0;
-    ship.damageFx.scale.set(pct <= 0.25 ? 0.92 : 0.72);
+    ship.damageFx.scale.set(ship.id === KRAKEN_ID ? (pct <= 0.25 ? 0.82 : 0.64) : (pct <= 0.25 ? 0.92 : 0.72));
     if (ship.damageGlow) ship.damageGlow.alpha = damageLevel > 0 ? 0.34 + damageLevel * 0.18 : 0;
     if (ship.id === PLAYER_ID) ship.sprite.tint = pct < 0.35 ? 0xffa5a7 : 0xffdf59;
   }
@@ -2520,8 +2936,8 @@ export class GameEngine {
       timeLeft: Math.max(0, this.config.sessionTime - this.elapsed),
       paused: this.paused,
       streak: this.streak,
-      enemyCount: this.enemies.filter((enemy) => enemy.alive).length,
-      entityCount: this.enemies.filter((enemy) => enemy.alive).length + this.projectiles.length + this.pickups.length + this.powderBarrels.filter((barrel) => barrel.alive).length + 1,
+      enemyCount: this.enemies.filter((enemy) => enemy.alive).length + (this.kraken?.alive ? 1 : 0),
+      entityCount: this.enemies.filter((enemy) => enemy.alive).length + (this.kraken?.alive ? 1 : 0) + this.projectiles.length + this.pickups.length + this.powderBarrels.filter((barrel) => barrel.alive).length + 1,
       frontReload: this.frontCooldown <= 0 ? 1 : clamp(1 - this.frontCooldown / Math.max(0.001, this.frontCooldownMax), 0, 1),
       broadsideReload: this.broadsideCooldown <= 0 ? 1 : clamp(1 - this.broadsideCooldown / Math.max(0.001, this.broadsideCooldownMax), 0, 1),
       dashReload: this.dashCooldown <= 0 ? 1 : clamp(1 - this.dashCooldown / Math.max(0.001, this.dashCooldownMax), 0, 1),
@@ -2554,7 +2970,8 @@ export class GameEngine {
     paused: boolean;
     player: { x: number; y: number; health: number; rotation: number };
     enemies: { id: string; kind: 'chaser' | 'shooter'; x: number; y: number; health: number; stuckTime: number }[];
-    projectiles: { owner: 'player' | 'enemy'; x: number; y: number; vx: number; vy: number; damage: number }[];
+    projectiles: { owner: 'player' | 'enemy'; target?: 'player' | 'kraken'; x: number; y: number; vx: number; vy: number; damage: number }[];
+    kraken: { alive: boolean; x: number; y: number; health: number; targetId: string | null; telegraphTime: number } | null;
     pickups: { kind: PickupKind; x: number; y: number; lifetime: number }[];
     barrels: { x: number; y: number; armTime: number; lifetime: number }[];
     cooldowns: { front: number; broadside: number; weaponSwitch: number; dash: number; barrel: number };
@@ -2578,7 +2995,8 @@ export class GameEngine {
         health: enemy.health,
         stuckTime: enemy.stuckTime,
       })),
-      projectiles: this.projectiles.filter((projectile) => projectile.alive).map((projectile) => ({ owner: projectile.owner, x: projectile.x, y: projectile.y, vx: projectile.vx, vy: projectile.vy, damage: projectile.damage })),
+      projectiles: this.projectiles.filter((projectile) => projectile.alive).map((projectile) => ({ owner: projectile.owner, target: projectile.target, x: projectile.x, y: projectile.y, vx: projectile.vx, vy: projectile.vy, damage: projectile.damage })),
+      kraken: this.kraken ? { alive: this.kraken.alive, x: this.kraken.x, y: this.kraken.y, health: this.kraken.health, targetId: this.kraken.targetId, telegraphTime: this.kraken.telegraphTime } : null,
       pickups: this.pickups.filter((pickup) => pickup.alive).map((pickup) => ({ kind: pickup.kind, x: pickup.x, y: pickup.y, lifetime: pickup.lifetime })),
       barrels: this.powderBarrels.filter((barrel) => barrel.alive).map((barrel) => ({ x: barrel.x, y: barrel.y, armTime: barrel.armTime, lifetime: barrel.lifetime })),
       cooldowns: { front: this.frontCooldown, broadside: this.broadsideCooldown, weaponSwitch: this.weaponSwitchCooldown, dash: this.dashCooldown, barrel: this.barrelCooldown },
@@ -2597,6 +3015,20 @@ export class GameEngine {
   debugSpawnPickup(kind: PickupKind): void {
     if (!this.player?.alive) return;
     this.spawnPickup(kind, this.player.x, this.player.y);
+  }
+
+  debugSpawnKraken(x: number, y: number, health?: number): string {
+    if (this.kraken?.alive) this.destroyKraken(false);
+    const kx = clamp(x, EXTRA_BALANCE.kraken.radius + 30, WORLD_W - EXTRA_BALANCE.kraken.radius - 30);
+    const ky = clamp(y, EXTRA_BALANCE.kraken.radius + 30, WORLD_H - EXTRA_BALANCE.kraken.radius - 30);
+    if (this.collidesIsland(kx, ky, EXTRA_BALANCE.kraken.radius)) return '';
+    this.kraken = this.makeKraken(kx, ky);
+    if (Number.isFinite(health)) {
+      this.kraken.health = clamp(health ?? this.kraken.maxHealth, 1, this.kraken.maxHealth);
+      this.updateHealth(this.kraken);
+    }
+    this.kraken.attackCooldown = 0;
+    return this.kraken.id;
   }
 
   debugSpawnEnemy(kind: 'chaser' | 'shooter', x: number, y: number, health?: number): string {

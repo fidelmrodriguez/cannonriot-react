@@ -53,6 +53,7 @@ const GAME_TEXTURE_URLS = [
   GAME_ASSETS.player,
   GAME_ASSETS.chaser,
   GAME_ASSETS.shooter,
+  GAME_ASSETS.kraken,
   GAME_ASSETS.cannonBall,
   GAME_ASSETS.explosion,
   GAME_ASSETS.fire,

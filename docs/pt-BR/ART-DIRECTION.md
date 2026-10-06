@@ -10,6 +10,7 @@ A UI usa bordas irregulares, sombras deslocadas e painéis de pôster, mas o tex
 - Barras de vida ficam presas aos navios; score/tempo/recargas ficam nas camadas React do HUD.
 - Projéteis do jogador/inimigos, dano, explosão e pickups usam acentos visuais diferentes.
 - Inimigos recém-spawnados recebem um `!` curto preso ao navio. É somente visual e não atrasa a IA.
+- O Kraken se diferencia das duas facções obrigatórias por corpo azul-marinho profundo, ventosas coral, olhos amarelos e acentos ciano de água. A barra local maior comunica resistência sem criar HUD de boss.
 - Painéis de reação evitam a zona imediata de segurança do jogador e tentam não sobrepor outros painéis ativos.
 - O dock global de idioma/áudio fica visualmente separado do conteúdo principal de menu/resultado.
 - Layouts mobile/tablet podem rolar painéis que não cabem verticalmente em vez de esconder conteúdo necessário.
@@ -34,7 +35,7 @@ Mobile reduz quantidade de camadas/partículas decorativas, mas nunca muda colli
 
 ## Painéis de reação
 
-Quatro famílias são usadas:
+Cinco famílias são usadas:
 
 - **damage** — dano no casco do jogador;
 - **victory** — destruição pontuável/combo;

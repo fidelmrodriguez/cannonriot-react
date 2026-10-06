@@ -73,6 +73,7 @@ The authoritative world is a fixed **1280×720** arena. Viewport resizing only c
 - Normal front/broadside fire is separated by a **0.25 s global weapon-switch lock**; quick touch taps can be buffered for **0.32 s**.
 - Chasers pursue the player and self-destruct on player collision. A normal collision death does not score; destroying one with an active dash is a scoring player attack.
 - Shooters seek ranged positions, line of sight and fire at the player. Sustained hull-to-hull friction damages both ships, with substantially more damage applied to the Shooter than to the player.
+- The **Kraken** is a hostile third faction: it always pursues the nearest living entity (player, Chaser or Shooter), can switch targets at any time and uses a telegraphed area tentacle attack. Nearby enemies can redirect aggro to it as well.
 - Islands and arena bounds block ships; islands also block projectiles.
 - Projectiles are single-hit and are removed on hit, obstacle, expiry or arena exit.
 - Every enemy destroyed by a scoring player attack awards exactly one point.
@@ -95,6 +96,7 @@ The required challenge rules stay authoritative; these mechanics are additive:
 - **Emergency support**: at ≤35% hull, if no nearby Medicine/Armor support exists, the game attempts to place a defensive pickup near the player. Emergency drops have a 12 s cooldown and can replace a less useful active pickup when all normal slots are occupied.
 - **Spawn alert**: a short `!` telegraph is visual only; newly spawned enemies remain fully active immediately.
 - **Shooter hull friction**: while the player hull is rubbing against a purple Shooter, both ships lose health continuously. Shooter friction DPS is intentionally much higher than player friction DPS, so scraping can be used tactically without becoming the optimal attack. Two dedicated chartreuse reaction portraits stay visible during contact and linger briefly after separation.
+- **Kraken event**: becomes eligible after 30% of the match duration, requires at least 15 s remaining and is capped at one active creature. It has 180 HP, a larger local health bar, consumes two active-enemy slots and stays until defeated. Its telegraphed tentacle slam deals 11 damage to the player and 18 to enemy ships; nearby Shooters and Chasers may switch aggro to it. Chasers explode on Kraken impact for 32 damage with no score. A player kill on the Kraken awards 1 point.
 
 Difficulty assistance is derived deterministically from the selected session duration and spawn interval. It changes support cadence, enemy cap and small balance coefficients, but never changes the ranking key or scoring value.
 
@@ -160,7 +162,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md).
 
 Playwright is configured for desktop Chromium and a landscape Pixel 7 touch profile. `?e2e=1` fixes the gameplay seed at `1337` and exposes test-only state/time hooks while still exercising the real simulation path.
 
-The current gameplay tests cover the weapon switch lock, Living Powder auto-fire, Shooter friction, infinite Wind dash, dash i-frame/scoring counter, emergency support and expanded powder-barrel splash. See [docs/TESTING.md](docs/TESTING.md) for the current suite status and the remaining evaluator-facing evidence.
+The current gameplay tests cover the weapon switch lock, Living Powder auto-fire, Shooter friction, infinite Wind dash, dash i-frame/scoring counter, emergency support, expanded powder-barrel splash and Kraken third-faction targeting. See [docs/TESTING.md](docs/TESTING.md) for the current suite status and the remaining evaluator-facing evidence.
 
 ## Performance
 

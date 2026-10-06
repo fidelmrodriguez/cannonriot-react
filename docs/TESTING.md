@@ -26,6 +26,7 @@ Available helpers:
 - `damagePlayer(amount)`;
 - `spawnPickup(kind)`;
 - `spawnEnemy(kind, x, y, health?)`;
+- `spawnKraken(x, y, health?)`;
 - `setEnemyShootCooldown(id, seconds)`;
 - `setPlayerPose(x, y, rotation?)`;
 - `advanceTime(seconds)`;
@@ -48,24 +49,25 @@ Available helpers:
 9. front/broadside projectile counts, parallel directions, cooldowns and the 0.25 s weapon-switch lock;
 10. projectile kill scoring exactly once;
 11. normal spawn sequence containing both Chaser and Shooter;
-12. Shooter hull friction damaging both participants asymmetrically;
-13. Chaser collision damage + non-scoring self-destruction;
-14. Wind keeping dash immediately ready while the buff is active;
-15. Living Powder automatic front + both-broadside fire and automatic stop on expiry;
-16. dash active i-frame, **scoring** Chaser counter and immediate return to vulnerability after dash;
-17. ≤35% hull emergency Medicine/Armor drop and cooldown;
-18. Medicine healing and paused buff timers;
-19. blur pause requiring explicit resume without time advance;
-20. powder-barrel trigger kill, expanded non-lethal splash and player self-immunity;
-21. timeout result persistence and clean restart;
-22. player-death result reason;
-23. abandoned match not creating DB/outbox records;
-24. repeated navigation/remounting keeping a single gameplay canvas;
-25. successful registration becoming visible in ranking and local history;
-26. ranking/history empty, timeout/error and pagination states;
-27. timeout-after-save idempotent retry;
-28. unavailable-at-game-over outbox persistence/recovery;
-29. out-of-order ranking requests preserving the selected page.
+12. Kraken third-faction targeting, nearest-target selection and nearby Shooter aggro redirection;
+13. Shooter hull friction damaging both participants asymmetrically;
+14. Chaser collision damage + non-scoring self-destruction;
+15. Wind keeping dash immediately ready while the buff is active;
+16. Living Powder automatic front + both-broadside fire and automatic stop on expiry;
+17. dash active i-frame, **scoring** Chaser counter and immediate return to vulnerability after dash;
+18. ≤35% hull emergency Medicine/Armor drop and cooldown;
+19. Medicine healing and paused buff timers;
+20. blur pause requiring explicit resume without time advance;
+21. powder-barrel trigger kill, expanded non-lethal splash and player self-immunity;
+22. timeout result persistence and clean restart;
+23. player-death result reason;
+24. abandoned match not creating DB/outbox records;
+25. repeated navigation/remounting keeping a single gameplay canvas;
+26. successful registration becoming visible in ranking and local history;
+27. ranking/history empty, timeout/error and pagination states;
+28. timeout-after-save idempotent retry;
+29. unavailable-at-game-over outbox persistence/recovery;
+30. out-of-order ranking requests preserving the selected page.
 
 The mobile selectors target the current D-pad UI; the suite no longer expects the removed virtual joystick and includes regression coverage for one-thumb diagonal steering.
 

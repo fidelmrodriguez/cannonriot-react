@@ -100,8 +100,10 @@ As interações são separadas em checagens explícitas:
 - navio × navio;
 - projétil × ilha;
 - projétil × saída da arena;
-- projétil do jogador × inimigo vivo;
-- projétil inimigo × jogador vivo.
+- projétil do jogador × inimigo/Kraken vivo;
+- projétil inimigo × jogador ou Kraken conforme o alvo do projétil;
+- casco de Chaser × casco do Kraken (o Chaser explode e causa dano);
+- AoE do tentáculo do Kraken × jogador/navios inimigos.
 
 A arte das ilhas é irregular/procedural, mas a colisão usa círculos estáveis. Projéteis usam substeps para que tiros acelerados não atravessem colliders pequenos. Um projétil é removido imediatamente após o primeiro hit válido.
 
@@ -126,6 +128,14 @@ Chasers usam perseguição/steering, desvio de ilha e recuperação de stuck. Sh
 
 Um valor determinístico de pressão derivado de `sessionTime` e `enemySpawnTime` ajusta teto de inimigos e pequenos coeficientes de suporte/balanceamento em configurações extremas.
 
+### Terceira facção: Kraken
+
+O Kraken fica separado da sequência obrigatória de navios em `EnemyEntity[]`, como uma `KrakenEntity`. Assim o padrão determinístico Chaser/Shooter permanece intacto enquanto existe um evento hostil neutro opcional. `maybeSpawnKraken()` fica elegível após 30% da duração da sessão, exige pelo menos 15 s restantes e verifica dois slots livres no teto de inimigos. Um Kraken vivo pesa como dois slots ao avaliar novos spawns normais. Quando o evento fica elegível, spawns normais reservam esses dois slots para uma configuração densa de 1 s não impedir o Kraken indefinidamente.
+
+`updateKraken()` recalcula a entidade viva mais próxima a cada tick entre jogador e todos os navios inimigos. O movimento segue esse alvo; quando o golpe de tentáculo começa, o ponto de impacto fica travado durante 0,55 s de telegraph e então um único passe de dano em área é resolvido. Não existe despawn aleatório: ele permanece até ser derrotado ou a partida encerrar.
+
+Navios inimigos escolhem alvo por `getEnemyCombatTarget()`. Shooters a até 420 px e Chasers a até 330 px podem mudar para o Kraken quando ele está mais perto que o jogador; uma margem de saída de 80 px cria histerese e permite que um jogador claramente mais próximo recupere o aggro. Projéteis de Shooter carregam `target` explícito (`player` ou `kraken`) para o dano entre facções ficar determinístico. Contato Chaser/Kraken usa o mesmo caminho de colisão sólida: o Chaser explode, causa dano no Kraken e não gera ponto.
+
 ## Pickups e diretor de suporte
 
 Existem quatro pickups: Medicina, Pólvora Viva, Vento a Favor e Casco Reforçado. Drops normais usam pressão, estado do casco e buffs ativos para escolher suporte útil.
@@ -136,9 +146,9 @@ Buffs repetidos estendem a duração com limite, em vez de resetar sem teto.
 
 ## Barril de pólvora
 
-O jogador pode manter até três barris ativos. Um barril arma após 0,48 s, dura 10,5 s e dispara quando um inimigo entra no raio de gatilho.
+O jogador pode manter até três barris ativos. Um barril arma após 0,48 s, dura 10,5 s e dispara quando um navio inimigo normal ou o Kraken entra no raio de gatilho.
 
-O inimigo que aciona é uma kill garantida e pontuável. Outros inimigos dentro do raio de explosão de 170 px recebem dano com falloff limitado para nunca finalizá-los; ficam com no mínimo 1 HP. A explosão do próprio barril nunca causa dano ao jogador.
+Um Chaser/Shooter que aciona é uma kill garantida e pontuável. Se o Kraken acionar, recebe os 62 de dano armazenado. Outros navios normais dentro do raio de 170 px recebem falloff limitado para nunca finalizá-los; um Kraken dentro da explosão recebe o falloff normalmente. A explosão do próprio barril nunca causa dano ao jogador.
 
 Isso mantém a armadilha útil contra grupos densos sem transformar um barril em chain-kill automático.
 

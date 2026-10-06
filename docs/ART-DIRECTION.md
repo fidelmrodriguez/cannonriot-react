@@ -10,6 +10,7 @@ The UI deliberately uses uneven borders, offset shadows and poster-like panels, 
 - Health bars are attached to ships; score/time/reload state remain in React HUD layers.
 - Player projectiles, enemy projectiles, damage, explosion and pickup feedback use different visual accents.
 - New enemies get a short `!` spawn telegraph attached to the ship. It is visual only and does not delay AI.
+- The Kraken is visually separated from both required ship factions: deep navy body, coral suction cups, yellow eyes and cyan water accents. Its larger local health bar communicates durability without a boss HUD.
 - Reaction panels avoid the immediate player safety zone and attempt to avoid other active panels.
 - The global language/audio dock stays visually separate from primary menu/result content.
 - Mobile/tablet layouts may scroll panels that do not fit vertically instead of hiding required content.
@@ -34,7 +35,7 @@ Mobile reduces the number of decorative layers/particles but never changes autho
 
 ## Reaction panels
 
-Four panel families are used:
+Five panel families are used:
 
 - **damage** — player hull damage;
 - **victory** — scoring enemy destruction/combo feedback;

@@ -49,6 +49,7 @@ export function GameScreen({ config, language, player, onEnd, onQuit }: Props) {
       damagePlayer: (amount: number) => void;
       spawnPickup: (kind: 'medicine' | 'powder' | 'wind' | 'armor') => void;
       spawnEnemy: (kind: 'chaser' | 'shooter', x: number, y: number, health?: number) => string;
+      spawnKraken: (x: number, y: number, health?: number) => string;
       setEnemyShootCooldown: (id: string, seconds: number) => void;
       setPlayerPose: (x: number, y: number, rotation?: number) => void;
       advanceTime: (seconds: number) => void;
@@ -60,6 +61,7 @@ export function GameScreen({ config, language, player, onEnd, onQuit }: Props) {
         damagePlayer: (amount) => engine.debugDamagePlayer(amount),
         spawnPickup: (kind) => engine.debugSpawnPickup(kind),
         spawnEnemy: (kind, x, y, health) => engine.debugSpawnEnemy(kind, x, y, health),
+        spawnKraken: (x, y, health) => engine.debugSpawnKraken(x, y, health),
         setEnemyShootCooldown: (id, seconds) => engine.debugSetEnemyShootCooldown(id, seconds),
         setPlayerPose: (x, y, rotation) => engine.debugSetPlayerPose(x, y, rotation),
         advanceTime: (seconds) => engine.debugAdvanceTime(seconds),

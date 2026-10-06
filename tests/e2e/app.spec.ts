@@ -251,6 +251,25 @@ test.describe('application and gameplay', () => {
     expect(after.projectiles.some((shot: any) => shot.owner === 'enemy')).toBeTruthy();
   });
 
+  test('Kraken acts as a neutral third faction and pulls nearby enemy aggro', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'Deterministic Kraken AI assertion.');
+    await startGame(page);
+    const ids = await page.evaluate(() => {
+      const api = (window as any).__CANNON_RIOT_TEST__;
+      api.setPlayerPose(260, 360, 0);
+      const krakenId = api.spawnKraken(900, 360, 180);
+      const shooterId = api.spawnEnemy('shooter', 700, 360, 82);
+      api.setEnemyShootCooldown(shooterId, 0);
+      api.advanceTime(0.25);
+      return { krakenId, shooterId };
+    });
+    expect(ids.krakenId).toBe('arena-kraken');
+    const state = await debugState(page);
+    expect(state.kraken?.alive).toBeTruthy();
+    expect(state.kraken?.targetId).toBe(ids.shooterId);
+    expect(state.projectiles.some((shot: any) => shot.owner === 'enemy' && shot.target === 'kraken')).toBeTruthy();
+  });
+
   test('front shot and broadside use the required projectile counts and cooldowns', async ({ page, isMobile }) => {
     test.skip(isMobile, 'Keyboard weapon assertion.');
     await startGame(page);

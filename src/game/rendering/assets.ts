@@ -2,6 +2,7 @@ export const GAME_ASSETS = {
   player: '/assets/png/default/ships/ship_6.png',
   chaser: '/assets/png/default/ships/ship_16.png',
   shooter: '/assets/png/default/ships/ship_22.png',
+  kraken: '/assets/png/default/enemies/kraken.png',
   cannonBall: '/assets/png/default/ship_parts/cannon_ball.png',
   explosion: '/assets/png/default/effects/explosion_1.png',
   fire: '/assets/png/default/effects/fire_1.png',

@@ -4,6 +4,7 @@ export interface Vec2 { x: number; y: number }
 export interface CircleCollider { x: number; y: number; radius: number }
 export interface Island { x: number; y: number; radius: number; view: Container; colliders: CircleCollider[] }
 export type EnemyKind = 'chaser' | 'shooter';
+export type EnemyTarget = 'player' | 'kraken';
 export type PickupKind = 'medicine' | 'powder' | 'wind' | 'armor';
 
 export interface ShipEntity {
@@ -36,11 +37,22 @@ export interface EnemyEntity extends ShipEntity {
   stuckTime: number;
   lastAiX: number;
   lastAiY: number;
+  targetKraken?: boolean;
+}
+
+export interface KrakenEntity extends ShipEntity {
+  attackCooldown: number;
+  telegraphTime: number;
+  attackX: number;
+  attackY: number;
+  targetId: string | null;
+  bornAt: number;
 }
 
 export interface ProjectileEntity {
   id: string;
   owner: 'player' | 'enemy';
+  target?: EnemyTarget;
   x: number;
   y: number;
   vx: number;

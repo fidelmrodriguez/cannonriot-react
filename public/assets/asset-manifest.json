@@ -5,7 +5,7 @@
     "format": "loose-assets",
     "generatedBy": "repository documentation/assets audit",
     "publicPathBase": "/assets/",
-    "note": "Runtime uses direct asset files. Metadata includes the current optimized react set, including the two chartreuse hull-friction portraits."
+    "note": "Runtime uses direct asset files. Metadata includes the current optimized react set, chartreuse hull-friction portraits, and the neutral-hostile Kraken sprite."
   },
   "assets": [
     {
@@ -123,6 +123,20 @@
         "width": 18,
         "height": 39
       }
+    },
+    {
+      "id": "png.default.enemies.kraken",
+      "path": "/assets/png/default/enemies/kraken.png",
+      "kind": "image",
+      "category": "gameplay/enemy",
+      "origin": "project",
+      "bytes": 211820,
+      "sha256": "d7faa2dc0b03d03b8628896f1f57f0ab6e14913437326cc1df1c4d12e9bb98f1",
+      "dimensions": {
+        "width": 512,
+        "height": 265
+      },
+      "note": "Neutral-hostile arena Kraken sprite; cropped/optimized from the project-generated concept art."
     },
     {
       "id": "png.default.ship_parts.cannon_ball",

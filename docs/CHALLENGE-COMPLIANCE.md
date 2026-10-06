@@ -42,7 +42,7 @@ Required core behavior is implemented:
 - manual + blur/hidden-tab pause with explicit resume;
 - firing, impact, explosion and damaged-hull feedback.
 
-Additional mechanics (dash, pickups, Living Powder auto-fire, powder barrel, emergency support) do not change the required ranking key or point value.
+Additional mechanics (dash, pickups, Living Powder auto-fire, powder barrel, emergency support and Kraken) do not change the required ranking key or point value. The Kraken is an optional third faction and does not replace the required Chaser/Shooter pattern.
 
 ## Current combat extensions
 
@@ -56,7 +56,8 @@ The current repository additionally implements:
 - ≤35% hull emergency Medicine/Armor support with 12 s cooldown;
 - powder barrel with 170 px non-lethal neighbour splash and player self-immunity;
 - asymmetric Shooter hull friction (light player damage, heavier Shooter damage) with persistent friction reactions;
-- visual-only `!` spawn telegraph with no attack delay.
+- visual-only `!` spawn telegraph with no attack delay;
+- neutral-hostile Kraken with dynamic nearest-target selection, telegraphed tentacle AoE, local Shooter/Chaser aggro, one-active cap, two-slot weight and no random despawn.
 
 ## Screens and configuration
 
@@ -149,7 +150,7 @@ Scenario controls are available only with `?dev=1`/`?e2e=1`. **Restore calm seas
 
 ## Automated test status
 
-The current Playwright suite covers the main functional categories plus recent mechanics (weapon lock, Living Powder auto-fire, Shooter friction, infinite Wind dash, scoring dash counter, emergency support and powder-barrel splash). Mobile assertions are aligned to the current steering-arrow UI.
+The current Playwright suite covers the main functional categories plus recent mechanics (weapon lock, Living Powder auto-fire, Shooter friction, infinite Wind dash, scoring dash counter, emergency support, powder-barrel splash and Kraken third-faction targeting). Mobile assertions are aligned to the current steering-arrow UI.
 
 The repository still needs evaluator-generated evidence that cannot honestly be fabricated in documentation:
 

@@ -42,7 +42,7 @@ O comportamento central exigido está implementado:
 - pausa manual e por blur/aba oculta com retomada explícita;
 - feedback de tiro, impacto, explosão e casco danificado.
 
-Mecânicas adicionais (dash, pickups, auto-fire da Pólvora Viva, barril, suporte de emergência) não alteram a chave obrigatória de ranking nem o valor do ponto.
+Mecânicas adicionais (dash, pickups, auto-fire da Pólvora Viva, barril, suporte de emergência e Kraken) não alteram a chave obrigatória de ranking nem o valor do ponto. O Kraken é uma terceira facção opcional e não substitui o padrão obrigatório Chaser/Shooter.
 
 ## Extensões atuais de combate
 
@@ -56,7 +56,8 @@ O repositório atual também implementa:
 - suporte de emergência de Medicina/Armadura com casco ≤35% e cooldown de 12 s;
 - barril com splash de 170 px não letal nos vizinhos e imunidade própria;
 - atrito assimétrico de casco com Shooter (dano leve no jogador e maior no Shooter), com reacts persistentes de atrito;
-- telegraph visual `!` no spawn sem atraso de ataque.
+- telegraph visual `!` no spawn sem atraso de ataque;
+- Kraken hostil neutro com alvo mais próximo dinâmico, ataque de tentáculo em área, aggro local de Shooters/Chasers, limite de um ativo, peso de dois slots e ausência de despawn aleatório.
 
 ## Telas e configuração
 
@@ -149,7 +150,7 @@ Os controles ficam disponíveis somente com `?dev=1`/`?e2e=1`. **Restore calm se
 
 ## Status dos testes automatizados
 
-A suíte Playwright atual cobre as categorias funcionais principais e as mecânicas recentes (lock de armas, auto-fire da Pólvora Viva, atrito com Shooter, dash infinito com Vento, counter pontuável de dash, emergency support e splash do barril). As assertions mobile estão alinhadas à UI atual de setas.
+A suíte Playwright atual cobre as categorias funcionais principais e as mecânicas recentes (lock de armas, auto-fire da Pólvora Viva, atrito com Shooter, dash infinito com Vento, counter pontuável de dash, emergency support, splash do barril e targeting de terceira facção do Kraken). As assertions mobile estão alinhadas à UI atual de setas.
 
 Ainda faltam evidências dependentes do ambiente, que não devem ser inventadas na documentação:
 
