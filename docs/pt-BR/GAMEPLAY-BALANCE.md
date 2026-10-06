@@ -75,31 +75,33 @@ O Shooter recebe propositalmente muito mais dano que o jogador. Assim, raspar po
 
 O atrito possui dois reacts chartreuse dedicados e cinco falas localizadas. Um react permanece visível durante todo o contato e fica por mais **2,2 s** depois que os cascos se separam.
 
-## Evento neutro-hostil do Kraken
+## Evento boss neutro-hostil do Kraken
 
-O Kraken é uma terceira facção da arena, não um boss. Apenas um pode ficar ativo por vez e ele ocupa o equivalente a **2 slots do teto de inimigos ativos** enquanto estiver vivo. Ele não desaparece aleatoriamente; só sai quando é derrotado ou quando a própria partida termina.
+O Kraken agora é tratado como uma **ameaça boss de terceira facção**. Apenas um pode ficar ativo por vez e ele ocupa o equivalente a **3 slots do teto de inimigos ativos** enquanto estiver vivo. Ele não desaparece aleatoriamente; só sai quando é derrotado ou quando a própria partida termina.
 
 Valores base:
 
 | Parâmetro | Valor |
 | --- | ---: |
-| Vida | 260 HP |
+| Vida | 600 HP |
 | Velocidade | 72 px/s |
 | Raio físico | 48 px |
 | Alcance do ataque de tentáculo | 210 px |
-| Telégrafo | 0,55 s |
-| Cooldown do ataque | 2,4 s |
+| Telégrafo por tentáculo | ~0,40 s |
+| Cooldown por tentáculo | 0,82–1,28 s |
+| Intervalo para repetir o mesmo alvo | 0,55–0,85 s |
 | Raio do impacto | 64 px |
-| Máximo de alvos por rajada | 5 |
+| Tentáculos de ataque independentes | 5 |
 | Dano no jogador | 11 |
 | Dano em navios | 18 |
-| Dano da colisão do Chaser no Kraken | 32 |
+| Multiplicador de tiro inimigo contra o Kraken | 55% |
+| Dano da colisão do Chaser no Kraken | 24 |
 
-O Kraken recalcula o **alvo vivo mais próximo a cada tick da simulação**, então pode alternar livremente entre jogador, Shooters e Chasers. Ele se move na direção desse alvo e marca o ponto de impacto antes de cada pancada de tentáculo. A navegação pelas ilhas usa um grid de água A* leve, checagem dos segmentos com o collider inteiro, suavização do caminho e recálculo ao detectar stuck, evitando que a criatura fique presa empurrando um collider. O sprite base não sobe e desce mais: quatro tentáculos procedurais leves, anéis de água animados e um squash/stretch sutil criam sensação de nado sem fazer o Kraken parecer voar. O impacto pode ferir jogador e inimigos normais; a imunidade do dash continua valendo se o golpe cair enquanto o estado temporizado do dash estiver ativo.
+O Kraken recalcula o **alvo vivo mais próximo a cada tick da simulação**, então o corpo pode alternar livremente entre jogador, Shooters e Chasers. O combate agora é deliberadamente assíncrono: cinco slots representam tentáculos independentes, cada um com seu próprio telégrafo e cooldown com seed. Um braço pronto escolhe um alvo visível dentro de **210 px**, fixa o ponto de impacto, avisa por cerca de **0,40 s**, golpeia e recarrega por **0,82–1,28 s** sem depender dos outros braços. Um pequeno intervalo por alvo de **0,55–0,85 s** evita que vários braços livres caiam exatamente juntos sobre a mesma vítima, enquanto jogador e vários navios podem ser atacados ao mesmo tempo e fora de ritmo. A navegação pelas ilhas usa grid de água A* leve, checagem com o collider inteiro, suavização de caminho e recálculo ao detectar stuck. O sprite base não sobe e desce mais: quatro tentáculos procedurais leves, anéis de água animados e squash/stretch sutil criam sensação de nado. A imunidade do dash continua valendo durante o estado temporizado do dash.
 
-Inimigos normais próximos podem redirecionar para o Kraken em vez do jogador. Shooters passam a considerá-lo dentro de aproximadamente **420 px** e Chasers dentro de **330 px**, mas proximidade sozinha não faz todo mundo esquecer o jogador: o Kraken também precisa ser o alvo local mais atraente. A histerese de 80 px impede troca nervosa de alvo. Se um tentáculo realmente causar dano num inimigo normal, esse navio entra numa **retaliação forçada de 5 s** contra o Kraken. Shooters podem ferir o Kraken com tiros. Chasers que colidem fisicamente com ele explodem e causam **32 de dano** ao Kraken, sem dar ponto ao jogador.
+Inimigos normais próximos podem redirecionar para o Kraken em vez do jogador. Shooters passam a considerá-lo dentro de aproximadamente **420 px** e Chasers dentro de **330 px**, mas proximidade sozinha não faz todo mundo esquecer o jogador: o Kraken também precisa ser o alvo local mais atraente. A histerese de 80 px impede troca nervosa de alvo. Se um tentáculo realmente causar dano num inimigo normal, esse navio entra numa **retaliação forçada de 5 s** contra o Kraken. Shooters podem ferir o Kraken com tiros. Bolas de canhão inimigas causam apenas **55%** do dano normal contra o boss. Chasers que colidem fisicamente com ele explodem e causam **24 de dano** ao Kraken, sem dar ponto ao jogador.
 
-O primeiro Kraken fica elegível a partir de **30% da duração da partida**, desde que restem pelo menos 15 s. Continua existindo um limite rígido de **um Kraken ativo por vez**, mas depois que ele é derrotado outro fica elegível após um intervalo determinístico com seed entre **28 e 34 s**. O golpe final causado pelo jogador vale o **+1 ponto** normal; mortes causadas por tiros inimigos ou colisões de Chaser valem zero. A explosão do barril do jogador pode ferir e finalizar o Kraken, mas nunca é uma eliminação garantida. O contato com o Kraken reutiliza os dois reacts de atrito com um roteiro próprio de cinco falas bravas; esse contato não adiciona DPS de raspagem extra, porque a ameaça de contato da criatura continua sendo a rajada de tentáculos. O feedback de dano do Kraken agora é aquático/ciano, sem foguinho de barco, e a morte usa a mesma explosão imediata dos navios em vez da sequência customizada de deterioração/afundamento.
+O primeiro Kraken fica elegível a partir de **30% da duração da partida**, desde que restem pelo menos 6 s. Continua existindo um limite rígido de **um Kraken ativo por vez**, mas depois que ele é derrotado outro fica elegível após um intervalo determinístico com seed entre **7 e 10 s**. O golpe final causado pelo jogador vale o **+1 ponto** normal e abre um react de vitória com um roteiro exclusivo de cinco falas do Kraken; mortes causadas por tiros inimigos ou colisões de Chaser valem zero. A explosão do barril do jogador pode ferir e finalizar o Kraken, mas nunca é uma eliminação garantida. O contato com o Kraken reutiliza os dois reacts de atrito com um roteiro próprio de cinco falas bravas; esse contato não adiciona DPS de raspagem extra, porque a ameaça de contato da criatura continua sendo os golpes independentes dos tentáculos. O feedback de dano do Kraken agora é aquático/ciano, sem foguinho de barco, e a morte usa a mesma explosão imediata dos navios em vez da sequência customizada de deterioração/afundamento.
 
 ## Pickups e suporte de emergência
 

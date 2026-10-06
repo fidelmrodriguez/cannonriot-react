@@ -52,7 +52,7 @@ Available helpers:
 9. front/broadside projectile counts, parallel directions, cooldowns and the 0.25 s weapon-switch lock;
 10. projectile kill scoring exactly once;
 11. normal spawn sequence containing both Chaser and Shooter;
-12. Kraken third-faction spawn/debug hooks, multi-target volley, hybrid aggro/forced retaliation, island routing, Chaser ram damage and scoring ownership;
+12. Kraken third-faction spawn/debug hooks, independent staggered tentacle timers, multi-target pressure, hybrid aggro/forced retaliation, island routing, Chaser ram damage and scoring ownership;
 13. Shooter hull friction damaging both participants asymmetrically;
 14. Chaser collision damage + non-scoring self-destruction;
 15. Wind keeping dash immediately ready while the buff is active;

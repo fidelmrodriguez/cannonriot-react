@@ -318,7 +318,7 @@ test.describe('application and gameplay', () => {
     expect(spawned).toBeTruthy();
     let state = await debugState(page);
     expect(state.kraken).toBeTruthy();
-    expect(state.kraken.health).toBe(260);
+    expect(state.kraken.health).toBe(600);
 
     await page.evaluate(() => {
       const api = (window as any).__CANNON_RIOT_TEST__;
@@ -328,7 +328,7 @@ test.describe('application and gameplay', () => {
     });
     state = await debugState(page);
     expect(state.score).toBe(0);
-    expect(state.kraken.health).toBeLessThan(260);
+    expect(state.kraken.health).toBeLessThan(600);
 
     await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.damageKraken(999, true));
     state = await debugState(page);
@@ -363,7 +363,7 @@ test.describe('application and gameplay', () => {
     expect(shooter.krakenRetaliationTime).toBeGreaterThan(4);
   });
 
-  test('Kraken can telegraph and strike several nearby targets in one volley', async ({ page }) => {
+  test('Kraken tentacles stagger naturally and can pressure several targets independently', async ({ page }) => {
     await startGame(page);
     await page.evaluate(() => {
       const api = (window as any).__CANNON_RIOT_TEST__;
@@ -371,12 +371,12 @@ test.describe('application and gameplay', () => {
       api.spawnKraken(820, 360);
       api.spawnEnemy('shooter', 770, 275, 100);
       api.spawnEnemy('shooter', 900, 420, 100);
-      api.krakenVolley();
+      api.advanceTime(0.30);
     });
     let state = await debugState(page);
-    expect(state.kraken.attackPointCount).toBeGreaterThanOrEqual(3);
+    expect(state.kraken.activeTentacles).toBe(1);
 
-    await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.advanceTime(0.62));
+    await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.advanceTime(0.95));
     state = await debugState(page);
     expect(state.player.health).toBeLessThan(100);
     const debugShooters = state.enemies.filter((enemy: any) => enemy.kind === 'shooter' && enemy.id.startsWith('debug-enemy'));

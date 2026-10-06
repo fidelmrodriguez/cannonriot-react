@@ -41,6 +41,13 @@ export interface EnemyEntity extends ShipEntity {
 }
 
 
+export interface KrakenAttackSlot {
+  cooldown: number;
+  prepRemaining: number;
+  point: Vec2;
+  targetId: string;
+}
+
 export interface KrakenEntity {
   id: string;
   x: number;
@@ -75,6 +82,9 @@ export interface KrakenEntity {
   navPathIndex: number;
   navRepathCooldown: number;
   navTargetId: string;
+  attackSlots: KrakenAttackSlot[];
+  targetAttackCooldowns: Record<string, number>;
+  // Compatibility/debug summary fields derived from attackSlots.
   attackCooldown: number;
   attackPrepRemaining: number;
   attackX: number;

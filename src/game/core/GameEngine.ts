@@ -9,7 +9,7 @@ import { EXTRA_BALANCE } from './config';
 import { GAME_ASSETS } from '../rendering/assets';
 import { getPreloadedAudioUrl } from '../../preload';
 import { isSfxMuted } from '../../audio/preferences';
-import type { CircleCollider, EnemyEntity, Island, KrakenEntity, PickupEntity, PickupKind, PowderBarrelEntity, ProjectileEntity, ShipEntity } from '../types/runtime';
+import type { CircleCollider, EnemyEntity, Island, KrakenAttackSlot, KrakenEntity, PickupEntity, PickupKind, PowderBarrelEntity, ProjectileEntity, ShipEntity } from '../types/runtime';
 import { engineText, gameLines, idleLineGroup } from '../../i18n';
 
 export interface GameSnapshot {
@@ -675,7 +675,14 @@ export class GameEngine {
       navPathIndex: 0,
       navRepathCooldown: 0,
       navTargetId: '',
-      attackCooldown: this.rng.range(0.9, 1.35),
+      attackSlots: Array.from({ length: EXTRA_BALANCE.kraken.maxAttackTargets }, (_, index) => ({
+        cooldown: 0.12 + index * EXTRA_BALANCE.kraken.tentacleInitialStagger + this.rng.range(0, 0.10),
+        prepRemaining: 0,
+        point: { x: position.x, y: position.y },
+        targetId: '',
+      })),
+      targetAttackCooldowns: {},
+      attackCooldown: 0,
       attackPrepRemaining: 0,
       attackX: position.x,
       attackY: position.y,
@@ -895,17 +902,9 @@ export class GameEngine {
   private updateKraken(dt: number): void {
     const kraken = this.kraken;
     if (!kraken?.alive) return;
-    kraken.attackCooldown = Math.max(0, kraken.attackCooldown - dt);
     kraken.orbitFlipCooldown = Math.max(0, kraken.orbitFlipCooldown - dt);
     kraken.navRepathCooldown = Math.max(0, kraken.navRepathCooldown - dt);
-
-    if (kraken.attackPrepRemaining > 0) {
-      const wasPreparing = kraken.attackPrepRemaining;
-      kraken.attackPrepRemaining = Math.max(0, kraken.attackPrepRemaining - dt);
-      this.animateKrakenVisual(kraken, dt, false);
-      if (wasPreparing > 0 && kraken.attackPrepRemaining <= 0) this.resolveKrakenAttack();
-      return;
-    }
+    this.updateKrakenTentacles(dt);
 
     const target = this.nearestKrakenTarget();
     if (!target) {
@@ -916,14 +915,9 @@ export class GameEngine {
     const targetX = target.entity.x;
     const targetY = target.entity.y;
     const attackTargets = this.krakenAttackTargetsInRange();
-    if (attackTargets.length > 0 && kraken.attackCooldown <= 0) {
-      this.beginKrakenAttack(attackTargets.map(({ entity }) => ({ x: entity.x, y: entity.y })));
-      this.animateKrakenVisual(kraken, dt, false);
-      return;
-    }
     if (attackTargets.length > 0) {
-      // Once prey is inside tentacle reach, the Kraken holds the water instead of
-      // trying to overlap hulls while the next multi-tentacle volley reloads.
+      // Tentacles reload independently. The body holds its ground while at least one
+      // target is in reach, but each arm can telegraph and strike on its own rhythm.
       this.animateKrakenVisual(kraken, dt, false);
       return;
     }
@@ -1057,95 +1051,156 @@ export class GameEngine {
     candidates.sort((a, b) =>
       distSq(kraken.x, kraken.y, a.entity.x, a.entity.y)
       - distSq(kraken.x, kraken.y, b.entity.x, b.entity.y));
-    return candidates.slice(0, EXTRA_BALANCE.kraken.maxAttackTargets);
+    return candidates;
   }
 
-  private beginKrakenAttack(points: Array<{ x: number; y: number }>): void {
-    const kraken = this.kraken;
-    if (!kraken?.alive || points.length === 0) return;
-    kraken.attackPoints = points
-      .slice(0, EXTRA_BALANCE.kraken.maxAttackTargets)
-      .map((point) => ({ x: clamp(point.x, 40, WORLD_W - 40), y: clamp(point.y, 40, WORLD_H - 40) }));
-    kraken.attackX = kraken.attackPoints[0]!.x;
-    kraken.attackY = kraken.attackPoints[0]!.y;
-    kraken.attackPrepRemaining = EXTRA_BALANCE.kraken.attackPrepSeconds;
-
-    for (const point of kraken.attackPoints) {
-      const ring = new Graphics()
-        .circle(0, 0, EXTRA_BALANCE.kraken.impactRadius)
-        .fill({ color: 0xff5b65, alpha: 0.08 })
-        .stroke({ color: 0xff666f, width: 6, alpha: 0.88 });
-      ring.position.set(point.x, point.y);
-      this.fx.addChild(ring);
-      let life = EXTRA_BALANCE.kraken.attackPrepSeconds;
-      const total = life;
-      const update = (ticker: { deltaMS: number }) => {
-        life -= ticker.deltaMS / 1000;
-        const p = clamp(1 - life / total, 0, 1);
-        const pulse = 0.92 + Math.sin(p * Math.PI * 7) * 0.07;
-        ring.scale.set(pulse);
-        ring.alpha = Math.max(0, life / total) * 0.88;
-        if (life <= 0) {
-          this.app.ticker.remove(update);
-          ring.destroy();
-        }
-      };
-      this.app.ticker.add(update);
-    }
-  }
-
-  private resolveKrakenAttack(): void {
+  private updateKrakenTentacles(dt: number): void {
     const kraken = this.kraken;
     if (!kraken?.alive) return;
-    kraken.attackCooldown = EXTRA_BALANCE.kraken.attackCooldownSeconds;
-    const points = kraken.attackPoints.length > 0
-      ? [...kraken.attackPoints]
-      : [{ x: kraken.attackX, y: kraken.attackY }];
-    kraken.attackPoints = [];
+    const candidates = this.krakenAttackTargetsInRange();
+    for (const targetId of Object.keys(kraken.targetAttackCooldowns)) {
+      kraken.targetAttackCooldowns[targetId] = Math.max(0, kraken.targetAttackCooldowns[targetId]! - dt);
+      if (kraken.targetAttackCooldowns[targetId] <= 0) delete kraken.targetAttackCooldowns[targetId];
+    }
+    const engagedTargets = new Set(
+      kraken.attackSlots
+        .filter((slot) => slot.prepRemaining > 0 && slot.targetId)
+        .map((slot) => slot.targetId),
+    );
+
+    for (const [index, slot] of kraken.attackSlots.entries()) {
+      slot.cooldown = Math.max(0, slot.cooldown - dt);
+      if (slot.prepRemaining > 0) {
+        const wasPreparing = slot.prepRemaining;
+        slot.prepRemaining = Math.max(0, slot.prepRemaining - dt);
+        if (wasPreparing > 0 && slot.prepRemaining <= 0) this.resolveKrakenTentacleAttack(slot, index);
+        continue;
+      }
+      if (slot.cooldown > 0 || candidates.length === 0) continue;
+
+      // A target owns its own rhythm: while one arm is already telegraphing that victim
+      // (or its short repeat gate is active), another arm must pick somebody else or wait.
+      // This lets five arms fight five different ships without collapsing into one volley.
+      const readyTargets = candidates.filter((candidate) =>
+        !engagedTargets.has(candidate.entity.id)
+        && (kraken.targetAttackCooldowns[candidate.entity.id] ?? 0) <= 0);
+      if (readyTargets.length === 0) continue;
+      const shortlist = readyTargets.slice(0, Math.min(readyTargets.length, 3));
+      const target = this.rng.pick(shortlist);
+      this.beginKrakenTentacleAttack(slot, target.entity.x, target.entity.y, target.entity.id);
+      engagedTargets.add(target.entity.id);
+    }
+    this.syncKrakenAttackSummary(kraken);
+  }
+
+  private beginKrakenTentacleAttack(slot: KrakenAttackSlot, x: number, y: number, targetId: string): void {
+    const kraken = this.kraken;
+    if (!kraken?.alive) return;
+    slot.point = { x: clamp(x, 40, WORLD_W - 40), y: clamp(y, 40, WORLD_H - 40) };
+    slot.targetId = targetId;
+    slot.prepRemaining = EXTRA_BALANCE.kraken.attackPrepSeconds * this.rng.range(0.88, 1.12);
+    const ring = new Graphics()
+      .circle(0, 0, EXTRA_BALANCE.kraken.impactRadius)
+      .fill({ color: 0xff5b65, alpha: 0.08 })
+      .stroke({ color: 0xff666f, width: 6, alpha: 0.88 });
+    ring.position.set(slot.point.x, slot.point.y);
+    this.fx.addChild(ring);
+    let life = slot.prepRemaining;
+    const total = Math.max(0.001, life);
+    const update = (ticker: { deltaMS: number }) => {
+      life -= ticker.deltaMS / 1000;
+      const p = clamp(1 - life / total, 0, 1);
+      const pulse = 0.92 + Math.sin(p * Math.PI * 7) * 0.07;
+      ring.scale.set(pulse);
+      ring.alpha = Math.max(0, life / total) * 0.88;
+      if (life <= 0 || !this.kraken?.alive) {
+        this.app.ticker.remove(update);
+        ring.destroy();
+      }
+    };
+    this.app.ticker.add(update);
+  }
+
+  private resolveKrakenTentacleAttack(slot: KrakenAttackSlot, tentacleIndex: number): void {
+    const kraken = this.kraken;
+    if (!kraken?.alive) return;
+    const point = { ...slot.point };
+    const targetId = slot.targetId;
+    slot.targetId = '';
+    slot.cooldown = this.rng.range(EXTRA_BALANCE.kraken.tentacleCooldownMin, EXTRA_BALANCE.kraken.tentacleCooldownMax);
+    if (targetId && !targetId.startsWith('debug-')) {
+      kraken.targetAttackCooldowns[targetId] = this.rng.range(
+        EXTRA_BALANCE.kraken.targetRepeatCooldownMin,
+        EXTRA_BALANCE.kraken.targetRepeatCooldownMax,
+      );
+    }
     const radius = EXTRA_BALANCE.kraken.impactRadius;
 
-    for (const [index, point] of points.entries()) {
-      const tentacle = new Graphics()
-        .roundRect(-11, -58, 22, 76, 11)
-        .fill(0x243a78)
-        .stroke({ color: 0xff7182, width: 5 });
-      tentacle.position.set(point.x, point.y + 16);
-      tentacle.rotation = -0.18 + (index % 3) * 0.16;
-      const splash = new Graphics()
-        .ellipse(0, 0, radius * 1.35, radius * 0.72)
-        .stroke({ color: 0x8fffff, width: 7, alpha: 0.86 });
-      splash.position.set(point.x, point.y);
-      this.fx.addChild(splash, tentacle);
-      let life = 0.42;
-      const update = (ticker: { deltaMS: number }) => {
-        life -= ticker.deltaMS / 1000;
-        const p = clamp(1 - life / 0.42, 0, 1);
-        tentacle.y = point.y + 34 - Math.sin(p * Math.PI) * 48;
-        tentacle.alpha = Math.max(0, life / 0.42);
-        splash.scale.set(0.55 + p * 0.75);
-        splash.alpha = Math.max(0, life / 0.42) * 0.86;
-        if (life <= 0) {
-          this.app.ticker.remove(update);
-          tentacle.destroy(); splash.destroy();
-        }
-      };
-      this.app.ticker.add(update);
-    }
-    this.shake(Math.min(8, 4 + points.length), 0.14);
+    const tentacle = new Graphics()
+      .roundRect(-11, -58, 22, 76, 11)
+      .fill(0x243a78)
+      .stroke({ color: 0xff7182, width: 5 });
+    tentacle.position.set(point.x, point.y + 16);
+    tentacle.rotation = -0.22 + (tentacleIndex % 5) * 0.11;
+    const splash = new Graphics()
+      .ellipse(0, 0, radius * 1.35, radius * 0.72)
+      .stroke({ color: 0x8fffff, width: 7, alpha: 0.86 });
+    splash.position.set(point.x, point.y);
+    this.fx.addChild(splash, tentacle);
+    let life = 0.38;
+    const update = (ticker: { deltaMS: number }) => {
+      life -= ticker.deltaMS / 1000;
+      const p = clamp(1 - life / 0.38, 0, 1);
+      tentacle.y = point.y + 34 - Math.sin(p * Math.PI) * 48;
+      tentacle.alpha = Math.max(0, life / 0.38);
+      splash.scale.set(0.55 + p * 0.75);
+      splash.alpha = Math.max(0, life / 0.38) * 0.86;
+      if (life <= 0) {
+        this.app.ticker.remove(update);
+        tentacle.destroy(); splash.destroy();
+      }
+    };
+    this.app.ticker.add(update);
+    this.shake(4.5, 0.11);
 
-    const playerHit = this.player.alive && points.some((point) =>
-      distSq(point.x, point.y, this.player.x, this.player.y) <= (radius + this.player.radius) ** 2);
-    if (playerHit) this.damageShip(this.player, EXTRA_BALANCE.kraken.playerDamage);
+    if (this.player.alive
+      && distSq(point.x, point.y, this.player.x, this.player.y) <= (radius + this.player.radius) ** 2) {
+      this.damageShip(this.player, EXTRA_BALANCE.kraken.playerDamage);
+    }
 
     for (const enemy of [...this.enemies]) {
       if (!enemy.alive) continue;
-      const hit = points.some((point) =>
-        distSq(point.x, point.y, enemy.x, enemy.y) <= (radius + enemy.radius) ** 2);
-      if (!hit) continue;
+      if (distSq(point.x, point.y, enemy.x, enemy.y) > (radius + enemy.radius) ** 2) continue;
       enemy.krakenRetaliationTime = EXTRA_BALANCE.kraken.retaliationSeconds;
       enemy.targetingKraken = true;
       this.damageShip(enemy, EXTRA_BALANCE.kraken.enemyDamage, { awardEnemyKill: false });
     }
+    this.syncKrakenAttackSummary(kraken);
+  }
+
+  private syncKrakenAttackSummary(kraken: KrakenEntity): void {
+    const active = kraken.attackSlots.filter((slot) => slot.prepRemaining > 0);
+    kraken.attackPoints = active.map((slot) => ({ ...slot.point }));
+    kraken.attackPrepRemaining = active.length > 0 ? Math.min(...active.map((slot) => slot.prepRemaining)) : 0;
+    kraken.attackCooldown = kraken.attackSlots.length > 0 ? Math.min(...kraken.attackSlots.map((slot) => slot.cooldown)) : 0;
+    const first = active[0];
+    if (first) {
+      kraken.attackX = first.point.x;
+      kraken.attackY = first.point.y;
+    }
+  }
+
+  // Debug compatibility: immediately telegraph explicit points using separate arms.
+  private beginKrakenAttack(points: Array<{ x: number; y: number }>): void {
+    const kraken = this.kraken;
+    if (!kraken?.alive || points.length === 0) return;
+    const count = Math.min(points.length, kraken.attackSlots.length);
+    for (let index = 0; index < count; index++) {
+      const slot = kraken.attackSlots[index]!;
+      slot.cooldown = 0;
+      this.beginKrakenTentacleAttack(slot, points[index]!.x, points[index]!.y, `debug-${index}`);
+    }
+    this.syncKrakenAttackSummary(kraken);
   }
 
   private damageKraken(amount: number, awardPointOnDefeat: boolean): void {
@@ -1175,7 +1230,7 @@ export class GameEngine {
       this.showComicPanel('victory', {
         value: 1,
         streak: this.streak,
-        line: this.uiRng.pick(gameLines('victoryGeneric')),
+        line: this.uiRng.pick(gameLines('victoryKraken')),
       });
       this.maybeDropPickup(kraken.x, kraken.y);
     }
@@ -1193,8 +1248,8 @@ export class GameEngine {
     const kraken = this.kraken;
     if (!kraken) return;
     const pct = kraken.health / kraken.maxHealth;
-    kraken.healthBack.clear().roundRect(-59, -72, 118, 11, 5).fill({ color: 0x071b36, alpha: 0.95 });
-    kraken.healthFill.clear().roundRect(-57, -70, 114 * pct, 7, 3).fill(pct > 0.5 ? 0xffd84d : pct > 0.25 ? 0xff8c65 : 0xff4e68);
+    kraken.healthBack.clear().roundRect(-79, -74, 158, 12, 6).fill({ color: 0x071b36, alpha: 0.96 });
+    kraken.healthFill.clear().roundRect(-77, -72, 154 * pct, 8, 4).fill(pct > 0.5 ? 0xffd84d : pct > 0.25 ? 0xff8c65 : 0xff4e68);
   }
 
   private enemyTarget(enemy: EnemyEntity): ShipEntity | KrakenEntity {
@@ -1852,7 +1907,7 @@ export class GameEngine {
     this.showFrictionComicPanel(touchingKraken ? 'kraken' : 'ship');
 
     // Existing ship-on-ship friction remains a damage mechanic. Kraken contact uses the
-    // same angry react language, while its tentacle volley remains the actual damage threat.
+    // same angry react language, while its independent tentacle strikes remain the actual damage threat.
     if (touchingShooters.length === 0) return;
     const playerDamage = EXTRA_BALANCE.shipFriction.playerDamagePerSecond * dt;
     const shooterDamage = EXTRA_BALANCE.shipFriction.shooterDamagePerSecond * dt;
@@ -1908,7 +1963,7 @@ export class GameEngine {
             && distSq(projectile.x, projectile.y, this.kraken.x, this.kraken.y) < (projectile.radius + this.kraken.radius) ** 2) {
             this.playProjectileHitSound();
             this.spawnSparkBurst(projectile.x, projectile.y, 0xff7dc8, 5);
-            this.damageKraken(projectile.damage, false);
+            this.damageKraken(projectile.damage * EXTRA_BALANCE.kraken.npcProjectileDamageMultiplier, false);
             this.removeProjectile(projectile);
           } else if (this.player.alive && distSq(projectile.x, projectile.y, this.player.x, this.player.y) < (projectile.radius + this.player.radius) ** 2) {
             this.playProjectileHitSound();
@@ -3279,7 +3334,7 @@ export class GameEngine {
     paused: boolean;
     player: { x: number; y: number; health: number; rotation: number };
     enemies: { id: string; kind: 'chaser' | 'shooter'; x: number; y: number; health: number; stuckTime: number; targetingKraken: boolean; krakenRetaliationTime: number }[];
-    kraken?: { x: number; y: number; health: number; maxHealth: number; attackCooldown: number; attackPrepRemaining: number; attackPointCount: number; stuckTime: number; swimIntensity: number };
+    kraken?: { x: number; y: number; health: number; maxHealth: number; attackCooldown: number; attackPrepRemaining: number; attackPointCount: number; activeTentacles: number; tentacleCooldowns: number[]; stuckTime: number; swimIntensity: number };
     projectiles: { owner: 'player' | 'enemy'; x: number; y: number; vx: number; vy: number; damage: number }[];
     pickups: { kind: PickupKind; x: number; y: number; lifetime: number }[];
     barrels: { x: number; y: number; armTime: number; lifetime: number }[];
@@ -3314,6 +3369,8 @@ export class GameEngine {
         attackCooldown: this.kraken.attackCooldown,
         attackPrepRemaining: this.kraken.attackPrepRemaining,
         attackPointCount: this.kraken.attackPoints.length,
+        activeTentacles: this.kraken.attackSlots.filter((slot) => slot.prepRemaining > 0).length,
+        tentacleCooldowns: this.kraken.attackSlots.map((slot) => slot.cooldown),
         stuckTime: this.kraken.stuckTime,
         swimIntensity: this.kraken.swimIntensity,
       } : undefined,
@@ -3359,18 +3416,19 @@ export class GameEngine {
 
   debugKrakenAttackAt(x: number, y: number): void {
     if (!this.kraken?.alive || !Number.isFinite(x) || !Number.isFinite(y)) return;
-    this.kraken.attackCooldown = 0;
-    this.kraken.attackPrepRemaining = 0;
-    this.beginKrakenAttack([{ x, y }]);
+    const slot = this.kraken.attackSlots[0];
+    if (!slot) return;
+    slot.cooldown = 0;
+    slot.prepRemaining = 0;
+    this.beginKrakenTentacleAttack(slot, x, y, 'debug-point');
+    this.syncKrakenAttackSummary(this.kraken);
   }
 
   debugKrakenVolley(): void {
     if (!this.kraken?.alive) return;
     const targets = this.krakenAttackTargetsInRange();
     if (targets.length === 0) return;
-    this.kraken.attackCooldown = 0;
-    this.kraken.attackPrepRemaining = 0;
-    this.beginKrakenAttack(targets.map(({ entity }) => ({ x: entity.x, y: entity.y })));
+    this.beginKrakenAttack(targets.slice(0, this.kraken.attackSlots.length).map(({ entity }) => ({ x: entity.x, y: entity.y })));
   }
 
   debugSpawnEnemy(kind: 'chaser' | 'shooter', x: number, y: number, health?: number): string {

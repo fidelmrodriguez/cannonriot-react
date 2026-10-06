@@ -75,31 +75,33 @@ The Shooter intentionally takes much more damage than the player. Scraping can t
 
 Friction has two dedicated chartreuse reaction portraits and five localized lines. One reaction stays visible for the full contact and lingers for **2.2 s** after the hulls separate.
 
-## Kraken neutral-hostile event
+## Kraken neutral-hostile boss event
 
-The Kraken is a third-faction arena threat, not a boss. Only one can be active at a time and it occupies the equivalent of **2 active-enemy slots** while alive. It never despawns randomly; it leaves only when defeated or when the match itself ends.
+The Kraken is now treated as a **boss-class third-faction arena threat**. Only one can be active at a time and it occupies the equivalent of **3 active-enemy slots** while alive. It never despawns randomly; it leaves only when defeated or when the match itself ends.
 
 Base values:
 
 | Parameter | Value |
 | --- | ---: |
-| Health | 260 HP |
+| Health | 600 HP |
 | Move speed | 72 px/s |
 | Physical radius | 48 px |
 | Tentacle attack range | 210 px |
-| Telegraph | 0.55 s |
-| Attack cooldown | 2.4 s |
+| Telegraph per tentacle | ~0.40 s |
+| Cooldown per tentacle | 0.82–1.28 s |
+| Same-target repeat gate | 0.55–0.85 s |
 | Impact radius | 64 px |
-| Max targets per volley | 5 |
+| Independent attack tentacles | 5 |
 | Damage to player | 11 |
 | Damage to ships | 18 |
-| Chaser ram damage to Kraken | 32 |
+| Enemy projectile multiplier vs Kraken | 55% |
+| Chaser ram damage to Kraken | 24 |
 
-The Kraken recalculates the **nearest living target every simulation tick**, so it can swap freely between the player, Shooters and Chasers. It moves toward that target, but when several visible targets are inside **210 px** it can raise up to **five tentacles in the same volley**, telegraphing one fixed impact point per target for 0.55 s. Player and enemies can therefore be threatened at the same time. A target can only take the Kraken damage once per volley even when telegraphs overlap. Island navigation uses a lightweight coarse A* water grid, full-collider segment checks, path smoothing and stuck-triggered replanning so the creature swims around land instead of pinning itself against a collider. Its base sprite no longer bobs vertically; four lightweight procedural tentacles, animated water rings and subtle squash/stretch provide the swimming motion. Player dash immunity still applies while the timed dash state is active.
+The Kraken recalculates the **nearest living target every simulation tick**, so its body can swap freely between the player, Shooters and Chasers. Combat is intentionally asynchronous: five attack slots represent independent tentacles, each with its own telegraph and seeded cooldown. A ready arm chooses a visible target inside **210 px**, fixes the impact point, warns for roughly **0.40 s**, strikes, and then reloads for **0.82–1.28 s** independently of the other arms. A small per-target repeat gate of **0.55–0.85 s** keeps multiple free arms from landing on exactly the same victim at once, while different ships — including the player — can be attacked concurrently and out of rhythm. Island navigation uses a lightweight coarse A* water grid, full-collider segment checks, path smoothing and stuck-triggered replanning so the creature swims around land instead of pinning itself against a collider. Its base sprite no longer bobs vertically; four lightweight procedural tentacles, animated water rings and subtle squash/stretch provide the swimming motion. Player dash immunity still applies while the timed dash state is active.
 
-Nearby normal enemies may redirect toward the Kraken instead of the player. Shooters consider it inside roughly **420 px** and Chasers inside roughly **330 px**, but proximity alone does not make every ship forget the player: the Kraken must also be the more attractive nearby target. The 80 px hysteresis margin prevents rapid target flicker. If a tentacle actually damages a normal enemy, that ship receives a **5 s forced retaliation** window against the Kraken. Shooters can damage the Kraken with cannon fire. Chasers that physically ram it explode and deal **32 damage** to the Kraken, awarding no player point.
+Nearby normal enemies may redirect toward the Kraken instead of the player. Shooters consider it inside roughly **420 px** and Chasers inside roughly **330 px**, but proximity alone does not make every ship forget the player: the Kraken must also be the more attractive nearby target. The 80 px hysteresis margin prevents rapid target flicker. If a tentacle actually damages a normal enemy, that ship receives a **5 s forced retaliation** window against the Kraken. Shooters can damage the Kraken with cannon fire. Enemy cannonballs deal only **55%** of their normal damage to the boss. Chasers that physically ram it explode and deal **24 damage** to the Kraken, awarding no player point.
 
-The first Kraken becomes eligible at **30% of match duration** if at least 15 s remain. There is still a strict maximum of **one active Kraken**, but after it is defeated another becomes eligible after a deterministic seeded delay between **28 and 34 s**. A player-delivered final hit awards the normal **+1 point**; kills caused by enemy fire or Chaser rams award zero. The player's powder-barrel blast can damage and finish the Kraken, but it is never a guaranteed one-shot. Kraken contact reuses the two friction portraits with a separate five-line angry script; the contact itself is not extra friction DPS, because the creature's tentacle volley is the intended contact threat. Kraken hit feedback is watery/cyan rather than a ship-style flame, and defeat now uses the same immediate explosion language as the normal boats instead of a custom deterioration/sinking sequence.
+The first Kraken becomes eligible at **30% of match duration** if at least 6 s remain. There is a strict maximum of **one active Kraken**, but after it is defeated another becomes eligible after a deterministic seeded delay between **7 and 10 s**. A player-delivered final hit awards the normal **+1 point** and opens a victory portrait with a Kraken-specific five-line script; kills caused by enemy fire or Chaser rams award zero. The player's powder-barrel blast can damage and finish the Kraken, but it is never a guaranteed one-shot. Kraken contact reuses the two friction portraits with a separate five-line angry script; the contact itself is not extra friction DPS, because the creature's independent tentacle strikes are the intended contact threat. Kraken hit feedback is watery/cyan rather than a ship-style flame, and defeat now uses the same immediate explosion language as the normal boats instead of a custom deterioration/sinking sequence.
 
 ## Pickups and emergency support
 

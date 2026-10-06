@@ -740,6 +740,7 @@ export type GameLineGroup =
   | 'victoryShooter'
   | 'victoryGeneric'
   | 'victoryDash'
+  | 'victoryKraken'
   | 'friction'
   | 'frictionKraken';
 
@@ -761,6 +762,7 @@ const lineGroups: Record<Language, Record<GameLineGroup, string[]>> = {
     victoryShooter: ['SHUT THAT CANNON UP!!', 'NO MORE SHOTS FOR YOU!!', 'SHOOTER DOWN!!', 'SO MUCH FOR YOUR AIM!!'],
     victoryGeneric: ['TAKE THAT!!', 'SANK BEAUTIFULLY!!', 'THAT\'S IT, PIRATE!!', 'SEND THE NEXT ONE!!'],
     victoryDash: ['OUT OF MY WAKE!!', 'WRONG SHIP TO RAM!!', 'DASHED YOU CLEAN!!', 'PIRATE EXPRESS!!', 'SHOULDA MOVED!!'],
+    victoryKraken: ['BACK TO THE ABYSS, BIG GUY!!', 'KRAKEN DOWN!! I DID THAT!!', 'WHO IS THE SNACK NOW?!', 'TOO MANY TENTACLES, NOT ENOUGH LUCK!!', 'THE SEA IS MINE, EIGHT-ARMS!!'],
     friction: ['HEY! OFF MY HULL!!', 'GO SCRATCH YOUR OWN SHIP!!', 'BACK OFF MY PAINT!!', 'THIS IS NOT A DOCK!!', 'GET YOUR HULL OFF MINE!!'],
     frictionKraken: ['GET OFF MY HULL, KRAKEN!!', 'KEEP THOSE TENTACLES OFF MY SHIP!!', 'MY SHIP IS NOT A SNACK!!', 'LET GO OF THE HULL, MONSTER!!', 'GO HUG ANOTHER SHIP!!'],
   },
@@ -781,6 +783,7 @@ const lineGroups: Record<Language, Record<GameLineGroup, string[]>> = {
     victoryShooter: ['CALA ESSE CANHÃO!!', 'SEM TIRO AGORA!!', 'SHOOTER AO FUNDO!!', 'MIRA NADA!!'],
     victoryGeneric: ['TOMA ESSA!!', 'AFUNDOU BONITO!!', 'BOA, PIRATA!!', 'CHAMA O PRÓXIMO!!'],
     victoryDash: ['SAI DA MINHA ESTEIRA!!', 'FOI BATER NO NAVIO ERRADO!!', 'DASH NA CARA!!', 'EXPRESSO PIRATA!!', 'ERA MELHOR TER SAÍDO!!'],
+    victoryKraken: ['VOLTA PRO ABISMO, MONSTRÃO!!', 'KRAKEN NO FUNDO!! FUI EU!!', 'QUEM É O PETISCO AGORA?!', 'TENTÁCULO DEMAIS, SORTE DE MENOS!!', 'O MAR É MEU, OITO-BRAÇOS!!'],
     friction: ['EI! LARGA DO MEU CASCO!!', 'VAI RASPAR OUTRO NAVIO!!', 'TIRA ESSE CASCO DA MINHA TINTA!!', 'ISSO AQUI NÃO É PORTO!!', 'DESENCOSTA DO MEU NAVIO!!'],
     frictionKraken: ['SAI DO MEU CASCO, KRAKEN!!', 'TIRA ESSES TENTÁCULOS DAQUI!!', 'MEU NAVIO NÃO É PETISCO!!', 'SOLTA O CASCO, MONSTRO!!', 'VAI ABRAÇAR OUTRO NAVIO!!'],
   },
@@ -801,6 +804,7 @@ const lineGroups: Record<Language, Record<GameLineGroup, string[]>> = {
     victoryShooter: ['¡CALLA ESE CAÑÓN!!', '¡SE ACABARON TUS DISPAROS!!', '¡SHOOTER HUNDIDO!!', '¡Y ESA PUNTERÍA QUÉ!!'],
     victoryGeneric: ['¡TOMA ESA!!', '¡SE HUNDIÓ BONITO!!', '¡ASÍ SE HACE, PIRATA!!', '¡QUE VENGA EL SIGUIENTE!!'],
     victoryDash: ['¡FUERA DE MI ESTELA!!', '¡EMBESTISTE AL BARCO EQUIVOCADO!!', '¡DASH EN LA CARA!!', '¡EXPRESO PIRATA!!', '¡DEBISTE APARTARTE!!'],
+    victoryKraken: ['¡VUELVE AL ABISMO, MONSTRUO!!', '¡KRAKEN AL FONDO!! ¡FUI YO!!', '¿QUIÉN ES LA COMIDA AHORA?!', '¡DEMASIADOS TENTÁCULOS, MUY POCA SUERTE!!', '¡EL MAR ES MÍO, OCHO BRAZOS!!'],
     friction: ['¡EH, SUELTA MI CASCO!!', '¡VE A RASPAR OTRO BARCO!!', '¡ALÉJATE DE MI PINTURA!!', '¡ESTO NO ES UN MUELLE!!', '¡SEPARA TU CASCO DEL MÍO!!'],
     frictionKraken: ['¡SUELTA MI CASCO, KRAKEN!!', '¡QUITA ESOS TENTÁCULOS DE AQUÍ!!', '¡MI BARCO NO ES COMIDA!!', '¡SUELTA EL CASCO, MONSTRUO!!', '¡VE A ABRAZAR OTRO BARCO!!'],
   },
