@@ -450,6 +450,25 @@ test.describe('application and gameplay', () => {
     expect(shooterBefore.health - shooterAfter.health).toBeGreaterThan(before.player.health - after.player.health);
   });
 
+
+  test('Kraken hull friction damages both player and Kraken with boss-safe DPS', async ({ page }) => {
+    await startGame(page);
+    const spawned = await page.evaluate(() => {
+      const api = (window as any).__CANNON_RIOT_TEST__;
+      api.setPlayerPose(640, 360, 0);
+      return api.spawnKraken(712, 360);
+    });
+    expect(spawned).toBeTruthy();
+    const before = await debugState(page);
+    await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.advanceTime(0.20));
+    const after = await debugState(page);
+    expect(after.player.health).toBeLessThan(before.player.health);
+    expect(after.kraken).toBeTruthy();
+    expect(after.kraken.health).toBeLessThan(before.kraken.health);
+    expect(before.kraken.health - after.kraken.health).toBeGreaterThan(before.player.health - after.player.health);
+    expect(before.player.health - after.player.health).toBeLessThan(2);
+  });
+
   test('Wind keeps dash immediately ready until the buff expires', async ({ page }) => {
     await startGame(page);
     await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.spawnPickup('wind'));

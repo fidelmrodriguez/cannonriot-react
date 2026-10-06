@@ -40,6 +40,7 @@ export const EXTRA_BALANCE = {
     contactPadding: 6,
     playerDamagePerSecond: 4.5,
     shooterDamagePerSecond: 26,
+    krakenDamagePerSecond: 18,
     reactLingerSeconds: 2.2,
   },
   kraken: {

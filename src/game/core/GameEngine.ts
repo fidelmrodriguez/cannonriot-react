@@ -1318,7 +1318,7 @@ export class GameEngine {
     this.updateProjectiles(dt);
     this.updateKraken(dt);
     this.updateEnemies(dt);
-    this.updateShooterFriction(dt);
+    this.updateHullFriction(dt);
     this.animateShipDamageFx(this.player);
     for (const enemy of this.enemies) if (enemy.alive) this.animateShipDamageFx(enemy);
     this.updatePowderBarrels(dt);
@@ -1877,7 +1877,7 @@ export class GameEngine {
     }
   }
 
-  private updateShooterFriction(dt: number): void {
+  private updateHullFriction(dt: number): void {
     if (!this.player.alive) {
       this.frictionActive = false;
       return;
@@ -1906,14 +1906,20 @@ export class GameEngine {
     }
     this.showFrictionComicPanel(touchingKraken ? 'kraken' : 'ship');
 
-    // Existing ship-on-ship friction remains a damage mechanic. Kraken contact uses the
-    // same angry react language, while its independent tentacle strikes remain the actual damage threat.
-    if (touchingShooters.length === 0) return;
+    // Sustained hull grinding hurts both sides. The player keeps the same low contact DPS,
+    // while Shooters take heavy friction damage and the tougher Kraken takes a lower boss-safe DPS.
+    // Friction is player-caused offense, so finishing the Kraken this way owns the normal +1/victory react.
     const playerDamage = EXTRA_BALANCE.shipFriction.playerDamagePerSecond * dt;
-    const shooterDamage = EXTRA_BALANCE.shipFriction.shooterDamagePerSecond * dt;
     this.damageShip(this.player, playerDamage, { showReact: false, showImpact: false, showLabel: false });
+
+    const shooterDamage = EXTRA_BALANCE.shipFriction.shooterDamagePerSecond * dt;
     for (const enemy of touchingShooters) {
       if (enemy.alive) this.damageShip(enemy, shooterDamage, { showReact: false, showImpact: false, showLabel: false });
+    }
+
+    if (touchingKraken && this.kraken?.alive) {
+      const krakenDamage = EXTRA_BALANCE.shipFriction.krakenDamagePerSecond * dt;
+      this.damageKraken(krakenDamage, true);
     }
   }
 
@@ -2078,7 +2084,7 @@ export class GameEngine {
         return true;
       }
 
-      // Ship hulls remain solid here. Shooter/player friction damage is resolved once per tick in updateShooterFriction().
+      // Ship hulls remain solid here. Shooter/player friction damage is resolved once per tick in updateHullFriction().
       return false;
     }
 

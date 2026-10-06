@@ -53,7 +53,7 @@ Helpers disponíveis:
 10. kill por projétil pontuando uma vez;
 11. sequência normal de spawn contendo Chaser e Shooter;
 12. hooks de spawn/debug do Kraken como terceira facção, timers independentes e desencontrados dos tentáculos, pressão multi-alvo, aggro híbrido/retaliação forçada, navegação ao redor de ilhas, dano de ram do Chaser e ownership de pontuação;
-13. atrito com casco do Shooter causando dano assimétrico nos dois participantes;
+13. atrito de casco com Shooter e Kraken causando dano assimétrico nos dois participantes, incluindo kill do Kraken por atrito com autoria do jogador;
 14. dano de colisão + autodestruição sem ponto do Chaser;
 15. Vento a Favor mantendo o dash imediatamente pronto enquanto o buff está ativo;
 16. Pólvora Viva disparando frontal + duas laterais automaticamente e parando ao expirar;
