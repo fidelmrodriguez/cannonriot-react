@@ -17,11 +17,11 @@
 ### Assets específicos do projeto
 
 - wallpapers de menu e resultado (`1672×941`);
+- sprite de gameplay do Kraken neutro-hostil (`512×265`, PNG transparente em `png/default/enemies/kraken.png`);
 - cinco portraits de dano e cinco de vitória (`640×640`, `react-damage-*` / `react-victory-*`);
 - dois portraits de atrito de casco (`640×640`, `react-friction-01.png` / `react-friction-02.png`) na cor chartreuse dedicada à mecânica;
 - dez portraits idle otimizados (`724×543`, `react-idle-*`);
 - seis portraits de mecânica otimizados (`640×640`, `react-mechanic-*`);
-- sprite otimizado do Kraken (`512×265`, `png/default/enemies/kraken.png`) com transparência para composição direta no Pixi;
 - SVGs das bandeiras EUA/Brasil/Espanha para idioma;
 - SFX de hit, colisão, pickup, dash e reação idle;
 - músicas de menu/resultado e sete faixas de batalha.

@@ -17,11 +17,11 @@
 ### Project-specific assets
 
 - menu and result wallpapers (`1672×941`);
+- neutral-hostile Kraken gameplay sprite (`512×265`, transparent PNG at `png/default/enemies/kraken.png`);
 - five damage portraits and five victory portraits (`640×640`, `react-damage-*` / `react-victory-*`);
 - two hull-friction portraits (`640×640`, `react-friction-01.png` / `react-friction-02.png`) on the dedicated chartreuse reaction color;
 - ten optimized idle portraits (`724×543`, `react-idle-*`);
 - six optimized mechanic portraits (`640×640`, `react-mechanic-*`);
-- optimized Kraken sprite (`512×265`, `png/default/enemies/kraken.png`) with transparency for direct Pixi composition;
 - US/Brazil/Spain flag SVGs for language controls;
 - hit, collision, pickup, dash and idle-reaction SFX;
 - menu/result tracks and seven battle tracks.

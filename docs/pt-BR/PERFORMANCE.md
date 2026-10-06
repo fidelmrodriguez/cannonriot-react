@@ -12,7 +12,6 @@
 - Snapshots React do HUD limitados a aproximadamente 80 ms, sem state update por frame.
 - Aplicação Pixi, listeners de input/visibility/blur e `ResizeObserver` limpos ao destruir a engine.
 - Portraits de reação otimizados para tamanhos mais próximos do uso real, reduzindo download/decode/memória de GPU.
-- Kraken limitado a uma entidade ativa, com sprite único otimizado e peso de dois slots no teto de inimigos para não aumentar a densidade total sem controle.
 
 ### Perfil do renderer desktop
 

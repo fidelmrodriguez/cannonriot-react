@@ -26,7 +26,9 @@ Available helpers:
 - `damagePlayer(amount)`;
 - `spawnPickup(kind)`;
 - `spawnEnemy(kind, x, y, health?)`;
-- `spawnKraken(x, y, health?)`;
+- `spawnKraken(x?, y?)`;
+- `damageKraken(amount, awardPointOnDefeat?)`;
+- `krakenAttackAt(x, y)`;
 - `setEnemyShootCooldown(id, seconds)`;
 - `setPlayerPose(x, y, rotation?)`;
 - `advanceTime(seconds)`;
@@ -49,7 +51,7 @@ Available helpers:
 9. front/broadside projectile counts, parallel directions, cooldowns and the 0.25 s weapon-switch lock;
 10. projectile kill scoring exactly once;
 11. normal spawn sequence containing both Chaser and Shooter;
-12. Kraken third-faction targeting, nearest-target selection and nearby Shooter aggro redirection;
+12. Kraken third-faction spawn/debug hooks, hybrid aggro/forced retaliation, island routing, Chaser ram damage and scoring ownership;
 13. Shooter hull friction damaging both participants asymmetrically;
 14. Chaser collision damage + non-scoring self-destruction;
 15. Wind keeping dash immediately ready while the buff is active;

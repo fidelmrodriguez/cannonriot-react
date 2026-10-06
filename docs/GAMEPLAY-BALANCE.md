@@ -77,28 +77,28 @@ Friction has two dedicated chartreuse reaction portraits and five localized line
 
 ## Kraken neutral-hostile event
 
-The Kraken is an additive third faction rather than a boss. It never replaces the required Chaser/Shooter spawn sequence and does not use a global boss bar. Only one Kraken may be active.
+The Kraken is a third-faction arena threat, not a boss. Only one can be active at a time and it occupies the equivalent of **2 active-enemy slots** while alive. It never despawns randomly; it leaves only when defeated or when the match itself ends.
+
+Base values:
 
 | Parameter | Value |
 | --- | ---: |
-| Hull | 180 HP |
-| Move speed | 70 px/s |
-| Collision radius | 48 px |
-| Target perception reference | 460 px |
-| Tentacle attack range | 270 px |
+| Health | 180 HP |
+| Move speed | 72 px/s |
+| Physical radius | 48 px |
+| Tentacle attack range | 150 px |
 | Telegraph | 0.55 s |
 | Attack cooldown | 2.2 s |
 | Impact radius | 64 px |
 | Damage to player | 11 |
-| Damage to enemy ships | 18 |
+| Damage to ships | 18 |
 | Chaser ram damage to Kraken | 32 |
-| Active-enemy slot weight | 2 |
 
-Every simulation tick the Kraken chooses the nearest living target among the player, Chasers and Shooters. It can change target immediately as distances change. Once a tentacle attack begins, the impact point is locked for the 0.55 s telegraph so the dodge remains readable. Dash immunity applies normally if the player is inside the impact during an active dash.
+The Kraken recalculates the **nearest living target every simulation tick**, so it can swap freely between the player, Shooters and Chasers. It moves toward that target and telegraphs the impact point before each tentacle slam. Island navigation uses a lightweight coarse A* water grid, full-collider segment checks, path smoothing and stuck-triggered replanning so the creature swims around land instead of pinning itself against a collider. Its base sprite no longer bobs vertically; four lightweight procedural tentacles, animated water rings and subtle squash/stretch provide the swimming motion. The impact can damage the player and normal enemies; player dash immunity still applies if the impact lands while the timed dash state is active.
 
-Nearby enemies treat the Kraken as a local hostile target when it is closer than the player. Shooters can enter Kraken aggro within 420 px; Chasers use 330 px. An 80 px release margin keeps the current Kraken target stable until the player becomes clearly closer or the creature leaves the extended range. This hysteresis prevents frame-to-frame target flicker. Shooters fire their normal cannon damage at the Kraken. Chasers that physically ram it explode and deal 32 damage to the Kraken. NPC-caused deaths never award player score.
+Nearby normal enemies may redirect toward the Kraken instead of the player. Shooters consider it inside roughly **420 px** and Chasers inside roughly **330 px**, but proximity alone does not make every ship forget the player: the Kraken must also be the more attractive nearby target. The 80 px hysteresis margin prevents rapid target flicker. If a tentacle actually damages a normal enemy, that ship receives a **5 s forced retaliation** window against the Kraken. Shooters can damage the Kraken with cannon fire. Chasers that physically ram it explode and deal **32 damage** to the Kraken, awarding no player point.
 
-The first Kraken becomes eligible after 30% of the configured session duration, only if at least 15 s remain and two active-enemy slots are available. Once eligible, normal ship spawns reserve those two slots until the Kraken can enter, preventing a saturated 1 s spawn profile from starving the event. After it is defeated, another can become eligible 50–55 s later. It does **not** disappear randomly; apart from match teardown, it remains until defeated. A player-caused Kraken defeat awards exactly **1 point**.
+The first Kraken becomes eligible at **30% of match duration** if at least 15 s remain. After it is defeated, another becomes eligible after a deterministic seeded delay between **50 and 55 s**. A player-delivered final hit awards the normal **+1 point**; kills caused by enemy fire or Chaser rams award zero. The player's powder-barrel blast can damage and finish the Kraken, but it is never a guaranteed one-shot.
 
 ## Pickups and emergency support
 
@@ -129,7 +129,7 @@ Base values:
 | Trigger radius | 58 px |
 | Maximum active barrels | 3 |
 
-A normal Chaser/Shooter that triggers the armed barrel is destroyed and scores normally. The Kraken can also trigger a barrel, but receives the stored 62 damage instead of being auto-killed. Other normal enemy ships inside the expanded blast take heavy falloff damage capped to leave them at a minimum of 1 HP; a Kraken inside the blast can take the falloff damage normally. The player is immune to their own barrel explosion.
+The enemy that triggers the armed barrel is destroyed and scores normally. Other enemies inside the expanded blast take heavy falloff damage, but splash is capped to leave them at a minimum of 1 HP. The player is immune to their own barrel explosion.
 
 This lets a barrel soften 7–10 tightly grouped ships without turning one trigger into an automatic mass kill.
 
@@ -143,5 +143,5 @@ This lets a barrel soften 7–10 tightly grouped ships without turning one trigg
 - Chaser collision outside dash damages the player and self-destructs without scoring;
 - projectile substeps reduce tunnelling at boosted speeds;
 - projectile hits are single-application;
-- barrel splash cannot kill neighbouring normal ships; Kraken damage is not clamped by that safeguard;
+- barrel splash cannot kill neighbouring enemies;
 - support systems never change the value of a kill or the selected match settings.

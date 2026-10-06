@@ -75,30 +75,30 @@ O Shooter recebe propositalmente muito mais dano que o jogador. Assim, raspar po
 
 O atrito possui dois reacts chartreuse dedicados e cinco falas localizadas. Um react permanece visível durante todo o contato e fica por mais **2,2 s** depois que os cascos se separam.
 
-## Evento hostil neutro: Kraken
+## Evento neutro-hostil do Kraken
 
-O Kraken é uma terceira facção adicional, não um boss. Ele não substitui a sequência obrigatória de spawn de Chaser/Shooter e não usa barra global de chefe. Só pode existir um Kraken ativo.
+O Kraken é uma terceira facção da arena, não um boss. Apenas um pode ficar ativo por vez e ele ocupa o equivalente a **2 slots do teto de inimigos ativos** enquanto estiver vivo. Ele não desaparece aleatoriamente; só sai quando é derrotado ou quando a própria partida termina.
+
+Valores base:
 
 | Parâmetro | Valor |
 | --- | ---: |
 | Vida | 180 HP |
-| Velocidade | 70 px/s |
-| Raio de colisão | 48 px |
-| Referência de percepção | 460 px |
-| Alcance do tentáculo | 270 px |
-| Telegraph | 0,55 s |
+| Velocidade | 72 px/s |
+| Raio físico | 48 px |
+| Alcance do ataque de tentáculo | 150 px |
+| Telégrafo | 0,55 s |
 | Cooldown do ataque | 2,2 s |
-| Raio de impacto | 64 px |
+| Raio do impacto | 64 px |
 | Dano no jogador | 11 |
-| Dano em navios inimigos | 18 |
-| Dano de ram do Chaser no Kraken | 32 |
-| Peso no teto de inimigos | 2 slots |
+| Dano em navios | 18 |
+| Dano da colisão do Chaser no Kraken | 32 |
 
-A cada tick da simulação, o Kraken escolhe a entidade viva mais próxima entre jogador, Chasers e Shooters. Ele pode trocar de alvo imediatamente conforme as distâncias mudam. Quando o ataque de tentáculo começa, o ponto de impacto fica travado pelos 0,55 s do telegraph para manter a esquiva legível. A imunidade do dash continua valendo normalmente se o jogador estiver dentro do impacto durante um dash ativo.
+O Kraken recalcula o **alvo vivo mais próximo a cada tick da simulação**, então pode alternar livremente entre jogador, Shooters e Chasers. Ele se move na direção desse alvo e marca o ponto de impacto antes de cada pancada de tentáculo. A navegação pelas ilhas usa um grid de água A* leve, checagem dos segmentos com o collider inteiro, suavização do caminho e recálculo ao detectar stuck, evitando que a criatura fique presa empurrando um collider. O sprite base não sobe e desce mais: quatro tentáculos procedurais leves, anéis de água animados e um squash/stretch sutil criam sensação de nado sem fazer o Kraken parecer voar. O impacto pode ferir jogador e inimigos normais; a imunidade do dash continua valendo se o golpe cair enquanto o estado temporizado do dash estiver ativo.
 
-Inimigos próximos tratam o Kraken como alvo hostil local quando ele está mais perto que o jogador. Shooters podem entrar em aggro do Kraken a até 420 px; Chasers usam 330 px. Uma margem de saída de 80 px mantém o alvo Kraken estável até o jogador ficar claramente mais próximo ou a criatura sair do alcance estendido. Essa histerese evita troca de alvo a cada frame. Shooters causam o dano normal de canhão no Kraken. Chasers que colidem fisicamente com ele explodem e causam 32 de dano. Mortes provocadas por NPCs nunca geram ponto para o jogador.
+Inimigos normais próximos podem redirecionar para o Kraken em vez do jogador. Shooters passam a considerá-lo dentro de aproximadamente **420 px** e Chasers dentro de **330 px**, mas proximidade sozinha não faz todo mundo esquecer o jogador: o Kraken também precisa ser o alvo local mais atraente. A histerese de 80 px impede troca nervosa de alvo. Se um tentáculo realmente causar dano num inimigo normal, esse navio entra numa **retaliação forçada de 5 s** contra o Kraken. Shooters podem ferir o Kraken com tiros. Chasers que colidem fisicamente com ele explodem e causam **32 de dano** ao Kraken, sem dar ponto ao jogador.
 
-O primeiro Kraken fica elegível após 30% da duração configurada, somente com pelo menos 15 s restantes e dois slots livres no teto de inimigos. Quando fica elegível, os spawns normais reservam esses dois slots até o Kraken entrar, evitando que o perfil saturado de spawn a cada 1 s impeça o evento indefinidamente. Depois de derrotado, outro pode ficar elegível 50–55 s mais tarde. Ele **não** desaparece aleatoriamente; fora o encerramento da partida, fica no mapa até ser derrotado. Se a derrota for causada pelo jogador, vale exatamente **1 ponto**.
+O primeiro Kraken fica elegível a partir de **30% da duração da partida**, desde que restem pelo menos 15 s. Depois que é derrotado, outro fica elegível após um intervalo determinístico com seed entre **50 e 55 s**. O golpe final causado pelo jogador vale o **+1 ponto** normal; mortes causadas por tiros inimigos ou colisões de Chaser valem zero. A explosão do barril do jogador pode ferir e finalizar o Kraken, mas nunca é uma eliminação garantida.
 
 ## Pickups e suporte de emergência
 
@@ -129,7 +129,7 @@ Valores base:
 | Raio de gatilho | 58 px |
 | Máximo de barris ativos | 3 |
 
-Um Chaser/Shooter normal que aciona o barril armado é destruído e pontua normalmente. O Kraken também pode acionar o barril, mas recebe os 62 de dano armazenado em vez de morrer automaticamente. Outros navios inimigos normais dentro do raio ampliado recebem dano forte com falloff limitado para deixá-los com no mínimo 1 HP; um Kraken dentro da explosão pode receber o falloff normalmente. O jogador é imune à própria explosão.
+O inimigo que aciona o barril armado é destruído e pontua normalmente. Outros inimigos dentro do raio ampliado recebem dano forte com falloff, mas o splash é limitado para deixá-los com no mínimo 1 HP. O jogador é imune à própria explosão.
 
 Isso permite enfraquecer 7–10 navios muito agrupados sem transformar um gatilho em massacre automático.
 
@@ -143,5 +143,5 @@ Isso permite enfraquecer 7–10 navios muito agrupados sem transformar um gatilh
 - colisão de Chaser fora do dash causa dano e autodestruição sem ponto;
 - substeps de projétil reduzem tunnelling em velocidades reforçadas;
 - hits de projétil aplicam dano uma única vez;
-- splash do barril não mata navios inimigos normais vizinhos; o dano no Kraken não usa esse clamp;
+- splash do barril não mata inimigos vizinhos;
 - sistemas de suporte nunca alteram valor do ponto nem configurações escolhidas.

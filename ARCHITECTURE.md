@@ -100,10 +100,10 @@ Ship and projectile interactions are separated into explicit checks:
 - ship × ship;
 - projectile × island;
 - projectile × arena exit;
-- player projectile × live enemy/Kraken;
-- enemy projectile × live player or Kraken according to the projectile target;
-- Chaser hull × Kraken hull (rammer explodes and damages Kraken);
-- Kraken tentacle AoE × player/enemy ships.
+- player projectile × live enemy;
+- enemy projectile × live player or live Kraken.
+- Kraken × ship hull; Chaser contact becomes a self-destructing ram against the Kraken.
+- Kraken tentacle area × player/normal enemies.
 
 Island art is procedural/irregular, while collision is represented by stable circle colliders. Projectiles use substeps so boosted shots cannot tunnel through small colliders. A projectile is removed immediately after its first valid hit.
 
@@ -121,13 +121,13 @@ Chasers use pursuit/steering, island avoidance and stuck recovery. Shooters comb
 
 A deterministic pressure value derived from `sessionTime` and `enemySpawnTime` adjusts the active-enemy cap and support/balance coefficients for extreme configurations.
 
-### Kraken third faction
+### Kraken third-faction AI
 
-The Kraken is stored separately from the required `EnemyEntity[]` ship sequence as a `KrakenEntity`. This preserves the deterministic Chaser/Shooter spawn pattern while allowing one optional neutral-hostile arena event. `maybeSpawnKraken()` becomes eligible at 30% of session time, requires at least 15 s remaining and checks that two enemy-cap slots are available. A live Kraken contributes a slot weight of two when normal ship spawns are evaluated. Once the event is eligible, normal spawns reserve those two slots so a high-density 1 s configuration cannot permanently starve the Kraken event.
+The Kraken is represented by a separate `KrakenEntity`, not by extending the required `EnemyKind` union. This keeps the challenge-mandated Chaser/Shooter spawn pattern intact while allowing a neutral-hostile third faction. `maybeSpawnKraken()` makes the first creature eligible at 30% of session duration and schedules another only 50–55 s after defeat; no random despawn path exists.
 
-`updateKraken()` recomputes the nearest living target every simulation tick across the player and all live enemy ships. Movement follows that nearest target; a tentacle strike locks its impact point for a 0.55 s telegraph, then resolves one AoE damage pass. There is no random despawn path: the entity remains until defeated or the match is torn down.
+`updateKraken(dt)` recomputes the nearest living target every tick across player + normal enemies. The creature steers toward that target, telegraphs a fixed impact point for 0.55 s, then resolves a 64 px area attack. Its navigation uses a lightweight coarse A* water grid, full-collider path checks, path smoothing and stuck-triggered replanning so it commits to swimming around land instead of repeatedly pushing into a coastline. Normal enemy targeting goes through `enemyTarget(enemy)`: proximity only makes the Kraken eligible when it is the more attractive nearby target, with an 80 px hysteresis margin; if a Kraken tentacle actually damages an enemy, that enemy is forced to retaliate against the Kraken for 5 s. Enemy cannonballs and Chaser rams can damage the Kraken, but those kills never credit the player.
 
-Enemy ships use `getEnemyCombatTarget()`. Shooters within 420 px and Chasers within 330 px can switch to the Kraken when it is closer than the player; an 80 px release margin provides hysteresis and lets a clearly closer player reclaim aggro. Shooter projectiles carry an explicit `target` (`player` or `kraken`) so faction damage is deterministic. Chaser/Kraken hull contact is resolved in the normal solid-hull collision path: the Chaser explodes, damages the Kraken and does not award score.
+The Kraken counts as two slots for normal spawn-cap calculations, while the HUD counts its visible body as one enemy entity. Its static base artwork is augmented at runtime with four lightweight procedural tentacles plus animated water rings and subtle squash/stretch, avoiding the old vertical bob that made it look like it was hovering. Player projectiles and powder-barrel damage can finish it; only a player-caused final hit awards +1.
 
 ## Pickups and support director
 
@@ -139,9 +139,9 @@ Repeated buffs extend duration with a capped extension rather than fully resetti
 
 ## Powder barrel
 
-The player can keep up to three active barrels. A barrel arms after 0.48 s, lasts 10.5 s and triggers when a normal enemy ship or the Kraken enters its trigger radius.
+The player can keep up to three active barrels. A barrel arms after 0.48 s, lasts 10.5 s and triggers when an enemy enters its trigger radius.
 
-A triggering Chaser/Shooter is a guaranteed scoring kill. A triggering Kraken instead takes the stored 62 damage. Other normal ships inside the 170 px blast radius receive falloff splash damage clamped so the blast cannot finish them; a Kraken in the blast receives falloff damage normally. The player's own barrel blast never damages the player.
+The triggering enemy is a guaranteed scoring kill. Other enemies inside the 170 px blast radius receive falloff splash damage clamped so the blast cannot finish them; they remain at a minimum of 1 HP. The player's own barrel blast never damages the player.
 
 This keeps the trap useful against dense groups without turning one barrel into an automatic multi-kill chain.
 

@@ -251,25 +251,6 @@ test.describe('application and gameplay', () => {
     expect(after.projectiles.some((shot: any) => shot.owner === 'enemy')).toBeTruthy();
   });
 
-  test('Kraken acts as a neutral third faction and pulls nearby enemy aggro', async ({ page, isMobile }) => {
-    test.skip(isMobile, 'Deterministic Kraken AI assertion.');
-    await startGame(page);
-    const ids = await page.evaluate(() => {
-      const api = (window as any).__CANNON_RIOT_TEST__;
-      api.setPlayerPose(260, 360, 0);
-      const krakenId = api.spawnKraken(900, 360, 180);
-      const shooterId = api.spawnEnemy('shooter', 700, 360, 82);
-      api.setEnemyShootCooldown(shooterId, 0);
-      api.advanceTime(0.25);
-      return { krakenId, shooterId };
-    });
-    expect(ids.krakenId).toBe('arena-kraken');
-    const state = await debugState(page);
-    expect(state.kraken?.alive).toBeTruthy();
-    expect(state.kraken?.targetId).toBe(ids.shooterId);
-    expect(state.projectiles.some((shot: any) => shot.owner === 'enemy' && shot.target === 'kraken')).toBeTruthy();
-  });
-
   test('front shot and broadside use the required projectile counts and cooldowns', async ({ page, isMobile }) => {
     test.skip(isMobile, 'Keyboard weapon assertion.');
     await startGame(page);
@@ -325,6 +306,78 @@ test.describe('application and gameplay', () => {
     const kinds = new Set(state.enemies.map((enemy: any) => enemy.kind));
     expect(kinds.has('chaser')).toBeTruthy();
     expect(kinds.has('shooter')).toBeTruthy();
+  });
+
+  test('Kraken behaves as a third faction and only player-caused defeat scores', async ({ page }) => {
+    await startGame(page);
+    const spawned = await page.evaluate(() => {
+      const api = (window as any).__CANNON_RIOT_TEST__;
+      api.setPlayerPose(360, 360, 0);
+      return api.spawnKraken(820, 360);
+    });
+    expect(spawned).toBeTruthy();
+    let state = await debugState(page);
+    expect(state.kraken).toBeTruthy();
+    expect(state.kraken.health).toBe(180);
+
+    await page.evaluate(() => {
+      const api = (window as any).__CANNON_RIOT_TEST__;
+      const kraken = api.getState().kraken;
+      api.spawnEnemy('chaser', kraken.x - 54, kraken.y, 100);
+      api.advanceTime(0.5);
+    });
+    state = await debugState(page);
+    expect(state.score).toBe(0);
+    expect(state.kraken.health).toBeLessThan(180);
+
+    await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.damageKraken(999, true));
+    state = await debugState(page);
+    expect(state.kraken).toBeFalsy();
+    expect(state.score).toBe(1);
+  });
+
+  test('Kraken proximity is selective and a tentacle hit forces retaliation', async ({ page }) => {
+    await startGame(page);
+    await page.evaluate(() => {
+      const api = (window as any).__CANNON_RIOT_TEST__;
+      api.setPlayerPose(560, 360, 0);
+      api.spawnKraken(820, 360);
+      api.spawnEnemy('shooter', 610, 360, 100);
+      api.advanceTime(0.05);
+    });
+    let state = await debugState(page);
+    let shooter = state.enemies.find((enemy: any) => enemy.kind === 'shooter' && enemy.id.startsWith('debug-enemy'));
+    expect(shooter).toBeTruthy();
+    expect(shooter.targetingKraken).toBeFalsy();
+
+    await page.evaluate(() => {
+      const api = (window as any).__CANNON_RIOT_TEST__;
+      const shooter = api.getState().enemies.find((enemy: any) => enemy.kind === 'shooter' && enemy.id.startsWith('debug-enemy'));
+      api.krakenAttackAt(shooter.x, shooter.y);
+      api.advanceTime(0.65);
+    });
+    state = await debugState(page);
+    shooter = state.enemies.find((enemy: any) => enemy.kind === 'shooter' && enemy.id.startsWith('debug-enemy'));
+    expect(shooter.health).toBeLessThan(100);
+    expect(shooter.targetingKraken).toBeTruthy();
+    expect(shooter.krakenRetaliationTime).toBeGreaterThan(4);
+  });
+
+  test('Kraken routes around an island instead of pinning itself to the coast', async ({ page }) => {
+    await startGame(page);
+    const spawned = await page.evaluate(() => {
+      const api = (window as any).__CANNON_RIOT_TEST__;
+      api.setPlayerPose(430, 214, 0);
+      const ok = api.spawnKraken(120, 214);
+      api.advanceTime(2.5);
+      return ok;
+    });
+    expect(spawned).toBeTruthy();
+    const state = await debugState(page);
+    expect(state.kraken).toBeTruthy();
+    expect(Math.hypot(state.kraken.x - 120, state.kraken.y - 214)).toBeGreaterThan(90);
+    expect(Math.abs(state.kraken.y - 214)).toBeGreaterThan(25);
+    expect(state.kraken.stuckTime).toBeLessThan(0.8);
   });
 
   test('Shooter hull remains solid during friction contact', async ({ page, isMobile }) => {

@@ -4,7 +4,6 @@ export interface Vec2 { x: number; y: number }
 export interface CircleCollider { x: number; y: number; radius: number }
 export interface Island { x: number; y: number; radius: number; view: Container; colliders: CircleCollider[] }
 export type EnemyKind = 'chaser' | 'shooter';
-export type EnemyTarget = 'player' | 'kraken';
 export type PickupKind = 'medicine' | 'powder' | 'wind' | 'armor';
 
 export interface ShipEntity {
@@ -32,27 +31,59 @@ export interface EnemyEntity extends ShipEntity {
   shootCooldown: number;
   warned?: boolean;
   telegraphing?: boolean;
+  targetingKraken?: boolean;
+  krakenRetaliationTime: number;
   preferredOrbitSign: -1 | 1;
   orbitFlipCooldown: number;
   stuckTime: number;
   lastAiX: number;
   lastAiY: number;
-  targetKraken?: boolean;
 }
 
-export interface KrakenEntity extends ShipEntity {
+
+export interface KrakenEntity {
+  id: string;
+  x: number;
+  y: number;
+  radius: number;
+  health: number;
+  maxHealth: number;
+  alive: boolean;
+  view: Container;
+  sprite: Sprite;
+  healthBack: Graphics;
+  healthFill: Graphics;
+  wakeOuter: Graphics;
+  wakeInner: Graphics;
+  tentacles: Array<{
+    view: Container;
+    baseX: number;
+    baseY: number;
+    baseRotation: number;
+    phase: number;
+    speed: number;
+    amplitude: number;
+  }>;
+  baseSpriteScale: number;
+  swimIntensity: number;
+  preferredOrbitSign: -1 | 1;
+  orbitFlipCooldown: number;
+  stuckTime: number;
+  lastAiX: number;
+  lastAiY: number;
+  navPath: Vec2[];
+  navPathIndex: number;
+  navRepathCooldown: number;
+  navTargetId: string;
   attackCooldown: number;
-  telegraphTime: number;
+  attackPrepRemaining: number;
   attackX: number;
   attackY: number;
-  targetId: string | null;
-  bornAt: number;
 }
 
 export interface ProjectileEntity {
   id: string;
   owner: 'player' | 'enemy';
-  target?: EnemyTarget;
   x: number;
   y: number;
   vx: number;
