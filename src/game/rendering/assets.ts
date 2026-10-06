@@ -44,6 +44,10 @@ export const GAME_ASSETS = {
     armor: '/assets/ui/react-mechanic-armor.png',
     barrel: '/assets/ui/react-mechanic-barrel.png',
   },
+  krakenPortraits: {
+    alert: '/assets/ui/react-kraken-alert.png',
+    relief: '/assets/ui/react-kraken-relief.png',
+  },
   shotSound: '/assets/sounds/cannon_fire_1.wav',
   broadsideSound: '/assets/sounds/cannon_broadside.wav',
   explosionSound: '/assets/sounds/ship_explosion_1.wav',
@@ -55,4 +59,5 @@ export const GAME_ASSETS = {
   idleChirpSound: '/assets/sounds/idle_captain_chirp.wav',
   pickupSound: '/assets/sounds/pickup_chime.wav',
   dashSound: '/assets/sounds/dash_whoosh.wav',
+  krakenReactSound: '/assets/sounds/kraken_react_chirp.wav',
 } as const;

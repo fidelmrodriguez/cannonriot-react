@@ -62,6 +62,7 @@ const GAME_TEXTURE_URLS = [
   ...GAME_ASSETS.frictionPortraits,
   ...GAME_ASSETS.idlePortraits,
   ...Object.values(GAME_ASSETS.mechanicPortraits),
+  ...Object.values(GAME_ASSETS.krakenPortraits),
 ] as const;
 
 const SCREEN_IMAGE_URLS = [
@@ -79,6 +80,7 @@ const SFX_URLS = [
   GAME_ASSETS.idleChirpSound,
   GAME_ASSETS.pickupSound,
   GAME_ASSETS.dashSound,
+  GAME_ASSETS.krakenReactSound,
 ] as const;
 
 const MUSIC_URLS = ALL_MUSIC_TRACKS.map((track) => track.src);

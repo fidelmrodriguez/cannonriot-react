@@ -3000,7 +3000,8 @@ body {
   .touch-dash,
   .touch-fire,
   .touch-side,
-  .touch-barrel {
+  .touch-barrel,
+  .touch-attack-zone .touch-dash {
     appearance: none;
     -webkit-appearance: none;
     display: flex;
@@ -3072,7 +3073,8 @@ body {
 
   .touch-fire,
   .touch-side,
-  .touch-barrel {
+  .touch-barrel,
+  .touch-attack-zone .touch-dash {
     position: absolute;
     border-radius: 16px;
   }
@@ -3112,6 +3114,23 @@ body {
     transform: translateX(-50%);
     background: #6f4330;
     color: #fff6d6;
+  }
+
+  .touch-attack-zone .touch-dash {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    width: clamp(62px, 10.6vh, 82px);
+    height: clamp(46px, 7.8vh, 60px);
+    aspect-ratio: auto;
+    border-radius: 16px;
+    background: rgba(47,87,113,.9);
+    color: white;
+  }
+
+  .touch-attack-zone .touch-dash.ready {
+    background: #72edff;
+    color: #071b36;
   }
 
   .touch-barrel.ready {
@@ -4732,4 +4751,26 @@ body {
   .touch-turn-left { left: 0 !important; top: 55px !important; }
   .touch-dash { left: 55px !important; top: 55px !important; }
   .touch-turn-right { left: 110px !important; top: 55px !important; }
+}
+
+@media (any-pointer: coarse) {
+  .touch-attack-zone .touch-dash {
+    left: auto !important;
+    right: 0 !important;
+    top: auto !important;
+    bottom: 0 !important;
+    width: 54px !important;
+    min-width: 54px !important;
+    height: 54px !important;
+    min-height: 54px !important;
+  }
+}
+
+@media (any-pointer: coarse) and (max-height: 430px) {
+  .touch-attack-zone .touch-dash {
+    width: 48px !important;
+    min-width: 48px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+  }
 }

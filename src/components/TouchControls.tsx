@@ -123,9 +123,6 @@ export function TouchControls({ language, onAction, dashReload, barrelReload, ba
           <strong aria-hidden="true">↷</strong><small>{t('touch.right', {}, language)}</small>
         </button>
       </div>
-      <button className={`touch-dash ${dashReload >= 0.999 ? 'ready' : ''}`} aria-label={`${t('touch.dash', {}, language)} ${dashLabel}`} {...bindActions('dash')}>
-        <strong>⚡</strong><span>{t('touch.dash', {}, language)}</span><small>{dashLabel}</small>
-      </button>
     </section>
 
     <section className="touch-attack-zone" aria-label={t('touch.artillery', {}, language)}>
@@ -133,7 +130,10 @@ export function TouchControls({ language, onAction, dashReload, barrelReload, ba
       <button className="touch-fire" aria-label={t('touch.frontAria', {}, language)} {...bindActions('fire')}><strong>💥</strong><small>{t('touch.front', {}, language)}</small></button>
       <button className="touch-side right" aria-label={t('touch.sideRight', {}, language)} {...bindActions('broadsideRight')}><strong>▶</strong><small>{t('touch.right', {}, language)}</small></button>
       <button className={`touch-barrel ${barrelReload >= 0.999 ? 'ready' : ''}`} aria-label={`${t('touch.barrel', {}, language)} ${barrelLabel}. ${barrelCount}/3`} {...bindActions('barrel')}>
-        <strong>🧨</strong><span>{t('touch.barrel', {}, language)}</span><small>{barrelReload >= 0.999 ? `${barrelCount}/3` : barrelLabel}</small>
+        <strong>🛢️</strong><span>{t('touch.barrel', {}, language)}</span><small>{barrelReload >= 0.999 ? `${barrelCount}/3` : barrelLabel}</small>
+      </button>
+      <button className={`touch-dash ${dashReload >= 0.999 ? 'ready' : ''}`} aria-label={`${t('touch.dash', {}, language)} ${dashLabel}`} {...bindActions('dash')}>
+        <strong>⚡</strong><span>{t('touch.dash', {}, language)}</span><small>{dashLabel}</small>
       </button>
     </section>
   </div>;

@@ -40,7 +40,7 @@ export const EXTRA_BALANCE = {
     contactPadding: 6,
     playerDamagePerSecond: 4.5,
     shooterDamagePerSecond: 26,
-    krakenDamagePerSecond: 18,
+    krakenDamagePerSecond: 15,
     reactLingerSeconds: 2.2,
   },
   kraken: {
@@ -56,7 +56,7 @@ export const EXTRA_BALANCE = {
     targetRepeatCooldownMax: 0.85,
     impactRadius: 64,
     maxAttackTargets: 5,
-    playerDamage: 11,
+    playerDamage: 9,
     enemyDamage: 18,
     npcProjectileDamageMultiplier: 0.55,
     chaserRamDamage: 24,

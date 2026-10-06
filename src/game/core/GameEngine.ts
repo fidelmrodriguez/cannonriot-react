@@ -240,6 +240,7 @@ export class GameEngine {
       ...GAME_ASSETS.frictionPortraits,
       ...GAME_ASSETS.idlePortraits,
       ...Object.values(GAME_ASSETS.mechanicPortraits),
+      ...Object.values(GAME_ASSETS.krakenPortraits),
     ];
     await Assets.load(urls);
     this.audio.set('front', new Audio(getPreloadedAudioUrl(GAME_ASSETS.shotSound)));
@@ -251,6 +252,7 @@ export class GameEngine {
     this.audio.set('idleChirp', new Audio(getPreloadedAudioUrl(GAME_ASSETS.idleChirpSound)));
     this.audio.set('pickup', new Audio(getPreloadedAudioUrl(GAME_ASSETS.pickupSound)));
     this.audio.set('dash', new Audio(getPreloadedAudioUrl(GAME_ASSETS.dashSound)));
+    this.audio.set('krakenReact', new Audio(getPreloadedAudioUrl(GAME_ASSETS.krakenReactSound)));
     this.audio.get('front')!.volume = 0.28;
     this.audio.get('broadside')!.volume = 0.30;
     this.audio.get('explosion')!.volume = 0.28;
@@ -260,6 +262,7 @@ export class GameEngine {
     this.audio.get('idleChirp')!.volume = 0.20;
     this.audio.get('pickup')!.volume = 0.23;
     this.audio.get('dash')!.volume = 0.20;
+    this.audio.get('krakenReact')!.volume = 0.26;
   }
 
   private drawOcean(): void {
@@ -698,6 +701,7 @@ export class GameEngine {
     this.updateKrakenHealth();
     this.showKrakenSpawnVfx(position.x, position.y);
     this.popLabel(engineText('kraken'), position.x, position.y - 86, 0xffd64a, 1.0);
+    this.showKrakenEventComicPanel('spawn');
     return true;
   }
 
@@ -1345,6 +1349,8 @@ export class GameEngine {
         line: this.uiRng.pick(gameLines('victoryKraken')),
       });
       this.maybeDropPickup(kraken.x, kraken.y);
+    } else if (this.player.alive && !this.ended) {
+      this.showKrakenEventComicPanel('relief');
     }
     this.popLabel(engineText('krakenDown'), kraken.x, kraken.y - 92, 0x67efff, 0.85);
     this.spawnActionLines(kraken.x, kraken.y, this.uiRng.range(0, Math.PI * 2), 0x65e9ff, 12);
@@ -2995,6 +3001,20 @@ export class GameEngine {
     this.playIdleChirp();
   }
 
+  private showKrakenEventComicPanel(kind: 'spawn' | 'relief'): void {
+    const relief = kind === 'relief';
+    this.showComicPanel('mechanic', {
+      line: this.uiRng.pick(gameLines(relief ? 'krakenRelief' : 'krakenSpawn')),
+      portraitPath: relief ? GAME_ASSETS.krakenPortraits.relief : GAME_ASSETS.krakenPortraits.alert,
+      accent: relief ? 0x44c975 : 0x4d68ff,
+      burstFill: relief ? 0xfff0a3 : 0xffd8fc,
+      headerText: engineText(relief ? 'krakenReliefHeader' : 'krakenSpawnHeader'),
+      badgeText: engineText(relief ? 'krakenReliefBadge' : 'krakenSpawnBadge'),
+      frameStroke: relief ? 0x218650 : 0x243bb3,
+    });
+    this.playKrakenReactChirp();
+  }
+
   private showMechanicComicPanel(kind: MechanicReactKind, lines: string[]): void {
     const presets: Record<MechanicReactKind, { portraitPath: string; accent: number; burstFill: number; headerText: string; badgeText: string; frameStroke: number }> = {
       dash: {
@@ -3405,6 +3425,16 @@ export class GameEngine {
     const sound = original.cloneNode() as HTMLAudioElement;
     sound.volume = original.volume;
     sound.playbackRate = this.uiRng.range(0.94, 1.08);
+    void sound.play().catch(() => undefined);
+  }
+
+  private playKrakenReactChirp(): void {
+    if (isSfxMuted()) return;
+    const original = this.audio.get('krakenReact');
+    if (!original) return;
+    const sound = original.cloneNode() as HTMLAudioElement;
+    sound.volume = original.volume;
+    sound.playbackRate = this.uiRng.range(0.97, 1.05);
     void sound.play().catch(() => undefined);
   }
 
