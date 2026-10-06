@@ -83,22 +83,23 @@ Base values:
 
 | Parameter | Value |
 | --- | ---: |
-| Health | 180 HP |
+| Health | 260 HP |
 | Move speed | 72 px/s |
 | Physical radius | 48 px |
-| Tentacle attack range | 150 px |
+| Tentacle attack range | 210 px |
 | Telegraph | 0.55 s |
-| Attack cooldown | 2.2 s |
+| Attack cooldown | 2.4 s |
 | Impact radius | 64 px |
+| Max targets per volley | 5 |
 | Damage to player | 11 |
 | Damage to ships | 18 |
 | Chaser ram damage to Kraken | 32 |
 
-The Kraken recalculates the **nearest living target every simulation tick**, so it can swap freely between the player, Shooters and Chasers. It moves toward that target and telegraphs the impact point before each tentacle slam. Island navigation uses a lightweight coarse A* water grid, full-collider segment checks, path smoothing and stuck-triggered replanning so the creature swims around land instead of pinning itself against a collider. Its base sprite no longer bobs vertically; four lightweight procedural tentacles, animated water rings and subtle squash/stretch provide the swimming motion. The impact can damage the player and normal enemies; player dash immunity still applies if the impact lands while the timed dash state is active.
+The Kraken recalculates the **nearest living target every simulation tick**, so it can swap freely between the player, Shooters and Chasers. It moves toward that target, but when several visible targets are inside **210 px** it can raise up to **five tentacles in the same volley**, telegraphing one fixed impact point per target for 0.55 s. Player and enemies can therefore be threatened at the same time. A target can only take the Kraken damage once per volley even when telegraphs overlap. Island navigation uses a lightweight coarse A* water grid, full-collider segment checks, path smoothing and stuck-triggered replanning so the creature swims around land instead of pinning itself against a collider. Its base sprite no longer bobs vertically; four lightweight procedural tentacles, animated water rings and subtle squash/stretch provide the swimming motion. Player dash immunity still applies while the timed dash state is active.
 
 Nearby normal enemies may redirect toward the Kraken instead of the player. Shooters consider it inside roughly **420 px** and Chasers inside roughly **330 px**, but proximity alone does not make every ship forget the player: the Kraken must also be the more attractive nearby target. The 80 px hysteresis margin prevents rapid target flicker. If a tentacle actually damages a normal enemy, that ship receives a **5 s forced retaliation** window against the Kraken. Shooters can damage the Kraken with cannon fire. Chasers that physically ram it explode and deal **32 damage** to the Kraken, awarding no player point.
 
-The first Kraken becomes eligible at **30% of match duration** if at least 15 s remain. After it is defeated, another becomes eligible after a deterministic seeded delay between **50 and 55 s**. A player-delivered final hit awards the normal **+1 point**; kills caused by enemy fire or Chaser rams award zero. The player's powder-barrel blast can damage and finish the Kraken, but it is never a guaranteed one-shot.
+The first Kraken becomes eligible at **30% of match duration** if at least 15 s remain. There is still a strict maximum of **one active Kraken**, but after it is defeated another becomes eligible after a deterministic seeded delay between **28 and 34 s**. A player-delivered final hit awards the normal **+1 point**; kills caused by enemy fire or Chaser rams award zero. The player's powder-barrel blast can damage and finish the Kraken, but it is never a guaranteed one-shot. Kraken contact reuses the two friction portraits with a separate five-line angry script; the contact itself is not extra friction DPS, because the creature's tentacle volley is the intended contact threat. Kraken hit feedback is watery/cyan rather than a ship-style flame, and defeat now uses the same immediate explosion language as the normal boats instead of a custom deterioration/sinking sequence.
 
 ## Pickups and emergency support
 

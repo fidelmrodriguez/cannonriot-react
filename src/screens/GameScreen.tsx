@@ -52,6 +52,7 @@ export function GameScreen({ config, language, player, onEnd, onQuit }: Props) {
       spawnKraken: (x?: number, y?: number) => boolean;
       damageKraken: (amount: number, awardPointOnDefeat?: boolean) => void;
       krakenAttackAt: (x: number, y: number) => void;
+      krakenVolley: () => void;
       setEnemyShootCooldown: (id: string, seconds: number) => void;
       setPlayerPose: (x: number, y: number, rotation?: number) => void;
       advanceTime: (seconds: number) => void;
@@ -66,6 +67,7 @@ export function GameScreen({ config, language, player, onEnd, onQuit }: Props) {
         spawnKraken: (x, y) => engine.debugSpawnKraken(x, y),
         damageKraken: (amount, awardPointOnDefeat) => engine.debugDamageKraken(amount, awardPointOnDefeat),
         krakenAttackAt: (x, y) => engine.debugKrakenAttackAt(x, y),
+        krakenVolley: () => engine.debugKrakenVolley(),
         setEnemyShootCooldown: (id, seconds) => engine.debugSetEnemyShootCooldown(id, seconds),
         setPlayerPose: (x, y, rotation) => engine.debugSetPlayerPose(x, y, rotation),
         advanceTime: (seconds) => engine.debugAdvanceTime(seconds),

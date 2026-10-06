@@ -79,6 +79,7 @@ export interface KrakenEntity {
   attackPrepRemaining: number;
   attackX: number;
   attackY: number;
+  attackPoints: Vec2[];
 }
 
 export interface ProjectileEntity {

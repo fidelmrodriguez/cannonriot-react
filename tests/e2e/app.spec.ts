@@ -318,7 +318,7 @@ test.describe('application and gameplay', () => {
     expect(spawned).toBeTruthy();
     let state = await debugState(page);
     expect(state.kraken).toBeTruthy();
-    expect(state.kraken.health).toBe(180);
+    expect(state.kraken.health).toBe(260);
 
     await page.evaluate(() => {
       const api = (window as any).__CANNON_RIOT_TEST__;
@@ -328,7 +328,7 @@ test.describe('application and gameplay', () => {
     });
     state = await debugState(page);
     expect(state.score).toBe(0);
-    expect(state.kraken.health).toBeLessThan(180);
+    expect(state.kraken.health).toBeLessThan(260);
 
     await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.damageKraken(999, true));
     state = await debugState(page);
@@ -361,6 +361,27 @@ test.describe('application and gameplay', () => {
     expect(shooter.health).toBeLessThan(100);
     expect(shooter.targetingKraken).toBeTruthy();
     expect(shooter.krakenRetaliationTime).toBeGreaterThan(4);
+  });
+
+  test('Kraken can telegraph and strike several nearby targets in one volley', async ({ page }) => {
+    await startGame(page);
+    await page.evaluate(() => {
+      const api = (window as any).__CANNON_RIOT_TEST__;
+      api.setPlayerPose(700, 360, 0);
+      api.spawnKraken(820, 360);
+      api.spawnEnemy('shooter', 770, 275, 100);
+      api.spawnEnemy('shooter', 900, 420, 100);
+      api.krakenVolley();
+    });
+    let state = await debugState(page);
+    expect(state.kraken.attackPointCount).toBeGreaterThanOrEqual(3);
+
+    await page.evaluate(() => (window as any).__CANNON_RIOT_TEST__.advanceTime(0.62));
+    state = await debugState(page);
+    expect(state.player.health).toBeLessThan(100);
+    const debugShooters = state.enemies.filter((enemy: any) => enemy.kind === 'shooter' && enemy.id.startsWith('debug-enemy'));
+    expect(debugShooters).toHaveLength(2);
+    expect(debugShooters.every((enemy: any) => enemy.health < 100)).toBeTruthy();
   });
 
   test('Kraken routes around an island instead of pinning itself to the coast', async ({ page }) => {
