@@ -744,7 +744,8 @@ export type GameLineGroup =
   | 'friction'
   | 'frictionKraken'
   | 'krakenSpawn'
-  | 'krakenRelief';
+  | 'krakenRelief'
+  | 'damageKraken';
 
 const lineGroups: Record<Language, Record<GameLineGroup, string[]>> = {
   en: {
@@ -769,6 +770,7 @@ const lineGroups: Record<Language, Record<GameLineGroup, string[]>> = {
     frictionKraken: ['GET OFF MY HULL, KRAKEN!!', 'KEEP THOSE TENTACLES OFF MY SHIP!!', 'MY SHIP IS NOT A SNACK!!', 'LET GO OF THE HULL, MONSTER!!', 'GO HUG ANOTHER SHIP!!'],
     krakenSpawn: ['KRAKEEEEEN!!', 'KRAKEN OFF THE BOW!!', 'TENTACLES AHEAD!!', 'MONSTER IN THE WATER!!', 'EVERYBODY MOVE, IT\'S THE KRAKEN!!'],
     krakenRelief: ['WHEW... IT SANK WITHOUT ME!!', 'AT LAST, THE MONSTER IS GONE!!', 'NICE! THE KRAKEN WENT DOWN!!', 'ONE LESS NIGHTMARE AT SEA!!', 'HAH, IT FINISHED ITSELF OFF!!'],
+    damageKraken: ['TENTACLE TO THE HULL!!', 'OW! THAT THING HITS HARD!!', 'GET THAT ARM OFF MY SHIP!!', 'HEY! NO SLAPPING MY DECK!!', 'THAT SQUID MEANS BUSINESS!!'],
   },
   pt: {
     dash: ['SEGURA O LEME!', 'RASGA ESSA MARÉ!', 'TURBINA O CASCO!', 'VAPT NO LEME!', 'PISCA E EU SUMI!'],
@@ -792,6 +794,7 @@ const lineGroups: Record<Language, Record<GameLineGroup, string[]>> = {
     frictionKraken: ['SAI DO MEU CASCO, KRAKEN!!', 'TIRA ESSES TENTÁCULOS DAQUI!!', 'MEU NAVIO NÃO É PETISCO!!', 'SOLTA O CASCO, MONSTRO!!', 'VAI ABRAÇAR OUTRO NAVIO!!'],
     krakenSpawn: ['KRAKEEEEEN!!', 'KRAKEN A BORESTE!!', 'TENTÁCULOS À VISTA!!', 'MONSTRÃO NO MAR!!', 'CORRE QUE É O KRAKEN!!'],
     krakenRelief: ['UFA... AFUNDOU SOZINHO!!', 'ATÉ QUE ENFIM SUMIU!!', 'BOA! O KRAKEN CAIU!!', 'MENOS UM TERROR NO MAR!!', 'NEM PRECISEI ACABAR COM ELE!!'],
+    damageKraken: ['TENTÁCULO NO CASCO!!', 'AI! ESSA COISA BATE FORTE!!', 'TIRA ESSE BRAÇO DO MEU NAVIO!!', 'EI! NÃO ESTAPEIA MEU CONVÉS!!', 'ESSE LULA GIGANTE TÁ BRAVO!!'],
   },
   es: {
     dash: ['¡AGARRA EL TIMÓN!', '¡CORTA ESA MAREA!', '¡ACELERA EL CASCO!', '¡VUELA CON EL TIMÓN!', '¡PARPADEA Y DESAPAREZCO!'],
@@ -815,6 +818,7 @@ const lineGroups: Record<Language, Record<GameLineGroup, string[]>> = {
     frictionKraken: ['¡SUELTA MI CASCO, KRAKEN!!', '¡QUITA ESOS TENTÁCULOS DE AQUÍ!!', '¡MI BARCO NO ES COMIDA!!', '¡SUELTA EL CASCO, MONSTRUO!!', '¡VE A ABRAZAR OTRO BARCO!!'],
     krakenSpawn: ['¡KRAKEEEEEN!', '¡KRAKEN A PROA!', '¡TENTÁCULOS A LA VISTA!', '¡MONSTRUO EN EL AGUA!', '¡TODOS ATRÁS, ES EL KRAKEN!'],
     krakenRelief: ['¡UF... SE HUNDIÓ SOLITO!', '¡POR FIN SE FUE EL MONSTRUO!', '¡BIEN! ¡EL KRAKEN CAYÓ!', '¡UN TERROR MENOS EN EL MAR!', '¡JA! ¡SE REMATÓ SOLO!'],
+    damageKraken: ['¡TENTÁCULO EN EL CASCO!', '¡AY! ¡ESA COSA PEGA FUERTE!', '¡QUITA ESE BRAZO DE MI BARCO!', '¡EH! ¡NO ME AZOTES LA CUBIERTA!', '¡ESE CALAMAR VA EN SERIO!'],
   },
 };
 

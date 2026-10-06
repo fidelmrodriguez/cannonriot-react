@@ -1274,7 +1274,7 @@ export class GameEngine {
 
     if (this.player.alive
       && distSq(point.x, point.y, this.player.x, this.player.y) <= (radius + this.player.radius) ** 2) {
-      this.damageShip(this.player, EXTRA_BALANCE.kraken.playerDamage);
+      this.damageShip(this.player, EXTRA_BALANCE.kraken.playerDamage, { reactSource: 'kraken' });
     }
 
     for (const enemy of [...this.enemies]) {
@@ -2554,7 +2554,7 @@ export class GameEngine {
   private damageShip(
     ship: ShipEntity,
     amount: number,
-    options: { showReact?: boolean; showImpact?: boolean; showLabel?: boolean; awardEnemyKill?: boolean } = {},
+    options: { showReact?: boolean; showImpact?: boolean; showLabel?: boolean; awardEnemyKill?: boolean; reactSource?: 'generic' | 'kraken' } = {},
   ): void {
     if (!ship.alive) return;
     const showReact = options.showReact ?? true;
@@ -2569,7 +2569,7 @@ export class GameEngine {
     if (ship.id === PLAYER_ID) {
       this.timeSincePlayerDamage = 0;
       this.resetIdlePopupCooldown();
-      if (showReact) this.showDamageComicPanel(effectiveAmount);
+      if (showReact) this.showDamageComicPanel(effectiveAmount, options.reactSource ?? 'generic');
       if (armorActive && showLabel) this.popLabel(engineText('armorHeld'), ship.x, ship.y - 70, 0xffd75a, 0.42);
     }
     this.updateHealth(ship);
@@ -2985,8 +2985,9 @@ export class GameEngine {
     this.app.ticker.add(update);
   }
 
-  private showDamageComicPanel(amount: number): void {
-    this.showComicPanel('damage', { value: amount, line: this.pickDamageLine() });
+  private showDamageComicPanel(amount: number, source: 'generic' | 'kraken' = 'generic'): void {
+    const line = source === 'kraken' ? this.uiRng.pick(gameLines('damageKraken')) : this.pickDamageLine();
+    this.showComicPanel('damage', { value: amount, line });
   }
 
   private showVictoryComicPanel(enemyKind: 'chaser' | 'shooter', streak: number, source: 'standard' | 'dash' = 'standard'): void {
